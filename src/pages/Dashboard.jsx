@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import Configuracoes from './Configuracoes'
 import Perfil from './Perfil'
+import MRCCompleta from '../components/MRCCompleta'
 
 // ── Dados das fases (pesos fixos da metodologia Polímata) ──────────────────
 const FASES = [
@@ -88,7 +89,7 @@ export default function Dashboard() {
       <main className="main">
         <Routes>
           <Route path="/"              element={<HomeDash projeto={projetoAtivo} />} />
-          <Route path="/mrc"           element={<MRCPlaceholder projeto={projetoAtivo} />} />
+          <Route path="/mrc"           element={<MRCCompleta projetoId={projetoAtivo?.id} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
           <Route path="/perfil"        element={<Perfil />} />
         </Routes>
@@ -130,7 +131,6 @@ function HomeDash({ projeto }) {
       .eq('projeto_id', projetoId)
       .order('ordem')
 
-    // Para cada área, buscar os controles e calcular o índice
     const areasComIndice = await Promise.all((data || []).map(async (area) => {
       const { data: controles } = await supabase
         .from('mrc')
@@ -144,16 +144,13 @@ function HomeDash({ projeto }) {
     setLoading(false)
   }
 
-  // Índice geral = soma dos índices ponderados de todas as áreas
   const indiceGeral = areas.reduce((acc, a) => acc + (a.indice?.geral || 0), 0)
   const totalControles = areas.reduce((acc, a) => acc + a.controles.length, 0)
 
-  // Ranking por índice de área (não ponderado pelo peso da empresa)
   const ranking = [...areas]
     .filter(a => a.controles.length > 0)
     .sort((a, b) => (b.indice?.percentual || 0) - (a.indice?.percentual || 0))
 
-  // Distribuição de resultados geral
   const dist = areas.reduce((acc, a) => {
     a.controles.forEach(c => {
       const r = c.resultado?.toLowerCase()
@@ -179,13 +176,11 @@ function HomeDash({ projeto }) {
 
   return (
     <div className="page-wrap">
-      {/* Header */}
       <div className="page-hdr">
         <h1 className="page-title">Dashboard</h1>
         {projeto && <span className="page-badge">{projeto.clientes?.nome} · {projeto.nome}</span>}
       </div>
 
-      {/* KPIs principais */}
       <div className="dash-kpis">
         <KPICard
           label="Índice de Maturidade"
@@ -217,12 +212,10 @@ function HomeDash({ projeto }) {
         />
       </div>
 
-      {/* Barras de progresso por fase */}
       <div className="dash-section">
         <div className="dash-section-title">Progresso por Fase</div>
         <div className="dash-fases">
           {FASES.map(f => {
-            // Calcular progresso médio da fase considerando todas as áreas
             const progresso = calcularProgressoFase(areas, f.id)
             return (
               <FaseBar
@@ -237,9 +230,7 @@ function HomeDash({ projeto }) {
         </div>
       </div>
 
-      {/* Ranking + Mapa de Calor */}
       <div className="dash-grid-2">
-        {/* Ranking */}
         <div className="dash-card">
           <div className="dash-card-title">Ranking por Área</div>
           <div className="dash-ranking">
@@ -264,14 +255,12 @@ function HomeDash({ projeto }) {
           </div>
         </div>
 
-        {/* Mapa de Calor */}
         <div className="dash-card">
           <div className="dash-card-title">Mapa de Calor — Risco</div>
           <HeatMap areas={areas} />
         </div>
       </div>
 
-      {/* Distribuição por criticidade */}
       <div className="dash-section">
         <div className="dash-section-title">Distribuição por Criticidade</div>
         <div className="dash-crit-grid">
@@ -345,7 +334,6 @@ function HeatMap({ areas }) {
     '2,4': '#FF0000', '3,3': '#FF0000', '3,4': '#FF0000', '4,2': '#FF0000', '4,3': '#FF0000', '4,4': '#FF0000',
   }
 
-  // Contar controles por célula (impacto × probabilidade)
   const celulas = {}
   areas.forEach(a => {
     a.controles.forEach(c => {
@@ -394,7 +382,6 @@ function calcularIndiceMaturidade(controles, pesoArea) {
 
   const PESO_CRIT = { 'Crítico': 0.4, 'Significativo': 0.3, 'Moderado': 0.2, 'Baixo': 0.1 }
 
-  // F1 — soma ponderada dos resultados
   let somaF1 = 0, totalPeso = 0
   controles.forEach(c => {
     const p = PESO_CRIT[c.criticidade] || 0.1
@@ -406,7 +393,7 @@ function calcularIndiceMaturidade(controles, pesoArea) {
   })
 
   const indiceF1 = totalPeso > 0 ? somaF1 / totalPeso : 0
-  const percentual = Math.max(0, (indiceF1 + 1) / 2) // normalizar para 0-1
+  const percentual = Math.max(0, (indiceF1 + 1) / 2)
   const geral = percentual * 0.10 * (pesoArea || 0.1)
 
   return { geral, percentual, indiceF1 }
@@ -418,12 +405,10 @@ function calcularProgressoFase(areas, faseId) {
   if (!totalControles) return 0
 
   if (faseId === 'f1') {
-    // F1: % de controles com resultado preenchido
     const comResultado = areas.reduce((acc, a) =>
       acc + a.controles.filter(c => c.resultado && c.resultado !== '').length, 0)
     return comResultado / totalControles
   }
-  // Demais fases: baseado na fase_atual dos controles
   const faseMap = { f1: 'F1', f2e1: 'F2-E1', f2e2: 'F2-E2', f3: 'F3', f4: 'F4', f5: 'F5' }
   const fases_ordem = ['F1', 'F2-E1', 'F2-E2', 'F3', 'F4', 'F5']
   const faseAtual = faseMap[faseId]
@@ -443,21 +428,4 @@ function getCorMaturidade(pct) {
   if (pct >= 0.50) return '#FBBF24'
   if (pct >= 0.25) return '#F97316'
   return '#EF4444'
-}
-
-// ── MRC Placeholder ───────────────────────────────────────────────────────────
-function MRCPlaceholder({ projeto }) {
-  return (
-    <div className="page-wrap">
-      <div className="page-hdr">
-        <h1 className="page-title">MRC Completa</h1>
-        {projeto && <span className="page-badge">{projeto.clientes?.nome} · {projeto.nome}</span>}
-      </div>
-      <div className="empty-state">
-        <div className="empty-icon">⊟</div>
-        <div className="empty-title">Matriz em construção</div>
-        <div className="empty-desc">A MRC completa será carregada do Supabase aqui.</div>
-      </div>
-    </div>
-  )
 }
