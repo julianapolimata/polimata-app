@@ -11,10 +11,12 @@ export default function ClientesConfig() {
 
   async function loadClientes() {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('clientes')
       .select('id, nome, ativo, cnpj, projetos(id, nome, ativo)')
       .order('nome')
+    if (error) console.error("CLIENTES ERROR:", error)
+    console.log("CLIENTES DATA:", data)
     setClientes(data || [])
     setLoading(false)
   }
