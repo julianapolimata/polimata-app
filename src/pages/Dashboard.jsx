@@ -11,9 +11,7 @@ export default function Dashboard() {
   const [projetos, setProjetos] = useState([])
   const [projetoAtivo, setProjetoAtivo] = useState(null)
 
-  useEffect(() => {
-    loadProjetos()
-  }, [])
+  useEffect(() => { loadProjetos() }, [])
 
   async function loadProjetos() {
     const { data } = await supabase
@@ -31,21 +29,15 @@ export default function Dashboard() {
 
   return (
     <div className="app">
-      {/* Sidebar */}
       <aside className="sidebar">
-        <div className="sb-brand">
-          <svg viewBox="0 0 40 50" fill="none" width="28">
-            <path d="M7 5 L7 45" stroke="#CC915E" strokeWidth="3.5" strokeLinecap="round"/>
-            <path d="M7 5 Q26 5 26 16 Q26 27 7 27" stroke="#CC915E" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
-            <path d="M7 27 Q22 27 22 36 Q22 45 7 45" stroke="#A6512F" strokeWidth="3" strokeLinecap="round" fill="none"/>
-          </svg>
-          <div>
-            <div className="sb-nome">Polímata</div>
-            <div className="sb-sub">Controles Internos</div>
-          </div>
+        <div className="sb-brand" style={{ padding: '16px 16px 14px' }}>
+          <img
+            src="/logotipo-branco.png"
+            alt="Polímata"
+            style={{ height: 30, width: 'auto', objectFit: 'contain' }}
+          />
         </div>
 
-        {/* Seletor de projeto */}
         {projetos.length > 0 && (
           <div className="sb-projeto">
             <div className="sb-projeto-label">Projeto ativo</div>
@@ -64,14 +56,14 @@ export default function Dashboard() {
         )}
 
         <nav className="sb-nav">
-          <NavItem icon="⊞" label="Dashboard" path="/" active={location.pathname === '/'} onClick={() => navigate('/')} />
-          <NavItem icon="⊟" label="MRC Completa" path="/mrc" active={location.pathname === '/mrc'} onClick={() => navigate('/mrc')} />
+          <NavItem icon="⊞" label="Dashboard" active={location.pathname === '/'} onClick={() => navigate('/')} />
+          <NavItem icon="⊟" label="MRC Completa" active={location.pathname === '/mrc'} onClick={() => navigate('/mrc')} />
           {isAdmin && (
             <>
               <div className="sb-sep">Administração</div>
-              <NavItem icon="◎" label="Clientes" path="/clientes" active={location.pathname === '/clientes'} onClick={() => navigate('/clientes')} />
-              <NavItem icon="◈" label="Usuários" path="/usuarios" active={location.pathname === '/usuarios'} onClick={() => navigate('/usuarios')} />
-              <NavItem icon="⚙" label="Configurações" path="/configuracoes" active={location.pathname.startsWith('/configuracoes')} onClick={() => navigate('/configuracoes')} />
+              <NavItem icon="◎" label="Clientes" active={location.pathname === '/clientes'} onClick={() => navigate('/clientes')} />
+              <NavItem icon="◈" label="Usuários" active={location.pathname === '/usuarios'} onClick={() => navigate('/usuarios')} />
+              <NavItem icon="⚙" label="Configurações" active={location.pathname.startsWith('/configuracoes')} onClick={() => navigate('/configuracoes')} />
             </>
           )}
         </nav>
@@ -88,7 +80,6 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* Main */}
       <main className="main">
         <Routes>
           <Route path="/" element={<Home projeto={projetoAtivo} />} />
@@ -114,6 +105,7 @@ function NavItem({ icon, label, active, onClick }) {
 function papelLabel(papel) {
   const map = {
     admin_polimata: 'Admin Polímata',
+    consultor_polimata: 'Consultor',
     gestor_cliente: 'Gestor',
     usuario_cliente: 'Usuário',
   }
