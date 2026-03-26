@@ -11,13 +11,24 @@ export default function ClientesConfig() {
 
   async function loadClientes() {
     setLoading(true)
-    const { data, error } = await supabase
+    // Buscar clientes
+    const { data: clientesData, error } = await supabase
       .from('clientes')
-      .select('id, nome, ativo, cnpj, projetos(id, nome, ativo)')
+      .select('id, nome, ativo, cnpj')
       .order('nome')
     if (error) console.error("CLIENTES ERROR:", error)
-    console.log("CLIENTES DATA:", data)
-    setClientes(data || [])
+
+    // Buscar projetos separadamente e agrupar por cliente
+    const { data: projetosData } = await supabase
+      .from('projetos')
+      .select('id, nome, ativo, cliente_id')
+
+    const clientes = (clientesData || []).map(c => ({
+      ...c,
+      projetos: (projetosData || []).filter(p => p.cliente_id === c.id)
+    }))
+
+    setClientes(clientes)
     setLoading(false)
   }
 
