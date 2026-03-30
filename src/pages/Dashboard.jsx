@@ -172,6 +172,87 @@ function getCorNivel(pct) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// HELPERS — KPIs por fase
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Determina em qual fase cada controle está com base nos campos preenchidos
+function getFaseAtual(c) {
+  // Se tem resultado em r3 (F3) ou posterior → F3+
+  // Se tem r_ader (F2-E2) preenchido → F2
+  // Se tem st_pa (F2-E1) preenchido → F2
+  // Se tem r1 (F1) preenchido → F1
+  // Senão → F1 (ainda não testado)
+  if (c.r3 && c.r3 !== 'Teste Não Realizado') return 3
+  if (c.r_ader && c.r_ader !== 'Teste Não Realizado') return 2
+  if (c.st_pa && c.st_pa !== '') return 2
+  if (c.r1 && c.r1 !== 'Teste Não Realizado') return 1
+  return 1
+}
+
+function isEfetivo(resultado) {
+  return (resultado || '').toLowerCase() === 'efetivo'
+}
+
+function isInefetivo(resultado) {
+  return (resultado || '').toLowerCase() === 'inefetivo'
+}
+
+function isGap(resultado) {
+  const r = (resultado || '').toLowerCase()
+  return r === 'gap' || r === 'gap de processo'
+}
+
+function isNaoRealizado(resultado) {
+  const r = (resultado || '').toLowerCase()
+  return !r || r === 'teste não realizado'
+}
+
+// Plano de Ação necessário: controle Inefetivo ou GAP em qualquer fase
+// Plano de Ação concluído: st_pa indica conclusão (Efetivo, Concluído, etc.)
+function precisaPlanoAcao(c) {
+  return isInefetivo(c.r1) || isGap(c.r1) || isInefetivo(c.r_ader) || isGap(c.r_ader) || isInefetivo(c.r3) || isGap(c.r3)
+}
+
+function planoAcaoConcluido(c) {
+  const st = (c.st_pa || '').toLowerCase()
+  return st === 'efetivo' || st === 'concluído' || st === 'concluido' || st === 'ok'
+}
+
+function calcKpisPorFase(controles) {
+  const kpis = {
+    controles: [0, 0, 0, 0, 0, 0],  // F1..F5 + Total
+    efetivos:  [0, 0, 0, 0, 0, 0],
+    inefetivos:[0, 0, 0, 0, 0, 0],
+    gap:       [0, 0, 0, 0, 0, 0],
+    planos:    [0, 0, 0, 0, 0, 0],   // Planos de ação pendentes
+  }
+
+  controles.forEach(c => {
+    const fase = getFaseAtual(c)
+    const fi = fase - 1 // 0-indexed
+
+    // Controles por fase
+    kpis.controles[fi]++
+    kpis.controles[5]++
+
+    // Resultado na fase atual
+    const resultado = fase === 1 ? c.r1 : fase === 2 ? (c.r_ader || c.st_pa || c.r1) : c.r3 || c.r1
+    if (isEfetivo(resultado)) { kpis.efetivos[fi]++; kpis.efetivos[5]++ }
+    else if (isInefetivo(resultado)) { kpis.inefetivos[fi]++; kpis.inefetivos[5]++ }
+    else if (isGap(resultado)) { kpis.gap[fi]++; kpis.gap[5]++ }
+
+    // Planos de ação: Inefetivo ou GAP que ainda não tem PA concluído
+    if (precisaPlanoAcao(c) && !planoAcaoConcluido(c)) {
+      // PA é uma atividade de F2, mas contamos na fase onde o controle está
+      kpis.planos[fi]++
+      kpis.planos[5]++
+    }
+  })
+
+  return kpis
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // DASH MATURIDADE
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -204,12 +285,16 @@ function HomeDash({ projeto }) {
     setLoading(false)
   }
 
+  const todosControles = useMemo(() => areasCalc.flatMap(a => a.controles), [areasCalc])
   const empresa = calcularIndiceEmpresa(areasCalc.map(a => ({ nome: a.nome, peso: a.peso || 0, percentual: a.calc?.percentual || 0 })))
   const areaAtiva = areasCalc.find(a => a.nome === areaSel)
   const ranking = useMemo(() =>
     [...areasCalc].filter(a => a.controles.length > 0).sort((a, b) => (b.calc?.percentual || 0) - (a.calc?.percentual || 0)),
     [areasCalc]
   )
+
+  const kpisEmpresa = useMemo(() => calcKpisPorFase(todosControles), [todosControles])
+  const kpisArea = useMemo(() => calcKpisPorFase(areaAtiva?.controles || []), [areaAtiva])
 
   function contribFaseArea(area) {
     if (!area?.calc) return [0, 0, 0, 0, 0]
@@ -262,17 +347,18 @@ function HomeDash({ projeto }) {
         <span style={S.headerText}>Maturidade do Ambiente de Controles Internos</span>
       </div>
 
-      {/* ─── ZONA PRINCIPAL: Visões (esq) + Ranking (dir) ─── */}
+      {/* ─── ZONA PRINCIPAL: Visões + Ranking ─── */}
       <div style={S.zonaPrincipal}>
 
-        {/* Coluna esquerda — Visão Consolidada + Visão Área */}
+        {/* Coluna esquerda — Visões */}
         <div style={S.colVisoes}>
-          {/* Visão Consolidada */}
-          <div style={S.card}>
-            <div style={S.blocoLabel}>Visão Consolidada</div>
+
+          {/* Visão Consolidada Empresa */}
+          <div style={{ ...S.card, flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div style={S.blocoLabel}>Visão Consolidada Empresa</div>
             <div style={S.visaoRow}>
               <div style={S.indiceWrap}>
-                <div style={{ fontSize: 30, fontWeight: 300, color: '#00203E', lineHeight: 1 }}>
+                <div style={{ fontSize: 26, fontWeight: 300, color: '#00203E', lineHeight: 1 }}>
                   {(empresa.indice * 100).toFixed(2)}%
                 </div>
                 <NivelBadge pct={empresa.indice} nivel={nivelEmpresa} />
@@ -280,11 +366,12 @@ function HomeDash({ projeto }) {
               <FasesBoxes fases={cfe} />
             </div>
             <GaugeBar pct={empresa.indice} />
+            <KpisTable kpis={kpisEmpresa} />
           </div>
 
           {/* Visão Área */}
-          <div style={S.card}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <div style={{ ...S.card, flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <div style={S.blocoLabel}>Visão</div>
               <select value={areaSel} onChange={e => setAreaSel(e.target.value)} style={S.areaSelect}>
                 {areasCalc.map(a => <option key={a.id} value={a.nome}>{a.nome}</option>)}
@@ -292,7 +379,7 @@ function HomeDash({ projeto }) {
             </div>
             <div style={S.visaoRow}>
               <div style={S.indiceWrap}>
-                <div style={{ fontSize: 26, fontWeight: 300, color: '#00203E', lineHeight: 1 }}>
+                <div style={{ fontSize: 24, fontWeight: 300, color: '#00203E', lineHeight: 1 }}>
                   {((areaAtiva?.calc?.percentual || 0) * 100).toFixed(2)}%
                 </div>
                 <NivelBadge pct={areaAtiva?.calc?.percentual || 0} nivel={nivelArea} />
@@ -300,6 +387,7 @@ function HomeDash({ projeto }) {
               <FasesBoxes fases={cfa} />
             </div>
             <GaugeBar pct={areaAtiva?.calc?.percentual || 0} />
+            <KpisTable kpis={kpisArea} />
           </div>
         </div>
 
@@ -313,8 +401,8 @@ function HomeDash({ projeto }) {
                   <th style={{ ...S.th, width: 28 }}>#</th>
                   <th style={{ ...S.th, textAlign: 'left' }}>Departamento</th>
                   <th style={{ ...S.th, width: 62 }}>Índice</th>
-                  <th style={{ ...S.th, width: 40 }}>Nível</th>
-                  <th style={{ ...S.th, width: 70 }}></th>
+                  <th style={{ ...S.th, width: 42 }}>Nível</th>
+                  <th style={{ ...S.th, width: 60 }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -352,90 +440,72 @@ function HomeDash({ projeto }) {
         </div>
       </div>
 
-      {/* ─── ZONA INFERIOR: Trilha de Desenvolvimento + Métrica ─── */}
-      <div style={S.zonaInferior}>
-        {/* Trilha de Desenvolvimento */}
-        <div style={{ ...S.card, flex: 3 }}>
-          <div style={S.secTitle}>Trilha de Desenvolvimento</div>
-          {/* Caixas de fases */}
-          <div style={{ display: 'flex', gap: 5, marginBottom: 8 }}>
-            {FASES_NOMES.map((nome, i) => (
-              <div key={i} style={{
-                flex: FASES_PESOS[i], background: FASES_CORES[i], borderRadius: 5,
-                padding: '8px 4px', textAlign: 'center', color: '#fff',
-              }}>
-                <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', opacity: .85, marginBottom: 2 }}>
-                  Fase {i + 1}
-                </div>
-                <div style={{ fontSize: 9, lineHeight: 1.2, marginBottom: 3 }}>{nome}</div>
-                <div style={{
-                  display: 'inline-block', background: 'rgba(255,255,255,0.2)',
-                  borderRadius: 3, padding: '1px 7px', fontSize: 10, fontWeight: 600,
-                }}>
-                  {FASES_PESOS[i]}%
-                </div>
-              </div>
-            ))}
-          </div>
-          {/* Barra de evolução */}
-          <div>
-            <div style={{ fontSize: 9, color: '#888', marginBottom: 3, fontWeight: 500 }}>Apresentação da Evolução</div>
-            <div style={{ display: 'flex', height: 16, borderRadius: 8, overflow: 'hidden' }}>
-              {FASES_PESOS.map((peso, i) => (
-                <div key={i} style={{
-                  flex: peso, background: FASES_CORES[i],
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <span style={{ fontSize: 7, color: '#fff', fontWeight: 600, textTransform: 'uppercase' }}>
-                    Fase {i + 1}
-                  </span>
-                </div>
-              ))}
+      {/* ─── ZONA INFERIOR: Trilha + Régua Maturidade ─── */}
+      <div style={S.card}>
+        <div style={S.secTitle}>Trilha de Desenvolvimento</div>
+        {/* 5 caixas mesmo tamanho */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+          {FASES_NOMES.map((nome, i) => (
+            <div key={i} style={{
+              flex: 1, background: FASES_CORES[i], borderRadius: 4,
+              padding: '6px 4px', textAlign: 'center', color: '#fff',
+            }}>
+              <div style={{ fontSize: 8, fontWeight: 700, opacity: .85 }}>FASE {i + 1}</div>
+              <div style={{ fontSize: 8, margin: '2px 0', lineHeight: 1.2 }}>{nome}</div>
+              <div style={{
+                display: 'inline-block', background: 'rgba(255,255,255,0.2)',
+                borderRadius: 2, padding: '0 6px', fontSize: 9, fontWeight: 600,
+              }}>{FASES_PESOS[i]}%</div>
             </div>
-            <div style={{ display: 'flex', marginTop: 2 }}>
-              {(() => {
-                let acc = 0
-                return FASES_PESOS.map((peso, i) => {
-                  const start = acc
-                  acc += peso
-                  return (
-                    <div key={i} style={{ flex: peso, display: 'flex', justifyContent: 'space-between', padding: '0 1px' }}>
-                      {i === 0 && <span style={{ fontSize: 8, color: '#999' }}>{start}%</span>}
-                      <span style={{ fontSize: 8, color: '#999', marginLeft: 'auto' }}>{acc}%</span>
-                    </div>
-                  )
-                })
-              })()}
-            </div>
-          </div>
+          ))}
         </div>
-
-        {/* Métrica de Maturidade */}
-        <div style={{ ...S.card, flex: 2 }}>
-          <div style={S.secTitle}>Métrica de Maturidade</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {NIVEIS.map(n => (
-              <div key={n.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 13, height: 13, borderRadius: 3, background: n.cor, flexShrink: 0 }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: n.cor, minWidth: 22 }}>{n.id}</span>
-                <span style={{ fontSize: 11, color: '#555', flex: 1 }}>{n.nome}</span>
-                <span style={{ fontSize: 10, color: '#999' }}>{n.faixa}</span>
-              </div>
-            ))}
-          </div>
+        {/* Régua de maturidade N1-N5 */}
+        <div style={{ display: 'flex', height: 18, borderRadius: 9, overflow: 'hidden' }}>
+          {[
+            { flex: 10, cor: '#B71C1C', label: 'N1' },
+            { flex: 15, cor: '#E65100', label: 'N2' },
+            { flex: 25, cor: '#F9A825', label: 'N3' },
+            { flex: 30, cor: '#558B2F', label: 'N4' },
+            { flex: 20, cor: '#1B5E20', label: 'N5' },
+          ].map((n, i) => (
+            <div key={i} style={{
+              flex: n.flex, background: n.cor,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{ fontSize: 8, color: '#fff', fontWeight: 600 }}>{n.label}</span>
+            </div>
+          ))}
+        </div>
+        {/* Labels */}
+        <div style={{ display: 'flex', marginTop: 2 }}>
+          {[
+            { flex: 10, cor: '#B71C1C', nome: 'Não confiável', faixa: '0–10%' },
+            { flex: 15, cor: '#E65100', nome: 'Informal', faixa: '11–25%' },
+            { flex: 25, cor: '#F9A825', nome: 'Padronizado', faixa: '26–50%' },
+            { flex: 30, cor: '#558B2F', nome: 'Monitorado', faixa: '51–80%' },
+            { flex: 20, cor: '#1B5E20', nome: 'Otimizado', faixa: '81–100%' },
+          ].map((n, i) => (
+            <div key={i} style={{ flex: n.flex, textAlign: 'center' }}>
+              <div style={{ fontSize: 8, color: n.cor, fontWeight: 600 }}>{n.nome}</div>
+              <div style={{ fontSize: 7, color: '#999' }}>{n.faixa}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   )
 }
 
-// ── Badge de nível ──
+// ══════════════════════════════════════════════════════════════════════════════
+// COMPONENTES
+// ══════════════════════════════════════════════════════════════════════════════
+
 function NivelBadge({ pct, nivel }) {
   return (
     <div style={{
-      fontSize: 10, fontWeight: 700, color: '#fff',
+      fontSize: 9, fontWeight: 700, color: '#fff',
       background: getCorNivel(pct),
-      padding: '2px 10px', borderRadius: 3, marginTop: 4,
+      padding: '2px 8px', borderRadius: 3, marginTop: 3,
       textTransform: 'uppercase', display: 'inline-block',
     }}>
       {nivel.nivel} — {nivel.nome}
@@ -443,55 +513,96 @@ function NivelBadge({ pct, nivel }) {
   )
 }
 
-// ── Fases boxes compactos ──
 function FasesBoxes({ fases }) {
   return (
-    <div style={{ display: 'flex', gap: 4, flex: 1 }}>
+    <div style={{ display: 'flex', gap: 3, flex: 1 }}>
       {fases.map((v, i) => (
         <div key={i} style={{
-          flex: 1, background: FASES_CORES[i], borderRadius: 5,
-          padding: '6px 3px', textAlign: 'center', color: '#fff',
+          flex: 1, background: FASES_CORES[i], borderRadius: 4,
+          padding: '5px 2px', textAlign: 'center', color: '#fff',
         }}>
-          <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .2, opacity: .85 }}>
-            Fase {i + 1}
-          </div>
-          <div style={{ fontSize: 11, fontWeight: 500, marginTop: 1 }}>
-            {(v * 100).toFixed(2)}%
-          </div>
+          <div style={{ fontSize: 7, fontWeight: 700, opacity: .85 }}>FASE {i + 1}</div>
+          <div style={{ fontSize: 10, fontWeight: 500, marginTop: 1 }}>{(v * 100).toFixed(2)}%</div>
         </div>
       ))}
     </div>
   )
 }
 
-// ── Gauge Bar ──
 function GaugeBar({ pct }) {
   const pos = Math.max(0, Math.min(pct * 100, 100))
   return (
-    <div style={{ position: 'relative', height: 30, marginTop: 4 }}>
+    <div style={{ position: 'relative', height: 24, marginTop: 3 }}>
       <div style={{
         position: 'absolute', left: `${pos}%`, top: 0, transform: 'translateX(-50%)', zIndex: 2,
         transition: 'left .6s cubic-bezier(.4,0,.2,1)',
       }}>
         <div style={{
           width: 0, height: 0,
-          borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-          borderTop: '8px solid #00203E',
+          borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+          borderTop: '7px solid #00203E',
         }} />
       </div>
       <div style={{
-        position: 'absolute', top: 10, left: 0, right: 0, height: 8, borderRadius: 4,
+        position: 'absolute', top: 9, left: 0, right: 0, height: 6, borderRadius: 3,
         overflow: 'hidden',
         background: 'linear-gradient(90deg, #B71C1C 0%, #E65100 20%, #F9A825 40%, #558B2F 65%, #1B5E20 100%)',
       }} />
       <div style={{
-        position: 'absolute', top: 21, left: 0, right: 0,
+        position: 'absolute', top: 17, left: 0, right: 0,
         display: 'flex', justifyContent: 'space-between', padding: '0 2%',
       }}>
         {['N1', 'N2', 'N3', 'N4', 'N5'].map(n => (
-          <span key={n} style={{ fontSize: 8, fontWeight: 600, color: '#999' }}>{n}</span>
+          <span key={n} style={{ fontSize: 7, fontWeight: 600, color: '#999' }}>{n}</span>
         ))}
       </div>
+    </div>
+  )
+}
+
+// ── Tabela de KPIs por fase ──
+function KpisTable({ kpis }) {
+  const rows = [
+    { label: 'Controles', data: kpis.controles, cor: '#00203E' },
+    { label: 'Efetivos', data: kpis.efetivos, cor: '#1B5E20' },
+    { label: 'Inefetivos', data: kpis.inefetivos, cor: '#B71C1C' },
+    { label: 'GAP', data: kpis.gap, cor: '#E65100' },
+    { label: 'Planos de Ação', data: kpis.planos, cor: '#1D3B5C' },
+  ]
+
+  return (
+    <div style={{ marginTop: 'auto', paddingTop: 4 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9, textAlign: 'center' }}>
+        <thead>
+          <tr>
+            <th style={{ textAlign: 'left', padding: '2px 4px', fontSize: 8, color: '#888', fontWeight: 600 }}></th>
+            {FASES_CORES.map((cor, i) => (
+              <th key={i} style={{
+                padding: '2px 3px', fontSize: 7, fontWeight: 700,
+                color: '#fff', background: cor, borderRadius: 2,
+              }}>F{i + 1}</th>
+            ))}
+            <th style={{ padding: '2px 4px', fontSize: 8, fontWeight: 700, color: '#00203E', borderBottom: '1px solid #eee' }}>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri} style={ri % 2 === 1 ? { background: '#f9f9f7' } : {}}>
+              <td style={{ textAlign: 'left', padding: '2px 4px', color: row.cor, fontWeight: 600 }}>{row.label}</td>
+              {row.data.slice(0, 5).map((v, ci) => (
+                <td key={ci} style={{
+                  padding: '2px',
+                  fontWeight: v > 0 ? 600 : 400,
+                  color: v > 0 ? row.cor : '#ccc',
+                }}>
+                  {row.label === 'Planos de Ação' && ci === 0 ? '—' : v}
+                </td>
+              ))}
+              <td style={{ padding: '2px', fontWeight: 700, color: row.cor }}>{row.data[5]}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
@@ -504,19 +615,19 @@ const S = {
   page: {
     background: '#F3EEE4',
     height: '100vh',
-    padding: '10px 14px',
+    padding: '8px 12px',
     fontFamily: "'Montserrat', sans-serif",
     color: '#333',
     fontSize: 12,
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
+    gap: 6,
     overflow: 'hidden',
   },
   header: {
     background: '#00203E',
     borderRadius: 6,
-    padding: '10px 20px',
+    padding: '8px 18px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -530,7 +641,7 @@ const S = {
   },
   zonaPrincipal: {
     display: 'flex',
-    gap: 10,
+    gap: 8,
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
@@ -538,46 +649,41 @@ const S = {
   colVisoes: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
-    flex: 3,
+    gap: 6,
+    flex: 5,
     minHeight: 0,
   },
   card: {
     background: '#fff',
     borderRadius: 6,
-    padding: '10px 14px',
+    padding: '8px 12px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
   },
   blocoLabel: {
-    fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-    color: '#00203E', letterSpacing: .8, marginBottom: 6,
+    fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
+    color: '#00203E', letterSpacing: .7, marginBottom: 4,
   },
   visaoRow: {
-    display: 'flex', alignItems: 'center', gap: 14,
+    display: 'flex', alignItems: 'center', gap: 12,
   },
   indiceWrap: {
-    minWidth: 120, flexShrink: 0,
+    minWidth: 110, flexShrink: 0,
   },
   areaSelect: {
-    fontSize: 14, fontWeight: 700, color: '#00203E', background: 'transparent',
+    fontSize: 13, fontWeight: 700, color: '#00203E', background: 'transparent',
     border: 'none', borderBottom: '2px solid #CC915E', outline: 'none', cursor: 'pointer',
     fontFamily: "'Montserrat', sans-serif", padding: '2px 4px',
   },
   secTitle: {
-    fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-    color: '#00203E', letterSpacing: .6, marginBottom: 8, textAlign: 'center',
+    fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+    color: '#00203E', letterSpacing: .6, marginBottom: 6, textAlign: 'center',
   },
   th: {
     fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-    color: '#fff', background: '#00203E', padding: '5px 6px',
+    color: '#fff', background: '#00203E', padding: '5px 4px',
     textAlign: 'center', position: 'sticky', top: 0, zIndex: 2,
   },
   tdCenter: {
     padding: '4px 4px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#00203E',
-  },
-  zonaInferior: {
-    display: 'flex',
-    gap: 10,
-    flexShrink: 0,
   },
 }
