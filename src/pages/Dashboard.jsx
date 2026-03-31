@@ -354,8 +354,9 @@ function HomeDash({ projeto }) {
         <div style={S.colVisoes}>
 
           {/* Visão Consolidada Empresa */}
-          <div style={{ ...S.card, flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <div style={S.blocoLabel}>Visão Consolidada Empresa</div>
+          <div style={{ ...S.card, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+            <div style={{ ...S.blocoLabel, flexShrink: 0 }}>Visão Consolidada Empresa</div>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             <div style={S.visaoRow}>
               <div style={S.indiceWrap}>
                 <div style={{ fontSize: 26, fontWeight: 300, color: '#00203E', lineHeight: 1 }}>
@@ -367,16 +368,18 @@ function HomeDash({ projeto }) {
             </div>
             <GaugeBar pct={empresa.indice} />
             <KpisTable kpis={kpisEmpresa} />
+            </div>
           </div>
 
           {/* Visão Área */}
-          <div style={{ ...S.card, flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <div style={{ ...S.card, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexShrink: 0 }}>
               <div style={S.blocoLabel}>Visão</div>
               <select value={areaSel} onChange={e => setAreaSel(e.target.value)} style={S.areaSelect}>
                 {areasCalc.map(a => <option key={a.id} value={a.nome}>{a.nome}</option>)}
               </select>
             </div>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             <div style={S.visaoRow}>
               <div style={S.indiceWrap}>
                 <div style={{ fontSize: 24, fontWeight: 300, color: '#00203E', lineHeight: 1 }}>
@@ -388,6 +391,7 @@ function HomeDash({ projeto }) {
             </div>
             <GaugeBar pct={areaAtiva?.calc?.percentual || 0} />
             <KpisTable kpis={kpisArea} />
+            </div>
           </div>
         </div>
 
@@ -644,14 +648,14 @@ const S = {
     gap: 8,
     flex: 1,
     minHeight: 0,
-    overflow: 'hidden',
   },
   colVisoes: {
     display: 'flex',
     flexDirection: 'column',
     gap: 6,
-    flex: 5,
+    flex: 3,
     minHeight: 0,
+    overflow: 'hidden',
   },
   card: {
     background: '#fff',
