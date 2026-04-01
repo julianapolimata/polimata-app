@@ -62,8 +62,8 @@ function calcKpisPorFase(controles) {
 function getUltimaAtualizacao(controles) {
   let max = null
   controles.forEach(c => {
-    const d = c.data_atualizacao || c.updated_at || c.created_at
-    if (d) { const dt = new Date(d); if (!max || dt > max) max = dt }
+    const d = c.dt_ult || c.atualizado_em || c.criado_em
+    if (d) { const dt = new Date(d); if (!isNaN(dt) && (!max || dt > max)) max = dt }
   })
   return max ? max.toLocaleDateString('pt-BR') : '—'
 }
@@ -127,7 +127,7 @@ export default function Dashboard() {
           </div>
         )}
         <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 0', display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {sidebarOpen && <div className="sb-sep">Visão Geral</div>}
+          {sidebarOpen && <div className="sb-sep">Dashboards</div>}
           <SideNavItem icon="📊" label="Dashboard Maturidade" active={location.pathname === '/'} onClick={() => navigate('/')} open={sidebarOpen} />
           <SideNavItem icon="📋" label="Visão Geral" active={location.pathname === '/visao-geral'} onClick={() => navigate('/visao-geral')} open={sidebarOpen} />
           {sidebarOpen && (
@@ -381,10 +381,35 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
 // ══════════════════════════════════════════════════════════════════════════════
 
 function VisaoGeral({ projeto, areasCalc, loading, ultimaAtualizacao, navigate }) {
-  const ranking = useMemo(() => [...areasCalc].filter(a => a.controles.length > 0).sort((a, b) => (b.calc?.percentual||0) - (a.calc?.percentual||0)), [areasCalc])
-  const somaPesos = areasCalc.reduce((s, a) => s + (a.peso||0), 0)
   if (loading) return <Spinner />
   if (!projeto) return <NoProjeto />
+
+  // Compute totals per area with criticidade breakdown
+  const areaStats = useMemo(() => {
+    return areasCalc.filter(a => a.controles.length > 0).map(a => {
+      const ef = [0,0,0,0], inf = [0,0,0,0], gap = [0,0,0,0]
+      a.controles.forEach(c => {
+        const ci = Math.max(0, Math.min(3, 4 - (c.crit || 1))) // crit 4→idx0, 3→1, 2→2, 1→3
+        if (isEfetivo(c.r1)) ef[ci]++
+        else if (isInefetivo(c.r1)) inf[ci]++
+        else if (isGap(c.r1)) gap[ci]++
+      })
+      return { ...a, ef, inf, gap }
+    })
+  }, [areasCalc])
+
+  // Grand totals
+  const totals = useMemo(() => {
+    const t = { total: 0, ef: [0,0,0,0], inf: [0,0,0,0], gap: [0,0,0,0] }
+    areaStats.forEach(a => {
+      t.total += a.controles.length
+      for (let i = 0; i < 4; i++) { t.ef[i] += a.ef[i]; t.inf[i] += a.inf[i]; t.gap[i] += a.gap[i] }
+    })
+    return t
+  }, [areaStats])
+
+  const sumArr = arr => arr.reduce((s, v) => s + v, 0)
+  const critColors = ['#B71C1C', '#E65100', '#F9A825', '#1B5E20'] // Crítico, Significativo, Moderado, Baixo
 
   return (
     <div style={S.page}>
@@ -392,33 +417,96 @@ function VisaoGeral({ projeto, areasCalc, loading, ultimaAtualizacao, navigate }
         <span style={S.headerText}>Cliente: <strong>{projeto.clientes?.nome || 'Cliente'}</strong> · Visão Geral</span>
         <span style={{ fontSize: 10, color: 'rgba(243,238,228,0.55)', fontWeight: 300 }}>Última atualização: {ultimaAtualizacao}</span>
       </div>
-      <ReguaN1N5 />
+
+      {/* 4 Totals cards */}
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div style={{ ...vgCard, borderTopColor: '#00203E' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#00203E' }}>Total</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: '#00203E', lineHeight: 1, marginTop: 4 }}>{totals.total}</div>
+        </div>
+        {[
+          { label: 'Efetivo', data: totals.ef, sum: sumArr(totals.ef), cor: '#1B5E20' },
+          { label: 'Inefetivo', data: totals.inf, sum: sumArr(totals.inf), cor: '#B71C1C' },
+          { label: 'GAP', data: totals.gap, sum: sumArr(totals.gap), cor: '#E65100' },
+        ].map((g, gi) => (
+          <div key={gi} style={{ ...vgCard, borderTopColor: g.cor }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: g.cor }}>{g.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: g.cor }}>{g.sum}</div>
+            </div>
+            <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+              {g.data.map((v, ci) => (
+                <div key={ci} style={{ flex: 1, textAlign: 'center', background: `${critColors[ci]}15`, borderRadius: 3, padding: '3px 2px' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: critColors[ci] }}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
+              {['Crít', 'Sign', 'Mod', 'Baixo'].map((l, ci) => (
+                <div key={ci} style={{ flex: 1, textAlign: 'center', fontSize: 7, color: '#999' }}>{l}</div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Table by area */}
       <div style={{ flex: 1, minHeight: 0, background: '#fff', borderRadius: 6, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#00203E', letterSpacing: .8, padding: '10px 14px', borderBottom: '1px solid #eee', flexShrink: 0 }}>Índice por Área</div>
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#00203E', letterSpacing: .8, padding: '10px 14px', borderBottom: '1px solid #eee', flexShrink: 0 }}>Resumo por Área</div>
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['#','Área','Peso','Controles','% Maturidade','Nível','Barra'].map((h,i) =>
-              <th key={i} style={{ ...S.th, textAlign: i===1?'left':'center', padding: '8px 10px', fontSize: 9, letterSpacing: .5 }}>{h}</th>)}</tr></thead>
-            <tbody>{ranking.map((a, i) => {
-              const p = a.calc?.percentual||0, nv = getNivelMaturidade(p)
-              const peso = somaPesos > 0 ? ((a.peso||0)/somaPesos*100).toFixed(1)+'%' : '—'
-              return (
-                <tr key={a.id} style={{ cursor: 'pointer' }} onClick={() => navigate('/area/'+a.id)}
-                  onMouseEnter={e => e.currentTarget.style.background='rgba(204,145,94,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}>
-                  <td style={{ padding: '10px', textAlign: 'center', fontWeight: 700, color: '#00203E', borderBottom: '1px solid #eee' }}>{i+1}</td>
-                  <td style={{ padding: '10px', textAlign: 'left', fontWeight: 600, color: '#00203E', borderBottom: '1px solid #eee' }}>{a.nome}</td>
-                  <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #eee', color: '#666' }}>{peso}</td>
-                  <td style={{ padding: '10px', textAlign: 'center', fontWeight: 600, borderBottom: '1px solid #eee' }}>{a.controles.length}</td>
-                  <td style={{ padding: '10px', textAlign: 'center', fontSize: 18, fontWeight: 300, color: getCorNivel(p), borderBottom: '1px solid #eee' }}>{(p*100).toFixed(1)}%</td>
-                  <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #eee' }}><span style={{ fontSize: 10, fontWeight: 700, color: '#fff', background: getCorNivel(p), padding: '3px 8px', borderRadius: 3 }}>{nv.nivel}</span></td>
-                  <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}><div style={{ width: '100%', maxWidth: 120, margin: '0 auto' }}><div style={{ height: 6, background: '#eee', borderRadius: 3, overflow: 'hidden' }}><div style={{ height: '100%', width: `${Math.min(p*100,100)}%`, borderRadius: 3, background: getCorNivel(p) }} /></div></div></td>
-                </tr>)})}</tbody>
+            <thead>
+              <tr>
+                <th style={{ ...S.th, textAlign: 'left', padding: '6px 10px', width: 180 }} rowSpan={2}>Área</th>
+                <th style={{ ...S.th, padding: '6px 6px', width: 70 }} rowSpan={2}>Última Revisão</th>
+                <th style={{ ...S.th, padding: '6px 6px', width: 50 }} rowSpan={2}>Total</th>
+                <th style={{ ...S.th, padding: '4px 4px', background: '#1B5E20', borderRight: '2px solid #F3EEE4' }} colSpan={4}>Efetivo</th>
+                <th style={{ ...S.th, padding: '4px 4px', background: '#B71C1C', borderRight: '2px solid #F3EEE4' }} colSpan={4}>Inefetivo</th>
+                <th style={{ ...S.th, padding: '4px 4px', background: '#E65100' }} colSpan={4}>GAP</th>
+              </tr>
+              <tr>
+                {[0,1,2].map(g => (
+                  [
+                    <th key={`${g}c`} style={{ ...vgSubTh, background: critColors[0]+'20', color: critColors[0] }}>●</th>,
+                    <th key={`${g}s`} style={{ ...vgSubTh, background: critColors[1]+'20', color: critColors[1] }}>●</th>,
+                    <th key={`${g}m`} style={{ ...vgSubTh, background: critColors[2]+'20', color: critColors[2] }}>●</th>,
+                    <th key={`${g}b`} style={{ ...vgSubTh, background: critColors[3]+'20', color: critColors[3], borderRight: g < 2 ? '2px solid #F3EEE4' : 'none' }}>●</th>,
+                  ]
+                )).flat()}
+              </tr>
+            </thead>
+            <tbody>
+              {areaStats.map(a => (
+                <tr key={a.id} style={{ cursor: 'pointer' }} onClick={() => navigate('/area/' + a.id)}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(204,145,94,0.06)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                  <td style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 500, color: '#00203E', borderBottom: '1px solid #eee', fontSize: 11 }}>{a.nome}</td>
+                  <td style={{ padding: '6px 6px', textAlign: 'center', borderBottom: '1px solid #eee', fontSize: 10, color: '#999' }}>—</td>
+                  <td style={{ padding: '6px 6px', textAlign: 'center', borderBottom: '1px solid #eee', fontSize: 12, fontWeight: 700, color: '#00203E' }}>{a.controles.length}</td>
+                  {a.ef.map((v, ci) => <td key={'e' + ci} style={{ ...vgTd, color: v > 0 ? '#1B5E20' : '#ddd' }}>{v}</td>)}
+                  {a.inf.map((v, ci) => <td key={'i' + ci} style={{ ...vgTd, color: v > 0 ? '#B71C1C' : '#ddd' }}>{v}</td>)}
+                  {a.gap.map((v, ci) => <td key={'g' + ci} style={{ ...vgTd, color: v > 0 ? '#E65100' : '#ddd' }}>{v}</td>)}
+                </tr>
+              ))}
+              {/* Total row */}
+              <tr style={{ background: 'rgba(0,32,62,0.04)' }}>
+                <td style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700, color: '#00203E', borderTop: '2px solid #00203E', fontSize: 11 }}>TOTAL</td>
+                <td style={{ padding: '8px 6px', borderTop: '2px solid #00203E' }}></td>
+                <td style={{ padding: '8px 6px', textAlign: 'center', fontWeight: 700, color: '#00203E', borderTop: '2px solid #00203E', fontSize: 12 }}>{totals.total}</td>
+                {totals.ef.map((v, ci) => <td key={'te' + ci} style={{ ...vgTd, fontWeight: 700, color: '#1B5E20', borderTop: '2px solid #00203E' }}>{v}</td>)}
+                {totals.inf.map((v, ci) => <td key={'ti' + ci} style={{ ...vgTd, fontWeight: 700, color: '#B71C1C', borderTop: '2px solid #00203E' }}>{v}</td>)}
+                {totals.gap.map((v, ci) => <td key={'tg' + ci} style={{ ...vgTd, fontWeight: 700, color: '#E65100', borderTop: '2px solid #00203E' }}>{v}</td>)}
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
     </div>
   )
 }
+
+const vgCard = { flex: 1, background: '#fff', borderRadius: 8, padding: '10px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderTop: '3px solid' }
+const vgSubTh = { padding: '3px 4px', fontSize: 8, fontWeight: 700, textAlign: 'center', position: 'sticky', top: 28, zIndex: 2 }
+const vgTd = { padding: '6px 4px', textAlign: 'center', borderBottom: '1px solid #eee', fontSize: 11, fontWeight: 600 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TELA 3 — POR ÁREA
@@ -440,18 +528,23 @@ function PorArea({ projeto, areasCalc, loading, navigate }) {
   const somaPesos = areasCalc.reduce((s, a) => s + (a.peso||0), 0)
   const pesoEmpresa = somaPesos > 0 ? ((area.peso||0)/somaPesos*100).toFixed(1) : '0'
   const p = area.calc?.percentual||0, nv = getNivelMaturidade(p)
-  let efetivos=0, inefetivos=0, gaps=0, gapsCriticos=0
-  area.controles.forEach(c => { if (isEfetivo(c.r1)) efetivos++; else if (isInefetivo(c.r1)) inefetivos++; else if (isGap(c.r1)) { gaps++; const cr = String(c.crit||'').toLowerCase(); if (cr.includes('crít')||cr.includes('crit')) gapsCriticos++ } })
+  let efetivos=0, inefetivos=0, gaps=0, planosAcao=0
+  area.controles.forEach(c => {
+    if (isEfetivo(c.r1)) efetivos++
+    else if (isInefetivo(c.r1)) inefetivos++
+    else if (isGap(c.r1)) gaps++
+    if (precisaPlanoAcao(c) && !planoAcaoConcluido(c)) planosAcao++
+  })
 
   const cf = area.controles.filter(c => {
-    if (busca) { const b = busca.toLowerCase(); if (![c.ref_risco,c.ref_controle,c.desc_risco,c.desc_controle,c.desc_inconsistencia,c.recomendacao].some(f => (f||'').toLowerCase().includes(b))) return false }
-    if (filtCrit && String(c.crit||'') !== filtCrit) return false
+    if (busca) { const b = busca.toLowerCase(); if (![c.rr,c.rc,c.dr,c.dc,c.incons,c.rec].some(f => (f||'').toLowerCase().includes(b))) return false }
+    if (filtCrit && String(c.crit_label||c.crit||'') !== filtCrit) return false
     if (filtImp && String(c.imp||'') !== filtImp) return false
     if (filtRes && String(c.r1||'') !== filtRes) return false
     return true
   })
 
-  const crits = [...new Set(area.controles.map(c => String(c.crit||'')).filter(v => v))].sort()
+  const crits = [...new Set(area.controles.map(c => String(c.crit_label||'')).filter(v => v))].sort()
   const imps = [...new Set(area.controles.map(c => String(c.imp||'')).filter(v => v))].sort()
   const ress = [...new Set(area.controles.map(c => String(c.r1||'')).filter(v => v))].sort()
 
@@ -471,22 +564,31 @@ function PorArea({ projeto, areasCalc, loading, navigate }) {
     return <span style={{ ...bS, background: 'rgba(0,0,0,0.04)', color: '#999' }}>{r}</span>
   }
 
+  const IMP_COLORS = { Crítico: { bg: 'rgba(240,86,86,0.12)', c: '#F05656' }, Alto: { bg: 'rgba(249,115,22,0.12)', c: '#F97316' }, Moderado: { bg: 'rgba(212,160,48,0.12)', c: '#D4A030' }, Baixo: { bg: 'rgba(34,212,160,0.12)', c: '#22D4A0' } }
+  const PROB_COLORS = { Extrema: { bg: 'rgba(240,86,86,0.12)', c: '#F05656' }, Alta: { bg: 'rgba(249,115,22,0.12)', c: '#F97316' }, Média: { bg: 'rgba(212,160,48,0.12)', c: '#D4A030' }, Baixa: { bg: 'rgba(34,212,160,0.12)', c: '#22D4A0' } }
+  const CRIT_COLORS = { 4: { bg: 'rgba(240,86,86,0.12)', c: '#EF4444', l: '4. Crítico' }, 3: { bg: 'rgba(249,115,22,0.12)', c: '#F97316', l: '3. Significativo' }, 2: { bg: 'rgba(212,160,48,0.12)', c: '#D4A030', l: '2. Moderado' }, 1: { bg: 'rgba(34,212,160,0.12)', c: '#22D4A0', l: '1. Baixo' } }
+
+  function badgeImp(v) { const m = IMP_COLORS[v]; return m ? <span style={{ ...bS, background: m.bg, color: m.c }}>{v}</span> : <span style={{ ...bS, background: 'rgba(0,0,0,0.04)', color: '#999' }}>{v||'—'}</span> }
+  function badgeProb(v) { const m = PROB_COLORS[v]; return m ? <span style={{ ...bS, background: m.bg, color: m.c }}>{v}</span> : <span style={{ ...bS, background: 'rgba(0,0,0,0.04)', color: '#999' }}>{v||'—'}</span> }
+  function badgeCrit(v) { const m = CRIT_COLORS[v]; return m ? <span style={{ ...bS, background: m.bg, color: m.c }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block', marginRight: 4 }} />{m.l}</span> : <span style={{ ...bS, background: 'rgba(0,0,0,0.04)', color: '#999' }}>{v||'—'}</span> }
+
   return (
     <div style={{ ...S.page, gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
         <button onClick={() => navigate('/visao-geral')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(0,32,62,0.08)', border: '1px solid rgba(0,32,62,0.15)', borderRadius: 4, padding: '4px 10px', fontSize: 10, fontWeight: 600, color: '#00203E', cursor: 'pointer', fontFamily: 'inherit' }}>← VOLTAR</button>
         <div><div style={{ fontSize: 18, fontWeight: 600, color: '#00203E' }}>{nome}</div><div style={{ fontSize: 10, color: '#999', marginTop: 1 }}>{area.controles.length} controles · Peso empresa: {pesoEmpresa}%</div></div>
       </div>
+
+      {/* 5 KPI cards */}
       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-        {[{ n: `${(p*100).toFixed(1)}%`, l: 'Maturidade', c: '#00203E', x: <NivelBadge pct={p} nivel={nv} /> },
-          { n: efetivos, l: 'Efetivos', c: '#1B5E20' }, { n: inefetivos, l: 'Inefetivos', c: '#B71C1C' },
-          { n: `${gaps} · ${gapsCriticos}`, l: 'GAPs · Críticos', c: '#E65100' }].map((k, i) => (
-          <div key={i} style={{ flex: 1, background: '#fff', borderRadius: 8, padding: '12px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderTop: `3px solid ${k.c}` }}>
-            <div style={{ fontSize: 24, fontWeight: 300, color: k.c, lineHeight: 1 }}>{k.n}</div>
-            <div style={{ fontSize: 9, fontWeight: 600, textTransform: 'uppercase', letterSpacing: .5, color: k.c, marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>{k.l} {k.x}</div>
-          </div>))}
+        <div style={{ ...kpiS, borderTopColor: '#00203E' }}><div style={{ fontSize: 24, fontWeight: 300, color: '#00203E', lineHeight: 1 }}>{(p*100).toFixed(1)}%</div><div style={{ ...kpiLbl, color: '#00203E' }}>Maturidade <NivelBadge pct={p} nivel={nv} /></div></div>
+        <div style={{ ...kpiS, borderTopColor: '#1B5E20' }}><div style={{ fontSize: 24, fontWeight: 300, color: '#1B5E20', lineHeight: 1 }}>{efetivos}</div><div style={{ ...kpiLbl, color: '#1B5E20' }}>Efetivos</div></div>
+        <div style={{ ...kpiS, borderTopColor: '#B71C1C' }}><div style={{ fontSize: 24, fontWeight: 300, color: '#B71C1C', lineHeight: 1 }}>{inefetivos}</div><div style={{ ...kpiLbl, color: '#B71C1C' }}>Inefetivos</div></div>
+        <div style={{ ...kpiS, borderTopColor: '#E65100' }}><div style={{ fontSize: 24, fontWeight: 300, color: '#E65100', lineHeight: 1 }}>{gaps}</div><div style={{ ...kpiLbl, color: '#E65100' }}>GAPs</div></div>
+        <div style={{ ...kpiS, borderTopColor: '#CC915E' }}><div style={{ fontSize: 24, fontWeight: 300, color: '#CC915E', lineHeight: 1 }}>{planosAcao}</div><div style={{ ...kpiLbl, color: '#CC915E' }}>Planos de Ação</div></div>
       </div>
-      <ReguaN1N5 nivelAtivo={nv.nivel} />
+
+      {/* Filters */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
         <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar risco, controle, inconsistência..." style={{ flex: 1, minWidth: 200, background: '#fff', border: '1px solid #ddd', borderRadius: 4, padding: '6px 10px', fontFamily: 'inherit', fontSize: 11, outline: 'none', color: '#333' }} />
         <select value={filtCrit} onChange={e => setFiltCrit(e.target.value)} style={fS}><option value="">Todas criticidades</option>{crits.map(c => <option key={c} value={c}>{c}</option>)}</select>
@@ -494,6 +596,8 @@ function PorArea({ projeto, areasCalc, loading, navigate }) {
         <select value={filtRes} onChange={e => setFiltRes(e.target.value)} style={fS}><option value="">Todos resultados F1</option>{ress.map(c => <option key={c} value={c}>{c}</option>)}</select>
         <div style={{ fontSize: 10, color: '#999', background: '#fff', border: '1px solid #ddd', borderRadius: 4, padding: '5px 10px' }}>{cf.length} controles</div>
       </div>
+
+      {/* MRC Table */}
       <div style={{ flex: 1, minHeight: 0, background: '#fff', borderRadius: 6, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
@@ -504,13 +608,13 @@ function PorArea({ projeto, areasCalc, loading, navigate }) {
             </tr></thead>
             <tbody>{cf.map((c, i) => { const fl = faseLabel(c); return (
               <tr key={c.id||i} onMouseEnter={e => e.currentTarget.style.background='rgba(204,145,94,0.04)'} onMouseLeave={e => e.currentTarget.style.background=''}>
-                <Td>{c.data_atualizacao ? new Date(c.data_atualizacao).toLocaleDateString('pt-BR') : '—'}</Td>
-                <Td>{c.gerencia}</Td><Td>{c.resp_subprocesso}</Td><Td>{c.processo}</Td><Td>{c.subprocesso}</Td>
-                <td style={{ ...tS, color: '#CC915E', fontWeight: 600 }}>{c.ref_risco}</td><Td w={200}>{c.desc_risco}</Td>
-                <td style={{ ...tS, color: '#CC915E', fontWeight: 600 }}>{c.ref_controle}</td><Td w={200}>{c.desc_controle}</Td>
-                <Td>{c.cat_controle}</Td><Td>{c.frequencia}</Td><Td>{c.natureza}</Td><Td>{c.caracteristica}</Td><Td>{c.sistema}</Td><Td>{c.ctrl_chave}</Td>
-                <Td w={180}>{c.passos_teste}</Td><td style={tS}>{badgeR(c.r1)}</td><Td w={180}>{c.desc_inconsistencia}</Td><Td w={180}>{c.recomendacao}</Td>
-                <Td>{c.imp}</Td><Td>{c.prob}</Td><Td>{c.crit}</Td>
+                <Td>{c.dt_ult || '—'}</Td>
+                <Td>{c.ger}</Td><Td>{c.resp_sub}</Td><Td>{c.area}</Td><Td>{c.sub}</Td>
+                <td style={{ ...tS, color: '#CC915E', fontWeight: 600 }}>{c.rr}</td><Td w={200}>{c.dr}</Td>
+                <td style={{ ...tS, color: '#CC915E', fontWeight: 600 }}>{c.rc}</td><Td w={200}>{c.dc}</Td>
+                <Td>{c.cat}</Td><Td>{c.freq}</Td><Td>{c.nat}</Td><Td>{c.car}</Td><Td>{c.sis}</Td><Td>{c.chave}</Td>
+                <Td w={180}>{c.passos_f1}</Td><td style={tS}>{badgeR(c.r1)}</td><Td w={180}>{c.incons}</Td><Td w={180}>{c.rec}</Td>
+                <td style={tS}>{badgeImp(c.imp)}</td><td style={tS}>{badgeProb(c.prob)}</td><td style={tS}>{badgeCrit(c.crit)}</td>
                 <td style={tS}><div style={{ fontSize: 10, fontWeight: 500, color: '#00203E', borderLeft: '3px solid #CC915E', paddingLeft: 6, lineHeight: 1.3 }}>{fl.f}</div><div style={{ fontSize: 9, color: '#999', paddingLeft: 9 }}>{fl.s}</div></td>
                 <td style={{ ...tS, textAlign: 'center' }}><button style={{ background: 'rgba(0,32,62,0.08)', border: '1px solid rgba(0,32,62,0.15)', borderRadius: 3, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: '#00203E', cursor: 'pointer', fontFamily: 'inherit' }}>Ver</button></td>
               </tr>)})}{cf.length === 0 && <tr><td colSpan={24} style={{ padding: 32, textAlign: 'center', color: '#999' }}>Nenhum controle encontrado.</td></tr>}</tbody>
@@ -520,6 +624,9 @@ function PorArea({ projeto, areasCalc, loading, navigate }) {
     </div>
   )
 }
+
+const kpiS = { flex: 1, background: '#fff', borderRadius: 8, padding: '12px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderTop: '3px solid' }
+const kpiLbl = { fontSize: 9, fontWeight: 600, textTransform: 'uppercase', letterSpacing: .5, marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }
 
 function Td({ children, w = 150 }) { return <td style={{ ...tS, maxWidth: w, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{children || '—'}</td> }
 
