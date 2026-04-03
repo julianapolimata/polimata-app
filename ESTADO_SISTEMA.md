@@ -1,5 +1,5 @@
 # ESTADO DO SISTEMA — CI Polímata
-> Atualizado em: 03/04/2026 (fim da sessão — ficha confirmada)
+> Atualizado em: 03/04/2026 (sessão 3 — Por Área redesign v2 + ajustes gerais)
 > Cole no início de cada novo chat para retomar sem perda de contexto.
 
 ---
@@ -28,26 +28,68 @@
 - **Brandbook:** Apresentacao.pdf (referência oficial)
 - **NUNCA usar itálico** em documentos gerados pelo sistema
 
+### Cores régua maturidade (VIVAS):
+- N1=#DC2626 (0–10%), N2=#EA580C (11–25%), N3=#EAB308 (26–50%), N4=#16A34A (51–80%), N5=#15803D (81–100%)
+
+### Cores semânticas resultado (definição aprovada 03/04):
+- **Efetivo = verde vivo (#22C55E)**
+- **Inefetivo = amarelo (#FACC15)**
+- **GAP = vermelho (#EF4444)**
+
+### Cores criticidade:
+- Crítico=#EF4444, Significativo=#F97316, Moderado=#EAB308, Baixo=#22C55E
+
+### Barras de maturidade:
+- Degradê contínuo seguindo a régua: #DC2626 → #EF4444 → #EA580C → #F97316 → #EAB308 → #84CC16 → #22C55E → #15803D
+- Função `getBarGradient(pct100)` no Dashboard.jsx
+
 ---
 
 ## Telas Implementadas
 
 ### Sidebar
-- Dashboards: Dashboard Maturidade | Visão Geral
+- Dashboards: Dashboard (renomeado de "Dashboard Maturidade")
+- ~~Visão Geral~~ — **REMOVIDA** (sessão 3)
 - Por Área: 14 áreas colapsáveis (navega por UUID)
 - Operação: MRC Completa (badge total)
 - Administração: Configurações (admin only)
 
-### 1. Dashboard Maturidade (rota `/`) — TEMA ESCURO
-- Fundo navy com cards escuros
-- Gauge + Visão Empresa + Visão Área + KPIs + Ranking
+### 1. Dashboard (rota `/`) — TEMA ESCURO ✅ REDESIGN v7+
+- Fundo navy (#00112C)
+- **HEADER:** Cliente + título + subtítulo + **última atualização global** (canto superior direito)
+- **6 KPI Cards:**
+  - Índice de Maturidade Consolidado · [Cliente] (dourado #CC915E, badge nível)
+  - Total de Controles (creme, subtítulo áreas)
+  - Efetivos (verde vivo #22C55E, % do total)
+  - Inefetivos (amarelo #FACC15)
+  - GAP (vermelho #EF4444, número único sem segregar)
+  - Planos de Ação (gradiente dourado via div absoluto, sem borderImage — preserva borderRadius)
+- **Maturidade por Área (full width):**
+  - Ranking do maior ao menor %
+  - Barras com degradê contínuo
+  - Badge nível com cores vivas
+  - **Clique navega para `/area/:areaId`** (não filtra mais o heatmap)
+- **Zona inferior lado a lado:**
+  - **Esquerda (~40%): Heatmap Impacto × Probabilidade 4×4**
+    - Filtrável por área (clique na tabela de criticidade)
+  - **Direita (~60%): Tabela Área × Criticidade**
+    - Clique filtra o heatmap + botão "Limpar filtro"
+    - Linha TOTAL no footer
 
-### 2. Visão Geral (rota `/visao-geral`)
-- 4 cards: Total | Efetivo | Inefetivo | GAP (breakdown 4 criticidades)
-- Tabela Resumo por Área + linha TOTAL
-
-### 3. Por Área (rota `/area/:areaId`)
-- 5 KPIs + Filtros + tabela MRC 23 colunas
+### 2. Por Área (rota `/area/:areaId`) — ✅ REDESIGN v2 TEMA ESCURO (sessão 3)
+- Fundo navy (#00112C) — mesmo tema do Dashboard
+- **HEADER:** Botão "← VOLTAR" → `/` (Dashboard) + nome da área + **última atualização da área** (canto superior direito)
+- **ZONA SUPERIOR — lado a lado:**
+  - **Esquerda: Heatmap 4×4 compacto** (Impacto × Probabilidade, filtrado para a área)
+  - **Direita: Grid 3×2 de KPI cards** (Maturidade, Total, Efetivos, Inefetivos, GAP, Planos de Ação)
+  - Fontes harmonizadas: label 9px, valor 28px, sub 10px
+- **Header fixo:** zona superior + filtros congelados, só tabela MRC rola
+- **Filtros:** busca + criticidade + impacto + resultado F1 (tema escuro)
+- **Tabela MRC 23 colunas:**
+  - Colunas com larguras fixas uniformes (width + minWidth) — consistente entre todas as áreas
+  - Headers com alinhamento `textAlign: 'left'` consistente
+  - Scroll horizontal visível (`overflowX: 'scroll'`)
+  - Badges tema escuro (Efetivo verde, Inefetivo amarelo, GAP vermelho)
 - Botão "Ver" → ModalDetalhe
 - Botão "Atualizar" (dourado, só admin/consultor) → ModalAtualizar ✅
 - Badges "EM ANÁLISE" e "TESTE PENDENTE" ✅
@@ -76,6 +118,11 @@ CHECK (status_workflow = ANY (ARRAY['rascunho','em_revisao','aprovado','reprovad
 
 ### Query loadDados:
 - Filtra `.neq('ativo', false)`
+
+### Campos usados no Heatmap:
+- `imp` (Impacto): Crítico / Alto / Moderado / Baixo → impToIdx()
+- `prob` (Probabilidade): Extrema / Alta / Média / Baixa → probToIdx()
+- `crit` (Criticidade): INTEGER 1-4 (1=Baixo, 2=Moderado, 3=Significativo, 4=Crítico) → critToIdx()
 
 ---
 
@@ -112,79 +159,42 @@ CHECK (status_workflow = ANY (ARRAY['rascunho','em_revisao','aprovado','reprovad
 
 **Aba 1: "📋 Ficha de Risco" (61 linhas × 9 colunas, paisagem)**
 
-**Layout de colunas:**
-- Col A = 3 (margem)
-- Col B = 34 (labels)
-- Col C-G = 20-22 (valores, merged)
-- Col H = 10 (✓/✗)
-- Col I = 28 (observação)
+Layout de colunas: A=3, B=34, C-G=20-22, H=10, I=28
 
-**HEADER (rows 1-2):**
-- Logo (logotipo-2cores.png) inserida como imagem na célula A1
-- B1: "Polímata · Consultoria em GRC" — Montserrat bold 10pt, creme (#F3EEE4), fundo navy (#00203E)
-- B2: "FICHA DE RISCO — EXECUÇÃO DO TESTE" — mesmo estilo, merged B2:I2
+**HEADER (rows 1-2):** Logo + "Polímata · Consultoria em GRC" + "FICHA DE RISCO — EXECUÇÃO DO TESTE" — Montserrat bold 10pt creme sobre navy
 
-**SEÇÃO 1 — DADOS DO PROJETO (rows 4-12):**
-- Título row 4: "1. DADOS DO PROJETO" — dourado (#CC915E) bold sobre navy (#00203E), merged
-- Labels col B: Montserrat bold 10pt navy (#00203E), fundo branco
-- Valores col C: Montserrat regular 10pt #333333, fundo creme (#F8F6F2)
-- Campos: CLIENTE, NATUREZA DO PROJETO, FASE EM CURSO, EXECUTOR, DATA E HORÁRIO, DOWNLOAD POR, REVISOR (editável), DATA DA REVISÃO (editável)
-- Valores merged C:I em cada row
+**SEÇÃO 1 — DADOS DO PROJETO (rows 4-12):** CLIENTE, NATUREZA, FASE, EXECUTOR, DATA, DOWNLOAD POR, REVISOR (editável), DATA REVISÃO (editável)
 
-**SEÇÃO 2 — IDENTIFICAÇÃO DO RISCO E CONTROLE (rows 14-22):**
-- Título row 14: "2. IDENTIFICAÇÃO DO RISCO E CONTROLE" — dourado sobre navy
-- Campos pré-preenchidos: ÁREA/PROCESSO, SUBPROCESSO, REF.RISCO, REF.CONTROLE, GERÊNCIA, RESP.SUBPROCESSO, DESC.RISCO, DESC.CONTROLE
-- Valores: fundo #F8F6F2 + borda esquerda medium #CC915E (dourada)
+**SEÇÃO 2 — IDENTIFICAÇÃO (rows 14-22):** ÁREA, SUBPROCESSO, REF.RISCO, REF.CONTROLE, GERÊNCIA, RESP.SUBPROCESSO, DESC.RISCO, DESC.CONTROLE — pré-preenchido #F8F6F2 + borda esquerda medium #CC915E
 
-**SEÇÃO 3 — ATRIBUTOS DO CONTROLE (rows 24-30):**
-- Título row 24: "3. ATRIBUTOS DO CONTROLE"
-- Campos: CATEGORIA, FREQUÊNCIA, NATUREZA, CARACTERÍSTICA, SISTEMA, CONTROLE CHAVE?
-- Mesmo estilo pré-preenchido (creme + borda dourada)
+**SEÇÃO 3 — ATRIBUTOS (rows 24-30):** CATEGORIA, FREQUÊNCIA, NATUREZA, CARACTERÍSTICA, SISTEMA, CONTROLE CHAVE?
 
-**SEÇÃO 4 — PREMISSAS (rows 32-38):**
-- Título row 32: "4. AS 6 PREMISSAS DO CONTROLE — VALIDAÇÃO METODOLÓGICA"
-- 6 campos editáveis: QUEM FAZ, QUANDO FAZ, POR QUÊ FAZ, COMO FAZ, ONDE FAZ, QUAL O RESULTADO
-- Valores: fundo #F8F6F2 + borda dourada (mesmo estilo dos pré-preenchidos)
+**SEÇÃO 4 — PREMISSAS (rows 32-38):** 6 campos editáveis (Quem, Quando, Por Quê, Como, Onde, Resultado)
 
-**SEÇÃO 5 — PASSOS DE TESTE (rows 40-52):**
-- Título row 40: "5. PASSOS DE TESTE"
-- Header row 41: "Atividade / Passo" (B, merged B:G) | "✓ / ✗" (H) | "Observação" (I)
-- Row 42: legenda "✓ = Teste realizado com sucesso · ✗ = Não foi possível realizar o teste"
-- Rows 43-52: Passo 1 a Passo 10 (editáveis)
+**SEÇÃO 5 — PASSOS DE TESTE (rows 40-52):** 10 linhas (Atividade + ✓/✗ + Observação)
 
-**SEÇÃO 6 — RESULTADO (rows 55-59):**
-- Título row 55: "6. RESULTADO"
-- Campos: RESULTADO, INCONSISTÊNCIA IDENTIFICADA, MELHORIA IDENTIFICADA?, DESCRIÇÃO DA MELHORIA
-- Row 60: nota "↑ Preencher apenas quando 'Melhoria Identificada?' = Sim"
+**SEÇÃO 6 — RESULTADO (rows 55-59):** RESULTADO, INCONSISTÊNCIA, MELHORIA?, DESC.MELHORIA
 
-**FOOTER (row 61):**
-- B61: "Polímata Consultoria em GRC · Ficha de Risco"
-- F61: "Gerado em: DD/MM/AAAA · HH:MM · Por: email@..."
+**FOOTER (row 61):** Polímata + data/hora/email
 
-**Aba 2: "Teste" (área livre)**
-- Row 2, col B: "7. EXECUÇÃO DO TESTE E EVIDÊNCIAS"
-- Espaço aberto para o profissional colar evidências
+**Aba 2: "Teste"** — "7. EXECUÇÃO DO TESTE E EVIDÊNCIAS" (área livre para evidências)
 
 ### Regras visuais confirmadas:
-- Fundo BRANCO geral, sem linhas de grade
-- Títulos de seção: dourado (#CC915E) sobre navy (#00203E), bold
-- Labels: navy (#00203E) bold sobre branco
+- Fundo BRANCO, sem linhas de grade
+- Títulos seção: dourado (#CC915E) sobre navy (#00203E), bold
+- Labels: navy bold sobre branco
 - Valores pré-preenchidos: #333333 regular sobre #F8F6F2, borda esquerda medium #CC915E
-- Campos editáveis: branco + borda cinza
-- Coluna A = 3 (margem estreita)
-- Fonte Montserrat 10pt em tudo, SEM itálico
-- Orientação paisagem
-- 1 imagem (logo) incorporada
+- Montserrat 10pt, SEM itálico, paisagem, 1 imagem (logo)
 
 ---
 
 ## Pendências (próximo chat)
-1. ~~Confirmar build/deploy da ficha Excel v5~~ ✅ FEITO
-2. **Testar ficha no browser** — verificar que logo carrega, dados corretos em produção
-3. **Configurar domínio** polimatagrc.com.br no Vercel
-4. **Tema escuro** do sistema (avaliar telas além do Dashboard)
+1. **Testar deploy sessão 3** — confirmar visual do Dashboard + Por Área em produção
+2. **Testar navegação** — clicar em "Maturidade por Área" deve ir para `/area/:id`
+3. **Testar ficha Excel v5 no browser** — verificar logo + dados em produção
+4. **Configurar domínio** polimatagrc.com.br no Vercel
 5. **PWA offline** — funcionamento sem internet + sincronização
-6. Upload e leitura de ficha preenchida (re-importar dados do Excel de volta pro sistema)
+6. Upload e leitura de ficha preenchida
 7. Export Excel/PDF da MRC
 8. Integrar engine na MRC (peso real no modal)
 9. Workflow aprovação (rascunho → em_revisao → aprovado)
@@ -195,7 +205,7 @@ CHECK (status_workflow = ANY (ARRAY['rascunho','em_revisao','aprovado','reprovad
 
 ## Notas Técnicas
 - GitHub bloqueado no Claude → upload direto de arquivos
-- Workflow com Claude: mockup HTML → aprovação → código
+- Workflow com Claude: mockup HTML → aprovação → código JSX
 - Excel: ExcelJS (instalado via npm)
 - `crit` é INTEGER — sempre usar String() ao comparar
 - Navegação Por Área usa area.id (UUID)
@@ -206,3 +216,13 @@ CHECK (status_workflow = ANY (ARRAY['rascunho','em_revisao','aprovado','reprovad
 - Modal Atualizar: fundo branco (contraste com tema escuro)
 - Dashboard.jsx passa `projeto` (objeto completo) pro ModalAtualizar
 - CUIDADO: ao montar arquivos por partes, verificar duplicação de blocos (causou build fail 03/04)
+- Dashboard.jsx: ~755 linhas (sessão 3)
+- Funções helper: impToIdx(), probToIdx(), critToIdx(), getBarGradient(), getUltimaAtualizacao()
+- Estado `areaFiltro` no HomeDash controla filtro do heatmap (só via tabela criticidade)
+- Componentes mantidos: NivelBadge, Spinner, NoProjeto, Shell, PorArea
+- Componentes removidos: FasesBoxes, GaugeBar, KpisTable, ReguaN1N5, contribFaseArea/Empresa, **VisaoGeral**
+- Card "Planos de Ação": usa div absoluto com gradiente (borderImage anula borderRadius)
+- PorArea: heatmap da área via `useMemo` sobre `area.controles`
+- PorArea: `ultAtualArea` via `getUltimaAtualizacao(area.controles)`
+- Tabela MRC: colunas com larguras fixas (width+minWidth) para uniformidade entre áreas
+- Estilos separados: `dashStyles` (Dashboard), `paStyles` (PorArea), `S` (legado MRC)
