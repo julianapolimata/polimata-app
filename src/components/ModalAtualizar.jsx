@@ -291,12 +291,12 @@ export default function ModalAtualizar({ row, onClose, onSaved, areas, projeto }
     const NAVY = '00203E', GOLD = 'CC915E', GOLD_DARK = 'A6512F', CREAM = 'F3EEE4'
     const PRE_BG = 'F8F6F2', BORDER_GRAY = 'D5CFC6', BORDER_LIGHT = 'F0EDE8', WHITE = 'FFFFFF'
 
-    const ws = wb.addWorksheet('📋 Teste', {
+    // ═══ ABA 1: FICHA DE RISCO ═══
+    const ws = wb.addWorksheet('📋 Ficha de Risco', {
       views: [{ showGridLines: false }],
       pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 }
     })
 
-    // Col A = 3 (medida Excel) 
     ws.getColumn('A').width = 3
     ws.getColumn('B').width = 22
     ws.getColumn('C').width = 20
@@ -313,22 +313,22 @@ export default function ModalAtualizar({ row, onClose, onSaved, areas, projeto }
     const fC = { type: 'pattern', pattern: 'solid', fgColor: { argb: CREAM } }
     const fW = { type: 'pattern', pattern: 'solid', fgColor: { argb: WHITE } }
 
-    // Fonts - SEM itálico em nenhum lugar — tudo size 10
+    // Fonts — tudo size 10, Montserrat, SEM itálico
     const flLabel = { name: 'Montserrat', size: 10, bold: true, color: { argb: NAVY } }
     const fvValue = { name: 'Montserrat', size: 10, color: { argb: '333333' } }
     const fgGold = { name: 'Montserrat', size: 10, bold: true, color: { argb: GOLD_DARK } }
     const fhHint = { name: 'Montserrat', size: 10, color: { argb: '999999' } }
     const fsSection = { name: 'Montserrat', size: 10, bold: true, color: { argb: GOLD } }
     const fdDim = { name: 'Montserrat', size: 10, color: { argb: 'BBBBBB' } }
-    const flSmall = { name: 'Montserrat', size: 10, bold: true, color: { argb: NAVY } }
 
+    // Helper: section header (navy bar with gold text)
     function sec(r, t) {
       ws.mergeCells(`B${r}:I${r}`)
       const c = ws.getCell(`B${r}`); c.value = t; c.font = fsSection; c.fill = fN
       c.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 }
       c.border = { bottom: { style: 'thin', color: { argb: GOLD } } }
-      ws.getRow(r).height = 22
     }
+    // Helper: pre-filled row (label white + value #F8F6F2 with gold left border)
     function pre(r, l, v) {
       ws.getCell(`B${r}`).value = l; ws.getCell(`B${r}`).font = flLabel; ws.getCell(`B${r}`).fill = fW
       ws.getCell(`B${r}`).alignment = { vertical: 'middle', indent: 1 }; ws.getCell(`B${r}`).border = bH
@@ -337,6 +337,7 @@ export default function ModalAtualizar({ row, onClose, onSaved, areas, projeto }
       c.alignment = { vertical: 'middle', wrapText: true, indent: 1 }
       c.border = { ...bH, left: { style: 'medium', color: { argb: GOLD } } }
     }
+    // Helper: reference row (gold bold text)
     function refR(r, l, v) {
       ws.getCell(`B${r}`).value = l; ws.getCell(`B${r}`).font = flLabel; ws.getCell(`B${r}`).fill = fW
       ws.getCell(`B${r}`).alignment = { vertical: 'middle', indent: 1 }; ws.getCell(`B${r}`).border = bH
@@ -345,6 +346,7 @@ export default function ModalAtualizar({ row, onClose, onSaved, areas, projeto }
       c.alignment = { vertical: 'middle', indent: 1 }
       c.border = { ...bH, left: { style: 'medium', color: { argb: GOLD } } }
     }
+    // Helper: editable row (label white + value white with gray left border)
     function edit(r, l, p) {
       ws.getCell(`B${r}`).value = l; ws.getCell(`B${r}`).font = flLabel; ws.getCell(`B${r}`).fill = fW
       ws.getCell(`B${r}`).alignment = { vertical: 'middle', indent: 1 }; ws.getCell(`B${r}`).border = bH
@@ -353,18 +355,27 @@ export default function ModalAtualizar({ row, onClose, onSaved, areas, projeto }
       c.alignment = { vertical: 'middle', wrapText: true, indent: 1 }
       c.border = { ...bH, left: { style: 'thin', color: { argb: BORDER_GRAY } } }
     }
+    // Helper: resultado row (label creme + value white with gold left border)
+    function resRow(r, l) {
+      ws.getCell(`B${r}`).value = l; ws.getCell(`B${r}`).font = flLabel; ws.getCell(`B${r}`).fill = fC
+      ws.getCell(`B${r}`).alignment = { vertical: 'middle', indent: 1 }; ws.getCell(`B${r}`).border = bH
+      ws.mergeCells(`C${r}:I${r}`)
+      const c = ws.getCell(`C${r}`); c.value = ''; c.font = fvValue; c.fill = fW
+      c.alignment = { vertical: 'middle', wrapText: true, indent: 1 }
+      c.border = { ...bH, left: { style: 'medium', color: { argb: GOLD } } }
+    }
 
-    // ═══ HEADER (com logo) ═══
+    // ═══ HEADER (rows 1-2) ═══
     let r = 1
 
-    // Tentar carregar logo
+    // Logo (ícone dourado)
     try {
       const logoResp = await fetch('/icon.png')
       if (logoResp.ok) {
         const logoBlob = await logoResp.blob()
         const logoBuffer = await logoBlob.arrayBuffer()
         const logoId = wb.addImage({ buffer: logoBuffer, extension: 'png' })
-        ws.addImage(logoId, { tl: { col: 1, row: 0 }, ext: { width: 28, height: 28 } })
+        ws.addImage(logoId, { tl: { col: 1, row: 0 }, ext: { width: 42, height: 42 } })
       }
     } catch (e) { /* logo não disponível */ }
 
@@ -372,17 +383,20 @@ export default function ModalAtualizar({ row, onClose, onSaved, areas, projeto }
     ws.getCell(`B${r}`).value = '          Polímata · Consultoria em GRC'
     ws.getCell(`B${r}`).font = { name: 'Montserrat', size: 10, bold: true, color: { argb: CREAM } }
     ws.getCell(`B${r}`).fill = fN; ws.getCell(`B${r}`).alignment = { horizontal: 'left', vertical: 'middle', indent: 1 }
-    ws.getRow(r).height = 32; r++
+    r++
 
     ws.mergeCells(`B${r}:I${r}`)
-    ws.getCell(`B${r}`).value = 'FICHA DE RISCO — EXECUÇÃO DO TESTE'
+    ws.getCell(`B${r}`).value = '          FICHA DE RISCO — EXECUÇÃO DO TESTE'
     ws.getCell(`B${r}`).font = { name: 'Montserrat', size: 10, bold: true, color: { argb: GOLD } }
     ws.getCell(`B${r}`).fill = fN; ws.getCell(`B${r}`).alignment = { horizontal: 'left', vertical: 'middle', indent: 1 }
     ws.getCell(`B${r}`).border = { bottom: { style: 'medium', color: { argb: GOLD } } }
-    ws.getRow(r).height = 18; r++
+    r++
 
-    // ═══ BLOCO 1 — PROJETO (mesmo padrão do bloco Identificação: label + valor) ═══
-    sec(r, 'DADOS DO PROJETO'); r++
+    // Row 3: blank spacer
+    r++
+
+    // ═══ 1. DADOS DO PROJETO ═══
+    sec(r, '1. DADOS DO PROJETO'); r++
     pre(r, 'CLIENTE', projeto?.clientes?.nome || 'Cliente'); r++
     pre(r, 'NATUREZA DO PROJETO', projeto?.nome || 'Projeto'); r++
     refR(r, 'FASE EM CURSO', proximaFase.label); r++
@@ -392,19 +406,25 @@ export default function ModalAtualizar({ row, onClose, onSaved, areas, projeto }
     edit(r, 'REVISOR', ''); r++
     edit(r, 'DATA DA REVISÃO', ''); r++
 
-    // ═══ IDENTIFICAÇÃO ═══
-    sec(r, 'IDENTIFICAÇÃO DO CONTROLE'); r++
+    // Blank spacer
+    r++
+
+    // ═══ 2. IDENTIFICAÇÃO DO RISCO E CONTROLE ═══
+    sec(r, '2. IDENTIFICAÇÃO DO RISCO E CONTROLE'); r++
     pre(r, 'ÁREA / PROCESSO', row.area); r++
     pre(r, 'SUBPROCESSO', row.sub); r++
     refR(r, 'REF. RISCO', row.rr); r++
     refR(r, 'REF. CONTROLE', row.rc); r++
     pre(r, 'GERÊNCIA', row.ger); r++
     pre(r, 'RESP. SUBPROCESSO', row.resp_sub); r++
-    pre(r, 'DESCRIÇÃO DO RISCO', dr); ws.getRow(r).height = 32; r++
-    pre(r, 'DESCRIÇÃO DO CONTROLE', dc); ws.getRow(r).height = 32; r++
+    pre(r, 'DESCRIÇÃO DO RISCO', dr); r++
+    pre(r, 'DESCRIÇÃO DO CONTROLE', dc); r++
 
-    // ═══ ATRIBUTOS ═══
-    sec(r, 'ATRIBUTOS DO CONTROLE'); r++
+    // Blank spacer
+    r++
+
+    // ═══ 3. ATRIBUTOS DO CONTROLE ═══
+    sec(r, '3. ATRIBUTOS DO CONTROLE'); r++
     pre(r, 'CATEGORIA', cat); r++
     pre(r, 'FREQUÊNCIA', freq); r++
     pre(r, 'NATUREZA', nat); r++
@@ -412,17 +432,24 @@ export default function ModalAtualizar({ row, onClose, onSaved, areas, projeto }
     pre(r, 'SISTEMA', sis); r++
     pre(r, 'CONTROLE CHAVE?', chave); r++
 
-    // ═══ 6 PREMISSAS (editáveis) ═══
-    sec(r, '1. AS 6 PREMISSAS DO CONTROLE — VALIDAÇÃO METODOLÓGICA'); r++
-    edit(r, '1. QUEM FAZ', ''); r++
-    edit(r, '2. QUANDO FAZ', ''); r++
-    edit(r, '3. POR QUÊ FAZ', ''); r++
-    edit(r, '4. COMO FAZ', ''); r++
-    edit(r, '5. ONDE FAZ', ''); r++
-    edit(r, '6. QUAL O RESULTADO', ''); r++
+    // Blank spacer
+    r++
 
-    // ═══ PASSOS DE TESTE ═══
-    sec(r, '2. PASSOS DE TESTE'); r++
+    // ═══ 4. PREMISSAS (pré-preenchido, mesmo padrão pre()) ═══
+    sec(r, '4. AS 6 PREMISSAS DO CONTROLE — VALIDAÇÃO METODOLÓGICA'); r++
+    pre(r, '1. QUEM FAZ', ''); r++
+    pre(r, '2. QUANDO FAZ', ''); r++
+    pre(r, '3. POR QUÊ FAZ', ''); r++
+    pre(r, '4. COMO FAZ', ''); r++
+    pre(r, '5. ONDE FAZ', ''); r++
+    pre(r, '6. QUAL O RESULTADO', ''); r++
+
+    // Blank spacer
+    r++
+
+    // ═══ 5. PASSOS DE TESTE ═══
+    sec(r, '5. PASSOS DE TESTE'); r++
+    // Sub-header
     ws.mergeCells(`B${r}:G${r}`)
     ws.getCell(`B${r}`).value = 'Atividade / Passo'
     ws.getCell(`B${r}`).font = { name: 'Montserrat', size: 10, bold: true, color: { argb: CREAM } }
@@ -430,37 +457,97 @@ export default function ModalAtualizar({ row, onClose, onSaved, areas, projeto }
     ws.getCell(`H${r}`).value = '✓ / ✗'; ws.getCell(`H${r}`).font = { name: 'Montserrat', size: 10, bold: true, color: { argb: CREAM } }
     ws.getCell(`H${r}`).fill = fN; ws.getCell(`H${r}`).alignment = { horizontal: 'center', vertical: 'middle' }
     ws.getCell(`I${r}`).value = 'Observação'; ws.getCell(`I${r}`).font = { name: 'Montserrat', size: 10, bold: true, color: { argb: CREAM } }
-    ws.getCell(`I${r}`).fill = fN; ws.getCell(`I${r}`).alignment = { horizontal: 'left', vertical: 'middle', indent: 1 }; r++
+    ws.getCell(`I${r}`).fill = fN; ws.getCell(`I${r}`).alignment = { horizontal: 'left', vertical: 'middle', indent: 1 }
+    r++
 
-    for (let i = 1; i <= 10; i++) {
-      ws.mergeCells(`B${r}:G${r}`)
-      ws.getCell(`B${r}`).value = `Passo ${i}`; ws.getCell(`B${r}`).font = fdDim; ws.getCell(`B${r}`).fill = fW; ws.getCell(`B${r}`).border = bH; ws.getCell(`B${r}`).alignment = { indent: 1, vertical: 'middle' }
-      ws.getCell(`H${r}`).fill = fW; ws.getCell(`H${r}`).border = bH; ws.getCell(`H${r}`).alignment = { horizontal: 'center', vertical: 'middle' }
-      ws.getCell(`I${r}`).fill = fW; ws.getCell(`I${r}`).border = bH; r++
-    }
+    // Legend row (before passos)
     ws.mergeCells(`B${r}:I${r}`)
     ws.getCell(`B${r}`).value = '✓ = Teste realizado com sucesso · ✗ = Não foi possível realizar o teste'
-    ws.getCell(`B${r}`).font = fhHint; ws.getCell(`B${r}`).fill = fW; ws.getCell(`B${r}`).alignment = { indent: 1 }; r++
+    ws.getCell(`B${r}`).font = fhHint; ws.getCell(`B${r}`).fill = fW; ws.getCell(`B${r}`).alignment = { indent: 1 }
+    r++
 
-    // ═══ RESULTADO ═══
-    sec(r, '3. RESULTADO'); r++
-    ws.getCell(`B${r}`).value = 'RESULTADO'
-    ws.getCell(`B${r}`).font = { name: 'Montserrat', size: 10, bold: true, color: { argb: NAVY } }
-    ws.getCell(`B${r}`).fill = fC; ws.getCell(`B${r}`).alignment = { vertical: 'middle', indent: 1 }
-    ws.mergeCells(`C${r}:I${r}`); ws.getCell(`C${r}`).fill = fW
-    ws.getCell(`C${r}`).border = { ...bH, left: { style: 'medium', color: { argb: GOLD } } }
-    ws.getRow(r).height = 28; r++
-    edit(r, 'INCONSISTÊNCIA IDENTIFICADA', ''); ws.getRow(r).height = 32; r++
-    edit(r, 'MELHORIA IDENTIFICADA?', ''); r++
-    edit(r, 'DESCRIÇÃO DA MELHORIA', ''); ws.getRow(r).height = 32; r++
-    ws.mergeCells(`B${r}:I${r}`); ws.getCell(`B${r}`).value = '↑ Preencher apenas quando "Melhoria Identificada?" = Sim'
-    ws.getCell(`B${r}`).font = fhHint; ws.getCell(`B${r}`).fill = fW; r++
+    // 10 passos (B = label, C:G merged empty, H = ✓/✗ dropdown, I = obs)
+    const passosStartRow = r
+    for (let i = 1; i <= 10; i++) {
+      ws.getCell(`B${r}`).value = `Passo ${i}`; ws.getCell(`B${r}`).font = fdDim; ws.getCell(`B${r}`).fill = fW; ws.getCell(`B${r}`).border = bH; ws.getCell(`B${r}`).alignment = { indent: 1, vertical: 'middle' }
+      ws.mergeCells(`C${r}:G${r}`)
+      ws.getCell(`C${r}`).fill = fW; ws.getCell(`C${r}`).border = bH
+      ws.getCell(`H${r}`).fill = fW; ws.getCell(`H${r}`).border = bH; ws.getCell(`H${r}`).alignment = { horizontal: 'center', vertical: 'middle' }
+      ws.getCell(`I${r}`).fill = fW; ws.getCell(`I${r}`).border = bH
+      r++
+    }
+    const passosEndRow = r - 1
 
-    // ═══ EVIDÊNCIAS ═══
-    sec(r, '4. EXECUÇÃO DO TESTE E EVIDÊNCIAS'); r++
-    ws.mergeCells(`B${r}:I${r}`); ws.getCell(`B${r}`).value = '(inserir tabelas, listas ou amostras testadas abaixo)'
-    ws.getCell(`B${r}`).font = fdDim; ws.getCell(`B${r}`).fill = fW; ws.getCell(`B${r}`).alignment = { horizontal: 'center', vertical: 'middle' }
-    ws.getRow(r).height = 80
+    // Data validation: ✓ / ✗ dropdown on H column (passos)
+    ws.dataValidations.add(`H${passosStartRow}:H${passosEndRow}`, {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['"✓,✗"'],
+      showDropDown: false,
+    })
+
+    // Blank spacer (2 rows like the model)
+    r++; r++
+
+    // ═══ 6. RESULTADO ═══
+    sec(r, '6. RESULTADO'); r++
+    // RESULTADO row (label creme, value white with dropdown)
+    const resultadoRow = r
+    resRow(r, 'RESULTADO'); r++
+    // INCONSISTÊNCIA
+    resRow(r, 'INCONSISTÊNCIA IDENTIFICADA'); r++
+    // MELHORIA IDENTIFICADA?
+    const melhoriaRow = r
+    resRow(r, 'MELHORIA IDENTIFICADA?'); r++
+    // DESCRIÇÃO DA MELHORIA
+    resRow(r, 'DESCRIÇÃO DA MELHORIA'); r++
+    // Hint
+    ws.mergeCells(`B${r}:I${r}`)
+    ws.getCell(`B${r}`).value = '↑ Preencher apenas quando "Melhoria Identificada?" = Sim'
+    ws.getCell(`B${r}`).font = fhHint; ws.getCell(`B${r}`).fill = fW
+    r++
+
+    // Footer
+    ws.mergeCells(`B${r}:E${r}`)
+    ws.getCell(`B${r}`).value = 'Polímata Consultoria em GRC · Ficha de Risco'
+    ws.getCell(`B${r}`).font = { name: 'Montserrat', size: 7, color: { argb: NAVY } }; ws.getCell(`B${r}`).fill = fC
+    ws.getCell(`B${r}`).alignment = { indent: 1 }; ws.getCell(`B${r}`).border = { top: { style: 'medium', color: { argb: GOLD } } }
+    ws.mergeCells(`F${r}:I${r}`)
+    ws.getCell(`F${r}`).value = `Gerado em: ${dataHora} · Por: ${perfil?.email || ''}`
+    ws.getCell(`F${r}`).font = { name: 'Montserrat', size: 7, color: { argb: NAVY } }; ws.getCell(`F${r}`).fill = fC
+    ws.getCell(`F${r}`).alignment = { horizontal: 'right' }; ws.getCell(`F${r}`).border = { top: { style: 'medium', color: { argb: GOLD } } }
+
+    // Data validation: RESULTADO dropdown
+    ws.dataValidations.add(`C${resultadoRow}:I${resultadoRow}`, {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['"Efetivo,Inefetivo,GAP"'],
+      showDropDown: false,
+    })
+
+    // Data validation: MELHORIA IDENTIFICADA? dropdown
+    ws.dataValidations.add(`C${melhoriaRow}:I${melhoriaRow}`, {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['"Sim,Não"'],
+      showDropDown: false,
+    })
+
+    // ═══ ABA 2: TESTE ═══
+    const ws2 = wb.addWorksheet('Teste', {
+      views: [{ showGridLines: false }],
+      pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 }
+    })
+    ws2.getColumn('A').width = 3
+    for (const col of ['B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R']) {
+      ws2.getColumn(col).width = 13
+    }
+    // Row 2: section header
+    ws2.mergeCells('B2:R2')
+    ws2.getCell('B2').value = '7. EXECUÇÃO DO TESTE E EVIDÊNCIAS'
+    ws2.getCell('B2').font = fsSection; ws2.getCell('B2').fill = fN
+    ws2.getCell('B2').alignment = { horizontal: 'left', vertical: 'middle', indent: 1 }
+    ws2.getCell('B2').border = { bottom: { style: 'thin', color: { argb: GOLD } } }
 
     // Download
     const buffer = await wb.xlsx.writeBuffer()
