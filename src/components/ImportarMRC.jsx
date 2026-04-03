@@ -240,7 +240,16 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
         inserted += batch.length
       }
 
-      setResultado({ ok: true, msg: `${inserted} controles importados com sucesso para "${areaObj.nome}".` })
+      // 3. Atualizar gerente na tabela areas (pega do primeiro controle)
+      const gerente = registros.find(r => r.ger)?.ger || null
+      if (gerente) {
+        await supabase
+          .from('areas')
+          .update({ gerente })
+          .eq('id', areaObj.id)
+      }
+
+      setResultado({ ok: true, msg: `${inserted} controles importados com sucesso para "${areaObj.nome}".${gerente ? ` Gerente atualizado: ${gerente}.` : ''}` })
       setFile(null)
       setPreview(null)
       if (onImported) onImported()
@@ -332,6 +341,7 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
             <div style={S.confirmText}>
               Importar <strong>{previewCount} controles</strong> para a área <strong>"{areas.find(a => a.id === areaSelecionada)?.nome}"</strong>?
               <br />Todos os controles existentes dessa área serão removidos.
+              {preview.rows[0]?.[3] && <><br />Gerente será atualizado para: <strong>{preview.rows[0][3]}</strong></>}
             </div>
             <button
               onClick={handleImportar}
