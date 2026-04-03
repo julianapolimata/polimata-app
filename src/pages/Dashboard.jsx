@@ -244,6 +244,7 @@ function NoProjeto() { return <div style={{ background: '#00112C', minHeight: '1
 // ══════════════════════════════════════════════════════════════════════════════
 
 function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizacao }) {
+  const navigate = useNavigate()
   const [areaFiltro, setAreaFiltro] = useState(null) // nome da área filtrada no heatmap
 
   // Dados consolidados
@@ -344,7 +345,8 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
           <div style={{ ...D.kpiValor, color: COR_GAP }}>{kpis.gap}</div>
           <div style={D.kpiSub}>Riscos sem controle identificado</div>
         </div>
-        <div style={{ ...D.kpiCard, borderTopColor: '#CC915E', borderImage: 'linear-gradient(90deg, #CC915E, #A6512F) 1', borderTopStyle: 'solid' }}>
+        <div style={{ ...D.kpiCard, borderTopColor: '#CC915E', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #CC915E, #A6512F)' }} />
           <div style={D.kpiLabel}>Planos de Ação</div>
           <div style={{ ...D.kpiValor, color: '#CC915E' }}>{kpis.pa}</div>
           <div style={D.kpiSub}>Em desenvolvimento</div>
@@ -361,9 +363,8 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
           {ranking.map((a, i) => {
             const p = (a.calc?.percentual || 0) * 100
             const nv = getNivelMaturidade(a.calc?.percentual || 0)
-            const ativo = areaFiltro === a.nome
             return (
-              <div key={a.id} onClick={() => toggleAreaFiltro(a.nome)} style={{ ...D.areaRow, background: ativo ? 'rgba(204,145,94,0.1)' : 'transparent', cursor: 'pointer', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
+              <div key={a.id} onClick={() => navigate('/area/' + a.id)} style={{ ...D.areaRow, background: 'transparent', cursor: 'pointer', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
                 <span style={D.areaRank}>{i + 1}</span>
                 <span style={D.areaNome}>{a.nome}</span>
                 <div style={D.areaBarWrap}>
