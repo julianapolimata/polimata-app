@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs'
 
 // ══════════════════════════════════════════════════════════════════════════════
-// EXPORT MRC PARA EXCEL (.xlsx) — Polímata brand v6
+// EXPORT MRC PARA EXCEL (.xlsx) — Polímata brand
 // ══════════════════════════════════════════════════════════════════════════════
 
 const NAVY = '00203E'
@@ -62,7 +62,6 @@ const HM_COLORS = [
   ['F97316', 'EAB308', 'EAB308', '22C55E'],
   ['EAB308', '22C55E', '22C55E', '22C55E'],
 ]
-const EMPTY_COLOR = 'E8E4DC'
 
 function isYellowish(c) { return c === 'EAB308' || c === 'FACC15' }
 function impToIdx(v) { return { 'Crítico': 0, 'Alto': 1, 'Moderado': 2, 'Baixo': 3 }[v] ?? -1 }
@@ -176,8 +175,6 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
   r3.alignment = { vertical: 'middle' }
   for (let c = 1; c <= lastCol; c++) ws.getCell(3, c).fill = NAVY_FILL
 
-  // Row 4: spacer
-
   // ── CALCULAR DADOS ──
   const grid = Array.from({ length: 4 }, () => Array(4).fill(0))
   const gridE = Array.from({ length: 4 }, () => Array(4).fill(0))
@@ -217,20 +214,20 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
       const n = grid[ri][ci]
       const e = gridE[ri][ci], inf = gridI[ri][ci], g = gridG[ri][ci]
       const color = HM_COLORS[ri][ci]
+      const yellow = isYellowish(color)
+
+      // Sempre colorido — com ou sem valor
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } }
+      cell.border = CREME_BORDER
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
 
       if (n === 0) {
         cell.value = '0'
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } }
-        const yellow = isYellowish(color)
         cell.font = { name: 'Montserrat', bold: true, size: 14, color: { argb: yellow ? 'FF333333' : 'FFFFFFFF' } }
       } else {
         cell.value = `${n}\nE:${e}  I:${inf}  G:${g}`
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } }
-        const yellow = isYellowish(color)
         cell.font = { name: 'Montserrat', bold: false, size: 11, color: { argb: yellow ? 'FF333333' : 'FFFFFFFF' } }
       }
-      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
-      cell.border = CREME_BORDER
     }
   }
 
@@ -252,7 +249,7 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
   xAxis.alignment = { horizontal: 'center' }
   xAxis.fill = CREME_FILL
 
-  // ── LEGENDA (row 12, sem bordas) ──
+  // ── LEGENDA (row 12) ──
   const legData = [
     { label: '■ Crítico', color: 'EF4444' },
     { label: '■ Significativo', color: 'F97316' },
@@ -267,7 +264,7 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
     cell.fill = CREME_FILL
   })
 
-  // ── RESUMO (row 15: title, rows 16-18: cards) ──
+  // ── RESUMO (row 15: title, rows 16-18: cards centralizados) ──
   const resumoTitle = ws.getCell('C15')
   resumoTitle.value = 'RESUMO'
   resumoTitle.font = { name: 'Montserrat', bold: true, size: 8, color: { argb: 'FFAAAAAA' } }
@@ -290,7 +287,6 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
   cards.forEach((card, i) => {
     const col = 4 + i
 
-    // Row 16: label — CENTRALIZADO
     const labelCell = ws.getCell(16, col)
     labelCell.value = card.label
     labelCell.font = { name: 'Montserrat', bold: true, size: 7, color: { argb: 'FF999999' } }
@@ -302,7 +298,6 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
       right: { style: 'thin', color: { argb: 'FFEEEEEE' } },
     }
 
-    // Row 17: valor — CENTRALIZADO
     const valCell = ws.getCell(17, col)
     valCell.value = card.value
     valCell.font = { name: 'Montserrat', size: 26, color: { argb: card.color } }
@@ -313,7 +308,6 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
       right: { style: 'thin', color: { argb: 'FFEEEEEE' } },
     }
 
-    // Row 18: sub — CENTRALIZADO
     const subCell = ws.getCell(18, col)
     subCell.value = card.sub
     subCell.font = { name: 'Montserrat', size: 8, color: { argb: 'FFBBBBBB' } }
@@ -326,7 +320,7 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
     }
   })
 
-  // ── FOOTER (row 19-20) ──
+  // ── FOOTER (rows 19-20) ──
   ws.getRow(19).height = 15
   ws.getRow(20).height = 15
   ws.mergeCells('B20:E20')
