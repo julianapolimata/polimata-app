@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import ExcelJS from 'exceljs'
@@ -103,14 +103,17 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
   const { perfil } = useAuth()
   const [file, setFile] = useState(null)
   const [areaSelecionada, setAreaSelecionada] = useState('')
-  const [preview, setPreview] = useState(null)  // { rows: [], headers: [] }
+  const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [importing, setImporting] = useState(false)
-  const [resultado, setResultado] = useState(null) // { ok: bool, msg: string }
+  const [resultado, setResultado] = useState(null)
   const [erro, setErro] = useState(null)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const isAdmin = perfil?.papel === 'admin_polimata'
   if (!isAdmin) return null
+
+  const areaNome = areas?.find(a => a.id === areaSelecionada)?.nome || ''
 
   // Ler o Excel e gerar preview
   async function handleFileChange(e) {
@@ -145,18 +148,16 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
         let hasData = false
         row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
           let v = cell.value
-          // ExcelJS pode retornar objetos richText
           if (v && typeof v === 'object' && v.richText) {
             v = v.richText.map(rt => rt.text).join('')
           }
-          // ExcelJS pode retornar { result, formula }
           if (v && typeof v === 'object' && v.result !== undefined) {
             v = v.result
           }
           vals[colNumber - 1] = v
           if (v !== null && v !== undefined && String(v).trim() !== '') hasData = true
         })
-        if (hasData && vals[7]) { // Precisa ter pelo menos Ref. Risco (col 7/H)
+        if (hasData && vals[7]) {
           rows.push(vals)
         }
       }
@@ -168,8 +169,14 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
     setLoading(false)
   }
 
-  // Executar importação
+  // Abre o pop-up de confirmação
+  function handleClickImportar() {
+    setShowConfirm(true)
+  }
+
+  // Executar importação (chamado após confirmação no pop-up)
   async function handleImportar() {
+    setShowConfirm(false)
     if (!preview || !areaSelecionada || !projetoId) return
 
     const areaObj = areas.find(a => a.id === areaSelecionada)
@@ -215,7 +222,6 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
             if (cleaned && cleaned instanceof Date) {
               reg[field] = cleaned.toISOString()
             } else if (cleaned && typeof cleaned === 'string') {
-              // Tentar parsear data
               try {
                 const d = new Date(cleaned)
                 if (!isNaN(d)) reg[field] = d.toISOString()
@@ -269,7 +275,12 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
       <div style={S.header}>
         <div style={S.title}>Importar MRC</div>
         <div style={S.subtitle}>Upload de matriz Excel para sobrescrever os controles de uma área.</div>
-        <div style={S.warning}>⚠ Esta ação apaga todos os controles existentes da área selecionada e insere os do arquivo.</div>
+        <div style={S.warningBox}>
+          <div style={S.warningIcon}>⚠</div>
+          <div style={S.warningText}>
+            <strong>ATENÇÃO:</strong> Esta ação apaga TODOS os controles existentes da área selecionada e insere os do arquivo. Essa operação não pode ser desfeita.
+          </div>
+        </div>
       </div>
 
       {/* STEP 1: Selecionar área */}
@@ -341,12 +352,12 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
         <div style={S.section}>
           <div style={S.confirmBox}>
             <div style={S.confirmText}>
-              Importar <strong>{previewCount} controles</strong> para a área <strong>"{areas.find(a => a.id === areaSelecionada)?.nome}"</strong>?
+              Importar <strong>{previewCount} controles</strong> para a área <strong>"{areaNome}"</strong>?
               <br />Todos os controles existentes dessa área serão removidos.
               {preview.rows[0]?.[3] && <><br />Gerente será atualizado para: <strong>{preview.rows[0][3]}</strong></>}
             </div>
             <button
-              onClick={handleImportar}
+              onClick={handleClickImportar}
               disabled={importing}
               style={importing ? { ...S.btnImportar, opacity: 0.5 } : S.btnImportar}
             >
@@ -358,8 +369,31 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
 
       {/* RESULTADO */}
       {resultado && (
-        <div style={{ ...S.resultado, background: resultado.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', borderColor: resultado.ok ? '#22C55E' : '#EF4444' }}>
+        <div style={{ ...S.resultado, background: resultado.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', borderColor: resultado.ok ? '#22C55E' : '#EF4444' }}>
           {resultado.ok ? '✓' : '✕'} {resultado.msg}
+        </div>
+      )}
+
+      {/* ════════ POP-UP DE CONFIRMAÇÃO ════════ */}
+      {showConfirm && (
+        <div style={S.overlay} onClick={() => setShowConfirm(false)}>
+          <div style={S.modal} onClick={e => e.stopPropagation()}>
+            <div style={S.modalIcon}>⚠</div>
+            <div style={S.modalTitle}>Confirmar importação</div>
+            <div style={S.modalBody}>
+              Todos os controles existentes da área <strong>"{areaNome}"</strong> serão <span style={{ color: '#EF4444', fontWeight: 700 }}>permanentemente apagados</span> e substituidos pelos <strong>{previewCount} controles</strong> do arquivo.
+              <br /><br />
+              <strong>Essa ação não pode ser desfeita.</strong>
+            </div>
+            <div style={S.modalActions}>
+              <button onClick={() => setShowConfirm(false)} style={S.btnCancelar}>
+                Cancelar
+              </button>
+              <button onClick={handleImportar} style={S.btnConfirmar}>
+                Sim, apagar e importar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -367,7 +401,7 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ESTILOS
+// ESTILOS — TEMA ESCURO
 // ══════════════════════════════════════════════════════════════════════════════
 
 const S = {
@@ -375,7 +409,16 @@ const S = {
   header: { marginBottom: 24 },
   title: { fontSize: 18, fontWeight: 600, color: '#F3EEE4' },
   subtitle: { fontSize: 12, color: 'rgba(243,238,228,0.6)', marginTop: 4 },
-  warning: { fontSize: 11, color: '#CC915E', background: 'rgba(204,145,94,0.12)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 6, padding: '8px 12px', marginTop: 10 },
+
+  // Aviso amarelo chamativo
+  warningBox: {
+    display: 'flex', alignItems: 'flex-start', gap: 10,
+    marginTop: 14, padding: '12px 16px', borderRadius: 8,
+    background: '#FBBF24', border: '2px solid #F59E0B',
+  },
+  warningIcon: { fontSize: 20, lineHeight: 1, flexShrink: 0 },
+  warningText: { fontSize: 12, color: '#1a1a1a', lineHeight: 1.5 },
+
   section: { marginBottom: 20 },
   sectionTitle: { fontSize: 12, fontWeight: 700, color: '#CC915E', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   select: { width: '100%', maxWidth: 400, padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(243,238,228,0.2)', fontFamily: 'inherit', fontSize: 12, color: '#F3EEE4', background: '#1D3B5C', cursor: 'pointer' },
@@ -391,4 +434,33 @@ const S = {
   confirmText: { fontSize: 12, color: '#F3EEE4', lineHeight: 1.5 },
   btnImportar: { background: '#CC915E', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' },
   resultado: { marginTop: 16, padding: '12px 16px', borderRadius: 6, border: '1px solid', fontSize: 12, fontWeight: 500, color: '#F3EEE4' },
+
+  // Pop-up de confirmação
+  overlay: {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 9999,
+  },
+  modal: {
+    background: '#00203E', border: '2px solid #F59E0B', borderRadius: 12,
+    padding: '28px 32px', maxWidth: 480, width: '90%',
+    fontFamily: "'Montserrat', sans-serif", textAlign: 'center',
+  },
+  modalIcon: { fontSize: 40, marginBottom: 8 },
+  modalTitle: { fontSize: 16, fontWeight: 700, color: '#FBBF24', marginBottom: 12 },
+  modalBody: { fontSize: 13, color: '#F3EEE4', lineHeight: 1.6, marginBottom: 24, textAlign: 'left' },
+  modalActions: { display: 'flex', gap: 12, justifyContent: 'center' },
+  btnCancelar: {
+    background: 'transparent', color: '#F3EEE4',
+    border: '1px solid rgba(243,238,228,0.3)', borderRadius: 6,
+    padding: '10px 24px', fontSize: 12, fontWeight: 600,
+    fontFamily: 'inherit', cursor: 'pointer',
+  },
+  btnConfirmar: {
+    background: '#EF4444', color: '#fff',
+    border: 'none', borderRadius: 6,
+    padding: '10px 24px', fontSize: 12, fontWeight: 700,
+    fontFamily: 'inherit', cursor: 'pointer',
+  },
 }
