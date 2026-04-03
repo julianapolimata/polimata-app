@@ -129,12 +129,13 @@ function fillCreme(ws, fromRow, toRow, fromCol, toCol) {
 
 function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
   const ws = wb.addWorksheet('Mapa de Calor', {
-    properties: { defaultRowHeight: 15, showGridLines: false },
+    views: [{ showGridLines: false }],
+    properties: { defaultRowHeight: 15 },
     pageSetup: { orientation: 'landscape', fitToPage: true },
   })
 
-  // Colunas: A=3, B=4.09, C-H=18
-  ws.getColumn(1).width = 3
+  // Colunas: A=4, B=4.09, C-H=18
+  ws.getColumn(1).width = 4
   ws.getColumn(2).width = 4.09
   ws.getColumn(3).width = 18
   ws.getColumn(4).width = 18
@@ -219,8 +220,9 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
 
       if (n === 0) {
         cell.value = '0'
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EMPTY_COLOR } }
-        cell.font = { name: 'Montserrat', bold: true, size: 14, color: { argb: 'FFBBBBBB' } }
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } }
+        const yellow = isYellowish(color)
+        cell.font = { name: 'Montserrat', bold: true, size: 14, color: { argb: yellow ? 'FF333333' : 'FFFFFFFF' } }
       } else {
         cell.value = `${n}\nE:${e}  I:${inf}  G:${g}`
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } }
@@ -360,12 +362,12 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
 function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNome) {
   const lastCol = MRC_COLUMNS.length + 1
   const ws = wb.addWorksheet(tituloAba, {
-    views: [{ state: 'frozen', ySplit: 4, xSplit: 1 }],
-    properties: { defaultRowHeight: 15, showGridLines: false },
+    views: [{ state: 'frozen', ySplit: 4, xSplit: 1, showGridLines: false }],
+    properties: { defaultRowHeight: 15 },
     pageSetup: { orientation: 'landscape', fitToPage: true },
   })
 
-  ws.getColumn(1).width = 3
+  ws.getColumn(1).width = 4
   MRC_COLUMNS.forEach((col, idx) => { ws.getColumn(idx + 2).width = col.width })
 
   // ── HEADER (merge B) ──
