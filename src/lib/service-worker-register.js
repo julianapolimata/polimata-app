@@ -1,6 +1,6 @@
 // Registrar service worker e forçar reload após deploy
 export function registerServiceWorker() {
-  if ('serviceWorker' in navigator && 'window' in typeof window) {
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
     try {
       navigator.serviceWorker
         .register('/service-worker.js', { scope: '/' })
