@@ -33,6 +33,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
   // Auxiliary data
   const [areaDestino, setAreaDestino] = useState('')
   const [subDestino, setSubDestino] = useState('')
+  const [subprocessosDestino, setSubprocessosDestino] = useState([])
 
   useEffect(() => {
     loadPerfil()
@@ -47,6 +48,23 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         .eq('id', data.user.id)
         .single()
       setPerfil(profile)
+    }
+  }
+
+  async function loadSubprocessosDestino(areaId) {
+    if (!areaId) {
+      setSubprocessosDestino([])
+      return
+    }
+    const { data } = await supabase
+      .from('mrc')
+      .select('sub')
+      .eq('area_id', areaId)
+      .eq('projeto_id', row.projeto_id)
+      .eq('ativo', true)
+    if (data) {
+      const unique = [...new Set(data.map(d => d.sub).filter(Boolean))].sort()
+      setSubprocessosDestino(unique)
     }
   }
 
@@ -352,7 +370,11 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Área de destino *</label>
                     <select
                       value={areaDestino}
-                      onChange={(e) => setAreaDestino(e.target.value)}
+                      onChange={(e) => {
+                        setAreaDestino(e.target.value)
+                        loadSubprocessosDestino(e.target.value)
+                        setSubDestino('')
+                      }}
                       style={{ width: '100%', padding: 10, border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12 }}
                     >
                       <option value="">Selecione a área...</option>
@@ -363,7 +385,17 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Subprocesso *</label>
-                    <input type="text" value={subDestino} onChange={(e) => setSubDestino(e.target.value)} placeholder="Subprocesso..." style={{ width: '100%', padding: 10, border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12 }} />
+                    <select
+                      value={subDestino}
+                      onChange={(e) => setSubDestino(e.target.value)}
+                      disabled={!areaDestino}
+                      style={{ width: '100%', padding: 10, border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, opacity: !areaDestino ? 0.5 : 1 }}
+                    >
+                      <option value="">Selecione o subprocesso...</option>
+                      {subprocessosDestino && subprocessosDestino.map((sub, idx) => (
+                        <option key={idx} value={sub}>{sub}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
@@ -382,34 +414,38 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
               <button
                 style={{
                   padding: 12,
-                  border: '1px solid #e5e7eb',
+                  border: descChoice === 'nao' ? '2px solid #00203E' : '1px solid #d1d5db',
                   borderRadius: 6,
-                  background: descChoice === 'nao' ? '#00203E' : 'white',
-                  color: descChoice === 'nao' ? 'white' : 'inherit',
+                  background: descChoice === 'nao' ? '#00203E' : '#fafbfc',
+                  color: descChoice === 'nao' ? 'white' : '#333',
                   cursor: 'pointer',
                   textAlign: 'center',
+                  transition: 'all 0.2s',
+                  fontFamily: 'Montserrat, sans-serif',
                 }}
                 onClick={() => setDescChoice('nao')}
               >
                 <div style={{ fontSize: 18, marginBottom: 4 }}>✓</div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>Não</div>
-                <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8, fontWeight: 500 }}>manter como está</div>
+                <div style={{ fontSize: 11, marginTop: 4, opacity: descChoice === 'nao' ? 0.9 : 0.6, fontWeight: 500 }}>manter como está</div>
               </button>
               <button
                 style={{
                   padding: 12,
-                  border: '1px solid #e5e7eb',
+                  border: descChoice === 'sim' ? '2px solid #00203E' : '1px solid #d1d5db',
                   borderRadius: 6,
-                  background: descChoice === 'sim' ? '#00203E' : 'white',
-                  color: descChoice === 'sim' ? 'white' : 'inherit',
+                  background: descChoice === 'sim' ? '#00203E' : '#fafbfc',
+                  color: descChoice === 'sim' ? 'white' : '#333',
                   cursor: 'pointer',
                   textAlign: 'center',
+                  transition: 'all 0.2s',
+                  fontFamily: 'Montserrat, sans-serif',
                 }}
                 onClick={() => setDescChoice('sim')}
               >
                 <div style={{ fontSize: 18, marginBottom: 4 }}>✎</div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>Sim</div>
-                <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8, fontWeight: 500 }}>houve alteração</div>
+                <div style={{ fontSize: 11, marginTop: 4, opacity: descChoice === 'sim' ? 0.9 : 0.6, fontWeight: 500 }}>houve alteração</div>
               </button>
             </div>
           </div>
@@ -471,34 +507,38 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
           <button
             style={{
               padding: 12,
-              border: '1px solid #e5e7eb',
+              border: ctrlDescChoice === 'nao' ? '2px solid #00203E' : '1px solid #d1d5db',
               borderRadius: 6,
-              background: ctrlDescChoice === 'nao' ? '#00203E' : 'white',
-              color: ctrlDescChoice === 'nao' ? 'white' : 'inherit',
+              background: ctrlDescChoice === 'nao' ? '#00203E' : '#fafbfc',
+              color: ctrlDescChoice === 'nao' ? 'white' : '#333',
               cursor: 'pointer',
               textAlign: 'center',
+              transition: 'all 0.2s',
+              fontFamily: 'Montserrat, sans-serif',
             }}
             onClick={() => setCtrlDescChoice('nao')}
           >
             <div style={{ fontSize: 18, marginBottom: 4 }}>✓</div>
             <div style={{ fontSize: 13, fontWeight: 700 }}>Não</div>
-            <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8, fontWeight: 500 }}>manter como está</div>
+            <div style={{ fontSize: 11, marginTop: 4, opacity: ctrlDescChoice === 'nao' ? 0.9 : 0.6, fontWeight: 500 }}>manter como está</div>
           </button>
           <button
             style={{
               padding: 12,
-              border: '1px solid #e5e7eb',
+              border: ctrlDescChoice === 'sim' ? '2px solid #00203E' : '1px solid #d1d5db',
               borderRadius: 6,
-              background: ctrlDescChoice === 'sim' ? '#00203E' : 'white',
-              color: ctrlDescChoice === 'sim' ? 'white' : 'inherit',
+              background: ctrlDescChoice === 'sim' ? '#00203E' : '#fafbfc',
+              color: ctrlDescChoice === 'sim' ? 'white' : '#333',
               cursor: 'pointer',
               textAlign: 'center',
+              transition: 'all 0.2s',
+              fontFamily: 'Montserrat, sans-serif',
             }}
             onClick={() => setCtrlDescChoice('sim')}
           >
             <div style={{ fontSize: 18, marginBottom: 4 }}>✎</div>
             <div style={{ fontSize: 13, fontWeight: 700 }}>Sim</div>
-            <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8, fontWeight: 500 }}>houve alteração</div>
+            <div style={{ fontSize: 11, marginTop: 4, opacity: ctrlDescChoice === 'sim' ? 0.9 : 0.6, fontWeight: 500 }}>houve alteração</div>
           </button>
         </div>
       </div>
@@ -733,13 +773,13 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         </button>
       </div>
 
-      <div style={{ background: '#f3f4f6', border: '1px dashed #d1d5db', padding: 16, borderRadius: 8, marginBottom: 16, textAlign: 'center' }}>
-        <p style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>💾 Salvar sem gerar ficha</p>
-        <p style={{ fontSize: 11, color: '#999' }}>Salva as alterações, mas o teste ficará marcado como pendente.</p>
+      <div style={{ background: '#e5e7eb', border: '2px dashed #9ca3af', padding: 16, borderRadius: 8, marginBottom: 16, textAlign: 'center' }}>
+        <p style={{ fontSize: 13, color: '#1f2937', fontWeight: 600, marginBottom: 8 }}>💾 Salvar sem gerar ficha</p>
+        <p style={{ fontSize: 12, color: '#374151', marginBottom: 12 }}>Salva as alterações, mas o teste ficará marcado como pendente.</p>
         <button
           onClick={handleSaveSemFicha}
           disabled={saving}
-          style={{ marginTop: 8, background: '#f0f0f0', border: '1px solid #d1d5db', padding: '6px 12px', borderRadius: 4, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+          style={{ marginTop: 8, background: '#6b7280', color: 'white', border: '1px solid #4b5563', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
         >
           Salvar sem Ficha
         </button>
