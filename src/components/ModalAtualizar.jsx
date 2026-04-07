@@ -399,15 +399,11 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     }
 
     // Validação lista ✓/✗ em H43:H52
-    ws.dataValidations.add({
+    ws.dataValidations.add('H43:H52', {
       type: 'list',
       allowBlank: true,
-      sqref: 'H43:H52',
       formulae: ['"✓,✗"'],
       showDropDown: false,
-      showErrorMessage: true,
-      errorTitle: 'Valor inválido',
-      error: 'Selecione ✓ ou ✗',
     })
 
     ws.getRow(53).height = 5
@@ -421,27 +417,19 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     applyRow(ws, 59, 'DESCRIÇÃO DA MELHORIA',      '', true)
 
     // Validação Resultado C56:I56
-    ws.dataValidations.add({
+    ws.dataValidations.add('C56:I56', {
       type: 'list',
       allowBlank: true,
-      sqref: 'C56:I56',
       formulae: ['"Efetivo,Inefetivo,GAP"'],
       showDropDown: false,
-      showErrorMessage: true,
-      errorTitle: 'Valor inválido',
-      error: 'Selecione Efetivo, Inefetivo ou GAP',
     })
 
     // Validação Melhoria C58:I58
-    ws.dataValidations.add({
+    ws.dataValidations.add('C58:I58', {
       type: 'list',
       allowBlank: true,
-      sqref: 'C58:I58',
       formulae: ['"Sim,Não"'],
       showDropDown: false,
-      showErrorMessage: true,
-      errorTitle: 'Valor inválido',
-      error: 'Selecione Sim ou Não',
     })
 
     // Nota linha 60
@@ -481,8 +469,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
       const imgId = workbook.addImage({ buffer: bytes.buffer, extension: 'png' })
       ws.addImage(imgId, {
         tl: { col: 1, row: 0 },
-        ext: { width: 30, height: 30 },
-        editAs: 'oneCell',
+        br: { col: 2, row: 2 },
       })
     } catch (_) {}
 
