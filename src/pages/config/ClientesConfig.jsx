@@ -119,6 +119,8 @@ function NovoClienteForm({ onSave, onCancel }) {
 
   async function salvar() {
     if (!nome.trim()) { setErro('Nome do cliente é obrigatório'); return }
+    const areasInvalidas = areas.filter(a => a.nome.trim() && !(parseFloat(a.peso) > 0))
+    if (areasInvalidas.length) { setErro('Todas as áreas devem ter peso maior que 0%'); return }
     setSaving(true); setErro('')
     try {
       const { data: cli, error: eCli } = await supabase
@@ -249,6 +251,8 @@ function DetalheCliente({ cliente, onBack }) {
       await supabase.from('areas').insert({ projeto_id: projetoId, nome: area.nome, prefixo: area.prefixo.toUpperCase(), peso: parseFloat(area.peso)||0, gerente: area.gerente, ordem: areas.length+1 })
     }
     setEditandoArea(null); setNovaArea(false); await loadDados(); setSaving(false)
+    // Notifica o Dashboard para recarregar as áreas
+    window.dispatchEvent(new CustomEvent('polimata:areas-updated'))
   }
 
   async function removerArea(id) {
@@ -414,12 +418,17 @@ function AreaForm({ area, onSave, onCancel, saving, inline }) {
       <div className="cfg-row3">
         <div className="cfg-field"><label>Processo <span className="req">*</span></label><input className="input-light" value={form.nome} onChange={e=>u('nome',e.target.value)} placeholder="Ex: Compras" /></div>
         <div className="cfg-field"><label>Prefixo <span className="req">*</span></label><input className="input-light" value={form.prefixo} onChange={e=>u('prefixo',e.target.value.toUpperCase())} placeholder="COM" maxLength={8} /></div>
-        <div className="cfg-field"><label>Peso (%)</label><input className="input-light" type="number" value={form.peso} onChange={e=>u('peso',e.target.value)} placeholder="13.5" /></div>
+        <div className="cfg-field">
+          <label>Peso (%) <span className="req">*</span></label>
+          <input className="input-light" type="number" value={form.peso} onChange={e=>u('peso',e.target.value)} placeholder="13.5" min="0.1" step="0.1"
+            style={form.peso !== '' && !(parseFloat(form.peso) > 0) ? {borderColor:'#EF4444'} : {}} />
+          {form.peso !== '' && !(parseFloat(form.peso) > 0) && <span className="field-erro">Peso deve ser maior que 0%</span>}
+        </div>
       </div>
       <div className="cfg-field" style={{marginTop:10}}><label>Gerente</label><input className="input-light" value={form.gerente} onChange={e=>u('gerente',e.target.value)} placeholder="Nome do gerente" /></div>
       <div style={{display:'flex',gap:8,marginTop:10}}>
         <button className="btn-cfg-cancel" onClick={onCancel}>Cancelar</button>
-        <button className="btn-cfg-save" onClick={()=>onSave(form)} disabled={saving||!form.nome.trim()}>{saving?'Salvando...':'✓ Salvar'}</button>
+        <button className="btn-cfg-save" onClick={()=>onSave(form)} disabled={saving||!form.nome.trim()||!form.prefixo.trim()||!(parseFloat(form.peso)>0)}>{saving?'Salvando...':'✓ Salvar'}</button>
       </div>
     </div>
   )
