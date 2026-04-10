@@ -6,6 +6,8 @@ import Configuracoes from './Configuracoes'
 import Perfil from './Perfil'
 import MRCCompleta, { ModalDetalhe } from '../components/MRCCompleta'
 import ModalAtualizar from '../components/ModalAtualizar'
+import ModalNovoRisco from '../components/ModalNovoRisco'
+import ModalRegistrarResultado from '../components/ModalRegistrarResultado'
 import ImportarMRC from '../components/ImportarMRC'
 import {
   calcularPercentualArea,
@@ -520,6 +522,8 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   const [filtRes, setFiltRes] = useState('')
   const [modalRow, setModalRow] = useState(null)
   const [atualizarRow, setAtualizarRow] = useState(null)
+  const [modalNovoRisco, setModalNovoRisco] = useState(false)
+  const [rowRegistrarResultado, setRowRegistrarResultado] = useState(null)
   const canEdit = perfil?.papel === 'admin_polimata' || perfil?.papel === 'consultor_polimata'
 
   if (loading) return <Spinner />
@@ -717,8 +721,10 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
                     <button onClick={() => setModalRow(c)} style={{ background: 'rgba(243,238,228,0.06)', border: '1px solid rgba(243,238,228,0.1)', borderRadius: 3, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'rgba(243,238,228,0.6)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Ver</button>
                     {canEdit && <button onClick={() => setAtualizarRow(c)} style={{ background: 'rgba(204,145,94,0.1)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 3, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: '#CC915E', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Atualizar</button>}
+                    {canEdit && <button onClick={() => setRowRegistrarResultado(c)} disabled={c.status_workflow !== 'ficha_gerada'} style={{ background: c.status_workflow === 'ficha_gerada' ? 'rgba(204,145,94,0.1)' : 'rgba(255,255,255,0.02)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 3, padding: '2px 10px', fontSize: 9, fontWeight: 600, color: c.status_workflow === 'ficha_gerada' ? '#CC915E' : 'rgba(243,238,228,0.2)', cursor: c.status_workflow === 'ficha_gerada' ? 'pointer' : 'not-allowed', fontFamily: 'inherit', width: '100%' }}>Registrar</button>}
                     {c.status_workflow === 'em_analise' && <span style={{ fontSize: 8, fontWeight: 700, color: '#CC915E', background: 'rgba(204,145,94,0.15)', padding: '1px 6px', borderRadius: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Em Análise</span>}
                     {c.status_workflow === 'teste_pendente' && <span style={{ fontSize: 8, fontWeight: 700, color: '#EAB308', background: 'rgba(234,179,8,0.15)', padding: '1px 6px', borderRadius: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Teste Pendente</span>}
+                    {c.status_workflow === 'ficha_gerada' && <span style={{ fontSize: 8, fontWeight: 700, color: '#F3EEE4', background: 'rgba(243,238,228,0.15)', padding: '1px 6px', borderRadius: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Ficha Gerada</span>}
                   </div>
                 </td>
               </tr>)})}{cf.length === 0 && <tr><td colSpan={24} style={{ padding: 32, textAlign: 'center', color: 'rgba(243,238,228,0.3)' }}>Nenhum controle encontrado.</td></tr>}</tbody>
@@ -727,6 +733,8 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
       </div>
       {modalRow && <ModalDetalhe row={modalRow} onClose={() => setModalRow(null)} />}
       {atualizarRow && <ModalAtualizar row={atualizarRow} onClose={() => setAtualizarRow(null)} onSaved={() => { setAtualizarRow(null); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} />}
+      {modalNovoRisco && <ModalNovoRisco onClose={() => setModalNovoRisco(false)} onSaved={() => { setModalNovoRisco(false); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} />}
+      {rowRegistrarResultado && <ModalRegistrarResultado row={rowRegistrarResultado} onClose={() => setRowRegistrarResultado(null)} onSaved={() => { setRowRegistrarResultado(null); if (projeto?.id) loadDados(projeto.id) }} responsaveis={[]} />}
     </div>
   )
 }
