@@ -10,6 +10,42 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <style>body{display:flex;align-items:center;justify-content:center;height:100vh;background:#f5f0eb;color:#1a2540;font-family:Montserrat,sans-serif;text-align:center;}</style>
+      <p>JavaScript precisa estar habilitado para usar o Polímata CI.</p>
+    </noscript>
+    <script>
+      // If the app doesn't mount within 8s, offer a hard reload
+      setTimeout(function() {
+        var root = document.getElementById('root');
+        if (root && root.children.length === 0) {
+          root.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f5f0eb;font-family:Montserrat,sans-serif;color:#1a2540;gap:16px;">'
+            + '<p style="font-size:14px;color:#6b7a90;">Carregando nova versão...</p>'
+            + '<button onclick="location.reload(true)" style="padding:10px 24px;border-radius:8px;border:1px solid #c8895c;background:#c8895c;color:#fff;cursor:pointer;font-family:Montserrat,sans-serif;font-size:13px;">Recarregar</button>'
+            + '</div>';
+        }
+      }, 8000);
+    </script>
+    <script>
+      // Force-unregister any residual service workers and clear old caches
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          registrations.forEach(function(reg) {
+            reg.unregister().then(function() {
+              console.log('[SW] Unregistered residual service worker:', reg.scope);
+            });
+          });
+        });
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            names.forEach(function(name) {
+              caches.delete(name);
+              console.log('[Cache] Deleted cache:', name);
+            });
+          });
+        }
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
