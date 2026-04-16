@@ -454,7 +454,7 @@ body {
 .card-ttl { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--copper); font-weight: 600; }
 
 table { width: 100%; border-collapse: collapse; }
-th { padding: 12px 16px; text-align: left; font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--lt-text3); font-weight: 600; border-bottom: 1px solid var(--lt-border); background: rgba(10,37,64,0.02); white-space: nowrap; position: sticky; top: 0; z-index: 2; }
+th { padding: 12px 16px; text-align: left; font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--lt-text3); font-weight: 600; border-bottom: 1px solid var(--lt-border); background: var(--lt-card); white-space: nowrap; position: sticky; top: 0; z-index: 2; }
 td { padding: 14px 16px; border-bottom: 1px solid rgba(10,37,64,0.04); font-size: 12.5px; color: var(--lt-text2); vertical-align: top; }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(200,137,92,0.03); }
@@ -500,7 +500,28 @@ tr:hover td { background: rgba(200,137,92,0.03); }
 /* ══════════════════════════════════════════════
    MRC COMPLETA (LIGHT)
 ══════════════════════════════════════════════ */
-.mrc-wrap { padding: 24px 32px; }
+.mrc-wrap { padding: 0 32px 24px; }
+
+/* Header bar — título + stats na mesma linha */
+.mrc-header-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 14px; position: sticky; top: 0; z-index: 40; background: var(--lt-bg); }
+.mrc-header-bar .dash-eye { margin-bottom: 2px; }
+.mrc-header-bar .dash-ttl { font-size: 18px; }
+.mrc-header-stats { display: flex; gap: 20px; }
+.mrc-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.mrc-stat-n { font-size: 18px; font-weight: 300; font-family: 'Raleway', sans-serif; color: var(--lt-text); }
+.mrc-stat-l { font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--lt-text3); font-weight: 600; }
+
+/* Heatmap compact wrapper */
+.mrc-hm-compact .hm-wrap { margin-bottom: 12px; }
+.mrc-hm-compact .hm-cell { min-height: 44px; padding: 4px 4px; }
+.mrc-hm-compact .hm-n { font-size: 15px; }
+.mrc-hm-compact .hm-eig { font-size: 8px; gap: 3px; }
+.mrc-hm-compact .hm-ylabel { min-height: 44px; font-size: 9px; }
+.mrc-hm-compact .hm-legend { gap: 4px; min-width: 130px; }
+.mrc-hm-compact .hm-leg { padding: 6px 10px; }
+.mrc-hm-compact .hm-lnum { font-size: 14px; }
+.mrc-hm-compact .hm-lbl { font-size: 10px; }
+.mrc-hm-compact .hm-lsub { font-size: 9px; }
 
 /* Barra de ações */
 .mrc-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
