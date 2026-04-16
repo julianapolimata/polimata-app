@@ -304,9 +304,9 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
         {/* HEADER */}
         <div style={{
           background: 'linear-gradient(135deg, #00203E 0%, #1D3B5C 100%)',
-          color: '#F3EEE4',
+          color: '#F7F3EE',
           padding: '1.5rem 2rem',
-          borderBottom: '3px solid #CC915E'
+          borderBottom: '3px solid #C8895C'
         }}>
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 500 }}>Novo Risco</h2>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '12px', opacity: 0.85 }}>
@@ -329,8 +329,8 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                 textAlign: 'center',
                 fontSize: '12px',
                 fontWeight: 500,
-                color: step === s ? '#CC915E' : '#999',
-                borderBottom: step === s ? '2px solid #CC915E' : 'none',
+                color: step === s ? '#C8895C' : '#999',
+                borderBottom: step === s ? '2px solid #C8895C' : 'none',
                 background: step === s ? 'white' : 'transparent',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px'
@@ -523,7 +523,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                   letterSpacing: '0.5px',
                   marginBottom: '1rem',
                   paddingBottom: '0.75rem',
-                  borderBottom: '2px solid #CC915E'
+                  borderBottom: '2px solid #C8895C'
                 }}>
                   1. Descrição do Controle
                 </div>
@@ -565,7 +565,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                   letterSpacing: '0.5px',
                   marginBottom: '1rem',
                   paddingBottom: '0.75rem',
-                  borderBottom: '2px solid #CC915E'
+                  borderBottom: '2px solid #C8895C'
                 }}>
                   2. Características do Controle
                 </div>
@@ -622,7 +622,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                   letterSpacing: '0.5px',
                   marginBottom: '1rem',
                   paddingBottom: '0.75rem',
-                  borderBottom: '2px solid #CC915E'
+                  borderBottom: '2px solid #C8895C'
                 }}>
                   3. Premissas do Controle
                 </div>
@@ -696,7 +696,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                   letterSpacing: '0.5px',
                   marginBottom: '1rem',
                   paddingBottom: '0.75rem',
-                  borderBottom: '2px solid #CC915E'
+                  borderBottom: '2px solid #C8895C'
                 }}>
                   4. Resultado da Análise
                 </div>
@@ -725,7 +725,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                         alignItems: 'center',
                         gap: '1rem',
                         padding: '0.8rem',
-                        border: resultado === opt.value ? '2px solid #CC915E' : '1px solid #E0E0E0',
+                        border: resultado === opt.value ? '2px solid #C8895C' : '1px solid #E0E0E0',
                         borderRadius: '4px',
                         background: resultado === opt.value ? '#F9F7F3' : 'white',
                         cursor: 'pointer'
@@ -737,7 +737,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                         value={opt.value}
                         checked={resultado === opt.value}
                         onChange={() => {}}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#CC915E' }}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#C8895C' }}
                       />
                       <span style={{ fontSize: '14px', fontWeight: 500 }}>{opt.label}</span>
                       <span style={{
@@ -776,7 +776,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
               {showInconsistencia && (
                 <div style={{
                   background: '#F9F7F3',
-                  borderLeft: '3px solid #CC915E',
+                  borderLeft: '3px solid #C8895C',
                   padding: '1.5rem',
                   borderRadius: '4px',
                   marginBottom: '1.5rem'
@@ -845,7 +845,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                         value={opt.value}
                         checked={melhoria === opt.value}
                         onChange={e => setMelhoria(e.target.value)}
-                        style={{ accentColor: '#CC915E' }}
+                        style={{ accentColor: '#C8895C' }}
                       />
                       <span style={{ fontSize: '14px' }}>{opt.label}</span>
                     </label>
@@ -894,7 +894,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                   letterSpacing: '0.5px',
                   marginBottom: '1rem',
                   paddingBottom: '0.75rem',
-                  borderBottom: '2px solid #CC915E'
+                  borderBottom: '2px solid #C8895C'
                 }}>
                   5. Avaliação da Criticidade
                 </div>
@@ -966,7 +966,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                 </div>
                 {criticidade && (
                   <div style={{
-                    background: '#F3EEE4',
+                    background: '#F7F3EE',
                     border: '1px solid #E0D5C7',
                     padding: '1rem',
                     borderRadius: '4px',
@@ -996,7 +996,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
               {showPA && (
                 <div style={{
                   background: '#F9F7F3',
-                  borderLeft: '3px solid #CC915E',
+                  borderLeft: '3px solid #C8895C',
                   padding: '1.5rem',
                   borderRadius: '4px'
                 }}>
@@ -1033,7 +1033,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                           value={opt.value}
                           checked={temPA === opt.value}
                           onChange={e => setTemPA(e.target.value)}
-                          style={{ accentColor: '#CC915E' }}
+                          style={{ accentColor: '#C8895C' }}
                         />
                         <span style={{ fontSize: '14px' }}>{opt.label}</span>
                       </label>
@@ -1259,7 +1259,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                 letterSpacing: '0.5px',
                 marginBottom: '1rem',
                 paddingBottom: '0.75rem',
-                borderBottom: '2px solid #CC915E'
+                borderBottom: '2px solid #C8895C'
               }}>
                 Próximos Passos
               </div>
@@ -1328,9 +1328,9 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                 padding: '0.8rem 1.5rem',
                 fontSize: '13px',
                 fontWeight: 500,
-                border: '1px solid #CC915E',
+                border: '1px solid #C8895C',
                 borderRadius: '4px',
-                background: '#CC915E',
+                background: '#C8895C',
                 color: 'white',
                 cursor: saving || (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 'not-allowed' : 'pointer',
                 opacity: saving || (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 0.5 : 1,
@@ -1352,7 +1352,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                   fontWeight: 500,
                   border: '1px solid #E0D5C7',
                   borderRadius: '4px',
-                  background: '#F3EEE4',
+                  background: '#F7F3EE',
                   color: '#1D3B5C',
                   cursor: saving ? 'not-allowed' : 'pointer',
                   opacity: saving ? 0.5 : 1,
@@ -1369,9 +1369,9 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto }) => {
                   padding: '0.8rem 1.5rem',
                   fontSize: '13px',
                   fontWeight: 500,
-                  border: '1px solid #CC915E',
+                  border: '1px solid #C8895C',
                   borderRadius: '4px',
-                  background: '#CC915E',
+                  background: '#C8895C',
                   color: 'white',
                   cursor: saving ? 'not-allowed' : 'pointer',
                   opacity: saving ? 0.5 : 1,

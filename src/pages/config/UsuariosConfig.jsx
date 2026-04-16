@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 
 const PAPEIS = [
-  { value: 'admin_polimata',    label: 'Admin Polímata',    desc: 'Acesso total a todos os clientes e configurações', cor: '#CC915E' },
+  { value: 'admin_polimata',    label: 'Admin Polímata',    desc: 'Acesso total a todos os clientes e configurações', cor: '#C8895C' },
   { value: 'consultor_polimata',label: 'Consultor Polímata',desc: 'Edita análises, faz upload de fichas, baixa relatórios', cor: '#3B82F6' },
   { value: 'gestor_cliente',    label: 'Gestor do Cliente', desc: 'Vê todas as áreas do projeto, somente consulta e download', cor: '#22C55E' },
   { value: 'usuario_cliente',   label: 'Usuário Cliente',   desc: 'Acesso às áreas atribuídas, somente consulta e download', cor: '#A78BFA' },
@@ -96,7 +96,7 @@ export default function UsuariosConfig() {
                   </span>
                   {u.clientes?.nome && <span className="badge-cliente">{u.clientes.nome}</span>}
                   {u.papel === 'admin_polimata' && (
-                    <span className="badge-cliente" style={{ background: 'rgba(204,145,94,0.1)', color: 'var(--gold)' }}>Todos os clientes</span>
+                    <span className="badge-cliente" style={{ background: 'rgba(200,137,92,0.1)', color: 'var(--gold)' }}>Todos os clientes</span>
                   )}
                 </div>
               </div>
@@ -346,7 +346,7 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
   }
 
   return (
-    <div className="cfg-inline-form" style={{ borderColor: 'rgba(204,145,94,0.3)' }}>
+    <div className="cfg-inline-form" style={{ borderColor: 'rgba(200,137,92,0.3)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div className="cfg-group-title" style={{ fontSize: 13 }}>Editando: {usuario.nome}</div>
         <button className="btn-cfg-remove" onClick={onCancel}>✕</button>

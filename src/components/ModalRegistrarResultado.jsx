@@ -1,9 +1,48 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+
+// Helper: determina nome completo da fase atual do controle
+function getFaseAtual(c) {
+  if (c.r_f5 && c.r_f5 !== 'Teste Não Realizado') return 'Auditoria Independente'
+  if (c.r_f4c2 && c.r_f4c2 !== 'Teste Não Realizado') return 'Auditoria Contínua'
+  if (c.r_f4c1 && c.r_f4c1 !== 'Teste Não Realizado') return 'Auditoria Contínua'
+  if (c.r3 && c.r3 !== 'Teste Não Realizado') return 'Controles Internos'
+  if (c.r_ader && c.r_ader !== 'Teste Não Realizado') return 'Teste de Aderência'
+  if (c.st_pa && c.st_pa !== '') return 'Plano de Ação e Teste de Desenho'
+  if (c.r1 && c.r1 !== 'Teste Não Realizado') {
+    // Se F1 efetivo, pula pra Controles Internos (atalho)
+    if (c.r1.toLowerCase() === 'efetivo') return 'Controles Internos'
+    return 'Plano de Ação e Teste de Desenho'
+  }
+  return 'Diagnóstico Inicial'
+}
 
 const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
   // ═══ STATE ═══
+  const { user } = useAuth()
   const [saving, setSaving] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [notaReprovacao, setNotaReprovacao] = useState(null)
+  const faseAtual = getFaseAtual(row || {})
+  const isReprovado = row?.status_workflow === 'reprovado'
+
+  // Se controle foi reprovado, buscar a última nota de reprovação
+  useEffect(() => {
+    if (isReprovado && row?.id) {
+      supabase
+        .from('revisoes')
+        .select('nota, criado_em, autor:perfis!autor_id(nome)')
+        .eq('mrc_id', row.id)
+        .eq('tipo', 'reprovacao')
+        .order('criado_em', { ascending: false })
+        .limit(1)
+        .then(({ data }) => {
+          if (data?.[0]) setNotaReprovacao(data[0])
+        })
+    }
+  }, [row?.id, isReprovado])
+
   const [resultado, setResultado] = useState(row?.r1 || 'inefetivo')
   const [inconsistencia, setInconsistencia] = useState(row?.incons || '')
   const [showInconsistenciaAlert, setShowInconsistenciaAlert] = useState(false)
@@ -63,31 +102,41 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
     setResultado(novoResultado)
   }
 
-  // ═══ SALVAR RESULTADO ═══
-  async function saveResultado() {
+  // ═══ DADOS COMUNS PARA SALVAR ═══
+  function buildUpdatePayload() {
+    return {
+      r1: resultado,
+      incons: resultado !== 'efetivo' ? inconsistencia : null,
+      melhoria: melhoria === 'sim' ? true : false,
+      incons_ader: melhoria === 'sim' ? descMelhoria : null,
+      imp: parseInt(impacto),
+      prob: parseInt(probabilidade),
+      crit: criticidade,
+      crit_label: getCriticidadeLabel(criticidade).label,
+      dem_pa: resultado !== 'efetivo' && temPA === 'sim' ? paDesc : null,
+      resp_pa: resultado !== 'efetivo' && temPA === 'sim' ? paResp : null,
+      dt_pa: resultado !== 'efetivo' && temPA === 'sim' ? paPrazo : null,
+      st_pa: resultado !== 'efetivo' && temPA === 'sim' ? paStatus : null,
+    }
+  }
+
+  // ═══ SALVAR APENAS (mantém status atual, não submete) ═══
+  async function saveOnly() {
     setSaving(true)
     try {
+      const payload = buildUpdatePayload()
+      // Se estava reprovado, manter reprovado; senão manter status atual ou em_analise
+      if (!row.status_workflow || row.status_workflow === 'ficha_gerada') {
+        payload.status_workflow = 'em_analise'
+      }
+      // Se reprovado, manter reprovado (consultor só salva, não resubmete ainda)
+
       const { error } = await supabase
         .from('mrc')
-        .update({
-          r1: resultado,
-          incons: resultado !== 'efetivo' ? inconsistencia : null,
-          melhoria: melhoria === 'sim' ? true : false,
-          incons_ader: melhoria === 'sim' ? descMelhoria : null,
-          imp: parseInt(impacto),
-          prob: parseInt(probabilidade),
-          crit: criticidade,
-          crit_label: getCriticidadeLabel(criticidade).label,
-          dem_pa: resultado !== 'efetivo' && temPA === 'sim' ? paDesc : null,
-          resp_pa: resultado !== 'efetivo' && temPA === 'sim' ? paResp : null,
-          dt_pa: resultado !== 'efetivo' && temPA === 'sim' ? paPrazo : null,
-          st_pa: resultado !== 'efetivo' && temPA === 'sim' ? paStatus : null,
-          status_workflow: 'em_analise'
-        })
+        .update(payload)
         .eq('id', row.id)
 
       if (error) throw error
-
       onSaved?.(row)
       onClose?.()
     } catch (err) {
@@ -95,6 +144,68 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
       alert('Erro ao salvar. Tente novamente.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  // ═══ SALVAR E SUBMETER PARA REVISÃO ═══
+  async function saveAndSubmit() {
+    setSubmitting(true)
+    try {
+      const payload = buildUpdatePayload()
+      payload.status_workflow = 'em_revisao'
+      payload.submetido_por = user?.id || null
+      payload.submetido_em = new Date().toISOString()
+
+      const { error } = await supabase
+        .from('mrc')
+        .update(payload)
+        .eq('id', row.id)
+
+      if (error) throw error
+
+      // Registrar na tabela de revisões
+      const { error: revErr } = await supabase
+        .from('revisoes')
+        .insert({
+          mrc_id: row.id,
+          autor_id: user?.id,
+          tipo: 'submissao',
+          nota: null,
+          status_antes: row.status_workflow || 'ficha_gerada',
+          status_depois: 'em_revisao',
+          fase: faseAtual,
+        })
+      if (revErr) console.error('Erro ao registrar revisão:', revErr)
+
+      // Criar notificação para todos os admins
+      const { data: admins } = await supabase
+        .from('perfis')
+        .select('id')
+        .eq('papel', 'admin_polimata')
+
+      if (admins && admins.length > 0) {
+        const notifs = admins.map(a => ({
+          para_id: a.id,
+          de_id: user?.id,
+          tipo: 'submissao',
+          titulo: `Análise submetida — ${row.rc || row.rr}`,
+          mensagem: `${row.rc} (${row.area}) foi submetido para revisão na fase ${faseAtual}.`,
+          lida: false,
+          mrc_id: row.id,
+        }))
+        const { error: notErr } = await supabase
+          .from('notificacoes')
+          .insert(notifs)
+        if (notErr) console.error('Erro ao criar notificação:', notErr)
+      }
+
+      onSaved?.(row)
+      onClose?.()
+    } catch (err) {
+      console.error('Erro ao submeter:', err)
+      alert('Erro ao submeter para revisão. Tente novamente.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -125,9 +236,9 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
         {/* HEADER */}
         <div style={{
           background: 'linear-gradient(135deg, #00203E 0%, #1D3B5C 100%)',
-          color: '#F3EEE4',
+          color: '#F7F3EE',
           padding: '1.5rem 2rem',
-          borderBottom: '3px solid #CC915E'
+          borderBottom: '3px solid #C8895C'
         }}>
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 500 }}>Registrar Resultado do Teste</h2>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '12px', opacity: 0.85 }}>
@@ -142,6 +253,29 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
           flex: 1,
           fontFamily: 'Montserrat, sans-serif'
         }}>
+          {/* Banner de reprovação (se aplicável) */}
+          {isReprovado && notaReprovacao && (
+            <div style={{
+              background: '#FFF5F5',
+              borderLeft: '4px solid #E24B4A',
+              padding: '1rem 1.25rem',
+              borderRadius: '4px',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#C62828', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+                ↩ Análise Reprovada — Ação Necessária
+              </div>
+              <div style={{ fontSize: 13, color: '#444', lineHeight: 1.5, fontStyle: 'italic' }}>
+                "{notaReprovacao.nota}"
+              </div>
+              <div style={{ fontSize: 10, color: '#999', marginTop: 6 }}>
+                Reprovado por <strong style={{ color: '#666' }}>{notaReprovacao.autor?.nome || '—'}</strong> em{' '}
+                {new Date(notaReprovacao.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                {' · '}<span style={{ color: '#C8895C' }}>{faseAtual}</span>
+              </div>
+            </div>
+          )}
+
           {/* Seção: Resultado */}
           <div style={{ marginBottom: '2rem' }}>
             <div style={{
@@ -152,7 +286,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
               letterSpacing: '0.5px',
               marginBottom: '1rem',
               paddingBottom: '0.75rem',
-              borderBottom: '2px solid #CC915E'
+              borderBottom: '2px solid #C8895C'
             }}>
               1. Resultado da Execução do Teste
             </div>
@@ -181,7 +315,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
                     alignItems: 'center',
                     gap: '1rem',
                     padding: '0.8rem',
-                    border: resultado === opt.value ? '2px solid #CC915E' : '1px solid #E0E0E0',
+                    border: resultado === opt.value ? '2px solid #C8895C' : '1px solid #E0E0E0',
                     borderRadius: '4px',
                     background: resultado === opt.value ? '#F9F7F3' : 'white',
                     cursor: 'pointer'
@@ -193,7 +327,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
                     value={opt.value}
                     checked={resultado === opt.value}
                     onChange={() => {}}
-                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#CC915E' }}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#C8895C' }}
                   />
                   <span style={{ fontSize: '14px', fontWeight: 500 }}>{opt.label}</span>
                   <span style={{
@@ -232,7 +366,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
           {showInconsistencia && (
             <div style={{
               background: '#F9F7F3',
-              borderLeft: '3px solid #CC915E',
+              borderLeft: '3px solid #C8895C',
               padding: '1.5rem',
               borderRadius: '4px',
               marginBottom: '1.5rem'
@@ -301,7 +435,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
                     value={opt.value}
                     checked={melhoria === opt.value}
                     onChange={e => setMelhoria(e.target.value)}
-                    style={{ accentColor: '#CC915E' }}
+                    style={{ accentColor: '#C8895C' }}
                   />
                   <span style={{ fontSize: '14px' }}>{opt.label}</span>
                 </label>
@@ -350,7 +484,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
               letterSpacing: '0.5px',
               marginBottom: '1rem',
               paddingBottom: '0.75rem',
-              borderBottom: '2px solid #CC915E'
+              borderBottom: '2px solid #C8895C'
             }}>
               2. Avaliação da Criticidade
             </div>
@@ -422,7 +556,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
             </div>
             {criticidade && (
               <div style={{
-                background: '#F3EEE4',
+                background: '#F7F3EE',
                 border: '1px solid #E0D5C7',
                 padding: '1rem',
                 borderRadius: '4px',
@@ -452,7 +586,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
           {showPA && (
             <div style={{
               background: '#F9F7F3',
-              borderLeft: '3px solid #CC915E',
+              borderLeft: '3px solid #C8895C',
               padding: '1.5rem',
               borderRadius: '4px'
             }}>
@@ -489,7 +623,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
                       value={opt.value}
                       checked={temPA === opt.value}
                       onChange={e => setTemPA(e.target.value)}
-                      style={{ accentColor: '#CC915E' }}
+                      style={{ accentColor: '#C8895C' }}
                     />
                     <span style={{ fontSize: '14px' }}>{opt.label}</span>
                   </label>
@@ -650,6 +784,25 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
           )}
         </div>
 
+        {/* FASE ATUAL */}
+        <div style={{
+          background: '#F7F3EE',
+          borderTop: '1px solid #E0D5C7',
+          padding: '0.75rem 2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '11px',
+          color: '#1D3B5C'
+        }}>
+          <span>Fase em curso: <strong>{faseAtual}</strong></span>
+          {row?.status_workflow === 'reprovado' && (
+            <span style={{ color: '#C62828', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase' }}>
+              ↩ Análise reprovada — edite e reenvie
+            </span>
+          )}
+        </div>
+
         {/* FOOTER */}
         <div style={{
           background: '#FAFAFA',
@@ -661,7 +814,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
         }}>
           <button
             onClick={onClose}
-            disabled={saving}
+            disabled={saving || submitting}
             style={{
               padding: '0.8rem 1.5rem',
               fontSize: '13px',
@@ -669,32 +822,54 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
               border: '1px solid #D0D0D0',
               borderRadius: '4px',
               background: 'white',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              opacity: saving ? 0.5 : 1,
+              cursor: saving || submitting ? 'not-allowed' : 'pointer',
+              opacity: saving || submitting ? 0.5 : 1,
               textTransform: 'uppercase',
-              letterSpacing: '0.3px'
+              letterSpacing: '0.3px',
+              fontFamily: 'Montserrat, sans-serif'
             }}
           >
             Cancelar
           </button>
           <button
-            onClick={saveResultado}
-            disabled={!canSave || saving}
+            onClick={saveOnly}
+            disabled={!canSave || saving || submitting}
             style={{
               padding: '0.8rem 1.5rem',
               fontSize: '13px',
               fontWeight: 500,
-              border: '1px solid #CC915E',
+              border: '1px solid #D0D0D0',
               borderRadius: '4px',
-              background: '#CC915E',
-              color: 'white',
-              cursor: !canSave || saving ? 'not-allowed' : 'pointer',
-              opacity: !canSave || saving ? 0.5 : 1,
+              background: 'white',
+              color: '#1D3B5C',
+              cursor: !canSave || saving || submitting ? 'not-allowed' : 'pointer',
+              opacity: !canSave || saving || submitting ? 0.5 : 1,
               textTransform: 'uppercase',
-              letterSpacing: '0.3px'
+              letterSpacing: '0.3px',
+              fontFamily: 'Montserrat, sans-serif'
             }}
           >
-            {saving ? 'Salvando...' : '✓ Salvar Resultado'}
+            {saving ? 'Salvando...' : 'Salvar'}
+          </button>
+          <button
+            onClick={saveAndSubmit}
+            disabled={!canSave || saving || submitting}
+            style={{
+              padding: '0.8rem 1.5rem',
+              fontSize: '13px',
+              fontWeight: 600,
+              border: '1px solid #C8895C',
+              borderRadius: '4px',
+              background: 'linear-gradient(135deg, #C8895C 0%, #A6512F 100%)',
+              color: 'white',
+              cursor: !canSave || saving || submitting ? 'not-allowed' : 'pointer',
+              opacity: !canSave || saving || submitting ? 0.5 : 1,
+              textTransform: 'uppercase',
+              letterSpacing: '0.3px',
+              fontFamily: 'Montserrat, sans-serif'
+            }}
+          >
+            {submitting ? 'Submetendo...' : (row?.status_workflow === 'reprovado' ? '📤 Salvar e Reenviar para Revisão' : '📤 Salvar e Submeter para Revisão')}
           </button>
         </div>
       </div>

@@ -8,6 +8,8 @@ import MRCCompleta, { ModalDetalhe } from '../components/MRCCompleta'
 import ModalAtualizar from '../components/ModalAtualizar'
 import ModalNovoRisco from '../components/ModalNovoRisco'
 import ModalRegistrarResultado from '../components/ModalRegistrarResultado'
+import ModalRevisar from '../components/ModalRevisar'
+import NotificacoesPanel from '../components/NotificacoesPanel'
 import ImportarMRC from '../components/ImportarMRC'
 import {
   calcularPercentualArea,
@@ -155,14 +157,16 @@ export default function Dashboard() {
     const res = areas.map(a => {
       const ca = controles.filter(c => c.area_id === a.id || c.area === a.nome)
       const f1c = ca.length > 0 && ca.every(c => c.r1 && c.r1 !== 'Teste Não Realizado')
-      return { ...a, controles: ca, calc: calcularPercentualArea(ca, f1c) }
+      return { ...a, controles: ca, calc: calcularPercentualArea(ca, f1c, { requireAprovado: true }) }
     })
     const resOrdenado = [...res].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     setAreasCalc(resOrdenado); setTodosControles(controles); setLoading(false)
   }
 
   const isAdmin = perfil?.papel === 'admin_polimata'
-  const sw = sidebarOpen ? 240 : 56
+  const sw = sidebarOpen ? 260 : 56
+  const isHomeDash = location.pathname === '/'
+  const mainLightClass = isHomeDash ? '' : 'main-light'
   const ultimaAtualizacao = useMemo(() => getUltimaAtualizacao(todosControles), [todosControles])
 
   return (
@@ -217,7 +221,11 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg0)' }}>
+      <main className={mainLightClass} style={{ flex: 1, overflowY: 'auto', background: isHomeDash ? 'var(--bg0)' : 'var(--lt-bg)', position: 'relative' }}>
+        {/* Notificações — canto superior direito (sticky top-bar) */}
+        <div className="top-bar" style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 16px 0', background: isHomeDash ? 'var(--bg0)' : 'var(--lt-bg)' }}>
+          <NotificacoesPanel />
+        </div>
         <Routes>
           <Route path="/" element={<HomeDash projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} ultimaAtualizacao={ultimaAtualizacao} />} />
           <Route path="/area/:areaId" element={<PorArea projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} navigate={navigate} loadDados={loadDados} />} />
@@ -236,7 +244,7 @@ function SideNavItem({ icon, label, active, onClick, open, badge }) {
     <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick} style={open ? {} : { justifyContent: 'center', padding: '9px 0' }} title={open ? undefined : label}>
       <span className="nav-icon">{icon}</span>
       {open && <span>{label}</span>}
-      {open && badge && <span style={{ marginLeft: 'auto', fontSize: 9, background: 'rgba(204,145,94,.15)', padding: '1px 6px', borderRadius: 8, color: 'var(--gold)' }}>{badge}</span>}
+      {open && badge && <span style={{ marginLeft: 'auto', fontSize: 9, background: 'rgba(200,137,92,.15)', padding: '1px 6px', borderRadius: 999, color: 'var(--copper)' }}>{badge}</span>}
     </button>
   )
 }
@@ -247,11 +255,11 @@ function papelLabel(p) { return { admin_polimata: 'Admin Polímata', consultor_p
 // ══════════════════════════════════════════════════════════════════════════════
 
 function NivelBadge({ pct, nivel }) {
-  return <div style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: getCorNivel(pct), padding: '2px 8px', borderRadius: 3, marginTop: 3, textTransform: 'uppercase', display: 'inline-block' }}>{nivel.nivel} — {nivel.nome}</div>
+  return <div style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: getCorNivel(pct), padding: '2px 8px', borderRadius: 999, marginTop: 3, textTransform: 'uppercase', display: 'inline-block' }}>{nivel.nivel} — {nivel.nome}</div>
 }
 
-function Spinner() { return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#00112C' }}><div className="spinner" /></div> }
-function NoProjeto() { return <div style={{ background: '#00112C', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}><div style={{ fontSize: 48, opacity: 0.3 }}>📊</div><div style={{ fontSize: 15, fontWeight: 600, color: '#F3EEE4' }}>Nenhum projeto ativo</div></div> }
+function Spinner() { return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg0)' }}><div className="spinner" /></div> }
+function NoProjeto() { return <div style={{ background: 'var(--bg0)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}><div style={{ fontSize: 48, opacity: 0.3 }}>📊</div><div style={{ fontSize: 15, fontWeight: 600, color: 'var(--cream)' }}>Nenhum projeto ativo</div></div> }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TELA 1 — DASHBOARD (REDESIGN v7)
@@ -322,18 +330,18 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
         <div style={D.headerCliente}>{clienteNome} · {projeto.nome || 'Controles Internos'}</div>
         <div style={D.headerTitulo}>Maturidade do Ambiente de Controles Internos</div>
         <div style={D.headerSub}>Visão consolidada · {areasCalc.length} áreas · {todosControles.length} controles · Metodologia Polímata</div>
-        <div style={{ position: 'absolute', top: 14, right: 0, fontSize: 10, color: 'rgba(243,238,228,0.5)', fontWeight: 500, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, padding: '4px 10px' }}>Última atualização: {ultimaAtualizacao}</div>
+        <div style={{ position: 'absolute', top: 14, right: 0, fontSize: 10, color: 'rgba(247,243,238,0.5)', fontWeight: 500, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, padding: '4px 10px' }}>Última atualização: {ultimaAtualizacao}</div>
       </div>
 
       <div style={D.kpiRow}>
-        <div style={{ ...D.kpiCard, borderTopColor: '#CC915E' }}>
+        <div style={{ ...D.kpiCard, borderTopColor: 'var(--copper)' }}>
           <div style={D.kpiLabel}>Índice de Maturidade Consolidado · {clienteNome}</div>
-          <div style={{ ...D.kpiValor, color: '#CC915E' }}>{(empresa.indice * 100).toFixed(1)}%</div>
-          <div><span style={{ ...D.kpiBadge, background: getCorNivel(empresa.indice) }}>{nivelEmpresa.nivel}</span> <span style={{ fontSize: 9, color: 'rgba(243,238,228,0.35)' }}>{nivelEmpresa.nome}</span></div>
+          <div style={{ ...D.kpiValor, color: 'var(--copper)' }}>{(empresa.indice * 100).toFixed(1)}%</div>
+          <div><span style={{ ...D.kpiBadge, background: getCorNivel(empresa.indice) }}>{nivelEmpresa.nivel}</span> <span style={{ fontSize: 9, color: 'rgba(247,243,238,0.35)' }}>{nivelEmpresa.nome}</span></div>
         </div>
-        <div style={{ ...D.kpiCard, borderTopColor: '#F3EEE4' }}>
+        <div style={{ ...D.kpiCard, borderTopColor: 'var(--cream)' }}>
           <div style={D.kpiLabel}>Total de Controles</div>
-          <div style={{ ...D.kpiValor, color: '#F3EEE4' }}>{todosControles.length}</div>
+          <div style={{ ...D.kpiValor, color: 'var(--cream)' }}>{todosControles.length}</div>
           <div style={D.kpiSub}>{areasCalc.length} áreas · Metodologia Polímata</div>
         </div>
         <div style={{ ...D.kpiCard, borderTopColor: COR_EFETIVO }}>
@@ -352,9 +360,9 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
           <div style={D.kpiSub}>Riscos sem controle identificado</div>
         </div>
         <div style={{ ...D.kpiCard, borderTop: 'none', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #CC915E, #A6512F)' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #C8895C, #A6512F)' }} />
           <div style={D.kpiLabel}>Planos de Ação</div>
-          <div style={{ ...D.kpiValor, color: '#CC915E' }}>{kpis.pa}</div>
+          <div style={{ ...D.kpiValor, color: 'var(--copper)' }}>{kpis.pa}</div>
           <div style={D.kpiSub}>Em desenvolvimento</div>
         </div>
       </div>
@@ -380,7 +388,7 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
               </div>
             )
           })}
-          {ranking.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: 'rgba(243,238,228,0.3)' }}>Sem dados cadastrados.</div>}
+          {ranking.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: 'rgba(247,243,238,0.3)' }}>Sem dados cadastrados.</div>}
         </div>
       </div>
 
@@ -388,7 +396,7 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
         <div style={{ ...D.cardDark, flex: 4, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <div style={D.cardTitle}>
             Mapa de Calor — Impacto × Probabilidade
-            {areaFiltro && <span style={{ fontWeight: 400, color: '#CC915E', marginLeft: 8 }}>({areaFiltro})</span>}
+            {areaFiltro && <span style={{ fontWeight: 400, color: 'var(--copper)', marginLeft: 8 }}>({areaFiltro})</span>}
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <div style={{ display: 'flex', flex: 1 }}>
@@ -410,7 +418,7 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
             <div style={D.heatXLabels}>
               {PROB_LABELS.map(l => <div key={l} style={D.heatXLabel}>{l}</div>)}
             </div>
-            <div style={{ textAlign: 'center', marginTop: 2, fontSize: 8, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(243,238,228,0.25)' }}>Probabilidade →</div>
+            <div style={{ textAlign: 'center', marginTop: 2, fontSize: 8, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(247,243,238,0.25)' }}>Probabilidade →</div>
           </div>
           <div style={D.heatLegend}>
             {CRIT_LABELS.map((l, i) => (
@@ -430,18 +438,18 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
                 <tr>
                   <th style={{ ...D.critTh, textAlign: 'left' }}>Área</th>
                   {CRIT_LABELS.map((l, i) => <th key={l} style={{ ...D.critTh, color: CRIT_CORES[i], minWidth: 60 }}>{l}</th>)}
-                  <th style={{ ...D.critTh, color: 'rgba(243,238,228,0.5)' }}>Total</th>
+                  <th style={{ ...D.critTh, color: 'rgba(247,243,238,0.5)' }}>Total</th>
                 </tr>
               </thead>
               <tbody>
                 {critPorArea.map(a => {
                   const ativo = areaFiltro === a.nome
                   return (
-                    <tr key={a.nome} onClick={() => toggleAreaFiltro(a.nome)} style={{ cursor: 'pointer', background: ativo ? 'rgba(204,145,94,0.08)' : 'transparent' }}
-                      onMouseEnter={e => { if (!ativo) e.currentTarget.style.background = 'rgba(204,145,94,0.04)' }}
+                    <tr key={a.nome} onClick={() => toggleAreaFiltro(a.nome)} style={{ cursor: 'pointer', background: ativo ? 'rgba(200,137,92,0.08)' : 'transparent' }}
+                      onMouseEnter={e => { if (!ativo) e.currentTarget.style.background = 'rgba(200,137,92,0.04)' }}
                       onMouseLeave={e => { if (!ativo) e.currentTarget.style.background = '' }}>
                       <td style={D.critTdArea}>{a.nome}</td>
-                      {a.crit.map((v, i) => <td key={i} style={{ ...D.critTdNum, color: v > 0 ? CRIT_CORES[i] : 'rgba(243,238,228,0.15)' }}>{v}</td>)}
+                      {a.crit.map((v, i) => <td key={i} style={{ ...D.critTdNum, color: v > 0 ? CRIT_CORES[i] : 'rgba(247,243,238,0.15)' }}>{v}</td>)}
                       <td style={D.critTdTotal}>{a.total}</td>
                     </tr>
                   )
@@ -467,44 +475,44 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
 // ══════════════════════════════════════════════════════════════════════════════
 
 const dashStyles = {
-  page: { background: '#00112C', minHeight: '100vh', padding: '0 20px 12px', fontFamily: "'Montserrat', sans-serif", color: '#F3EEE4', fontSize: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
+  page: { background: 'var(--bg0)', minHeight: '100vh', padding: '0 20px 12px', fontFamily: "'Montserrat', sans-serif", color: 'var(--cream)', fontSize: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   header: { padding: '14px 0 4px', flexShrink: 0 },
-  headerCliente: { fontSize: 10, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', color: '#CC915E' },
-  headerTitulo: { fontSize: 20, fontWeight: 300, color: '#F3EEE4', marginTop: 2 },
-  headerSub: { fontSize: 10, fontWeight: 400, color: 'rgba(243,238,228,0.4)', marginTop: 2 },
+  headerCliente: { fontSize: 10, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', color: 'var(--copper)' },
+  headerTitulo: { fontSize: 20, fontWeight: 300, fontFamily: "'Raleway', sans-serif", color: 'var(--cream)', marginTop: 2 },
+  headerSub: { fontSize: 10, fontWeight: 400, color: 'rgba(247,243,238,0.4)', marginTop: 2 },
   kpiRow: { display: 'flex', gap: 8, flexShrink: 0, margin: '8px 0' },
-  kpiCard: { flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '12px 14px', borderTop: '3px solid' },
-  kpiLabel: { fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(243,238,228,0.45)', marginBottom: 5 },
+  kpiCard: { flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid' },
+  kpiLabel: { fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(247,243,238,0.45)', marginBottom: 5 },
   kpiValor: { fontSize: 26, fontWeight: 300, lineHeight: 1 },
-  kpiSub: { fontSize: 9, color: 'rgba(243,238,228,0.3)', marginTop: 4 },
-  kpiBadge: { display: 'inline-block', fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 3, color: '#fff' },
-  cardDark: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '14px 16px', marginBottom: 8, flexShrink: 0 },
-  cardTitle: { fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(243,238,228,0.4)', marginBottom: 10 },
-  limparFiltro: { background: 'rgba(204,145,94,0.15)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 600, color: '#CC915E', cursor: 'pointer', fontFamily: 'inherit' },
+  kpiSub: { fontSize: 9, color: 'rgba(247,243,238,0.3)', marginTop: 4 },
+  kpiBadge: { display: 'inline-block', fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 999, color: '#fff' },
+  cardDark: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '14px 16px', marginBottom: 8, flexShrink: 0 },
+  cardTitle: { fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(247,243,238,0.4)', marginBottom: 10 },
+  limparFiltro: { background: 'rgba(200,137,92,0.15)', border: '1px solid rgba(200,137,92,0.3)', borderRadius: 999, padding: '3px 10px', fontSize: 9, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit' },
   areaList: { maxHeight: 340, overflowY: 'auto', paddingRight: 4 },
   areaRow: { display: 'flex', alignItems: 'center', padding: '6px 4px', gap: 10, borderRadius: 4, transition: 'background .15s' },
-  areaRank: { fontSize: 10, fontWeight: 500, color: 'rgba(243,238,228,0.25)', width: 18, textAlign: 'right', flexShrink: 0 },
-  areaNome: { fontSize: 11, fontWeight: 500, color: '#F3EEE4', width: 180, flexShrink: 0 },
+  areaRank: { fontSize: 10, fontWeight: 500, color: 'rgba(247,243,238,0.25)', width: 18, textAlign: 'right', flexShrink: 0 },
+  areaNome: { fontSize: 11, fontWeight: 500, color: 'var(--cream)', width: 180, flexShrink: 0 },
   areaBarWrap: { flex: 1, height: 7, background: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden' },
   areaBar: { height: '100%', borderRadius: 4, transition: 'width 0.6s cubic-bezier(.4,0,.2,1)' },
-  areaPct: { fontSize: 12, fontWeight: 600, color: '#F3EEE4', width: 50, textAlign: 'right', flexShrink: 0 },
-  nivelBadge: { fontSize: 9, fontWeight: 700, color: '#fff', padding: '2px 7px', borderRadius: 4, flexShrink: 0, minWidth: 28, textAlign: 'center' },
+  areaPct: { fontSize: 12, fontWeight: 600, color: 'var(--cream)', width: 50, textAlign: 'right', flexShrink: 0 },
+  nivelBadge: { fontSize: 9, fontWeight: 700, color: '#fff', padding: '2px 7px', borderRadius: 999, flexShrink: 0, minWidth: 28, textAlign: 'center' },
   zonaInferior: { display: 'flex', gap: 8, flex: 1, minHeight: 0, overflow: 'hidden' },
   heatYLabels: { display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingRight: 8, width: 70, flexShrink: 0 },
-  heatYLabel: { fontSize: 9, fontWeight: 600, color: 'rgba(243,238,228,0.5)', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flex: 1 },
+  heatYLabel: { fontSize: 9, fontWeight: 600, color: 'rgba(247,243,238,0.5)', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flex: 1 },
   heatBody: { flex: 1, display: 'flex', flexDirection: 'column', gap: 3 },
   heatRow: { display: 'flex', gap: 3, flex: 1 },
   heatCell: { flex: 1, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', minHeight: 50, transition: 'transform .15s', cursor: 'default' },
   heatXLabels: { display: 'flex', paddingLeft: 78, paddingTop: 6, gap: 3 },
-  heatXLabel: { flex: 1, textAlign: 'center', fontSize: 9, fontWeight: 600, color: 'rgba(243,238,228,0.5)' },
+  heatXLabel: { flex: 1, textAlign: 'center', fontSize: 9, fontWeight: 600, color: 'rgba(247,243,238,0.5)' },
   heatLegend: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.04)' },
-  legendItem: { display: 'flex', alignItems: 'center', gap: 5, fontSize: 9, color: 'rgba(243,238,228,0.45)' },
+  legendItem: { display: 'flex', alignItems: 'center', gap: 5, fontSize: 9, color: 'rgba(247,243,238,0.45)' },
   legendDot: { width: 10, height: 10, borderRadius: 2 },
-  critTh: { padding: '6px 8px', fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, textAlign: 'center', position: 'sticky', top: 0, zIndex: 2, background: 'rgba(0,17,44,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' },
-  critTdArea: { padding: '5px 8px', fontSize: 10, fontWeight: 500, color: '#F3EEE4', borderBottom: '1px solid rgba(255,255,255,0.04)', textAlign: 'left' },
+  critTh: { padding: '6px 8px', fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, textAlign: 'center', position: 'sticky', top: 0, zIndex: 2, background: 'rgba(7,26,46,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' },
+  critTdArea: { padding: '5px 8px', fontSize: 10, fontWeight: 500, color: 'var(--cream)', borderBottom: '1px solid rgba(255,255,255,0.04)', textAlign: 'left' },
   critTdNum: { padding: '5px 8px', fontSize: 12, fontWeight: 700, textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)' },
-  critTdTotal: { padding: '5px 8px', fontSize: 11, fontWeight: 600, color: 'rgba(243,238,228,0.5)', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)' },
-  critTfoot: { padding: '8px', fontSize: 10, fontWeight: 700, textAlign: 'center', color: 'rgba(243,238,228,0.6)', borderTop: '1px solid rgba(255,255,255,0.1)' },
+  critTdTotal: { padding: '5px 8px', fontSize: 11, fontWeight: 600, color: 'rgba(247,243,238,0.5)', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)' },
+  critTfoot: { padding: '8px', fontSize: 10, fontWeight: 700, textAlign: 'center', color: 'rgba(247,243,238,0.6)', borderTop: '1px solid rgba(255,255,255,0.1)' },
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -524,11 +532,21 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   const [atualizarRow, setAtualizarRow] = useState(null)
   const [modalNovoRisco, setModalNovoRisco] = useState(false)
   const [rowRegistrarResultado, setRowRegistrarResultado] = useState(null)
+  const [rowRevisar, setRowRevisar] = useState(null)
   const canEdit = perfil?.papel === 'admin_polimata' || perfil?.papel === 'consultor_polimata'
+  const isAdmin = perfil?.papel === 'admin_polimata'
+  const isCliente = perfil?.papel === 'gestor_cliente' || perfil?.papel === 'usuario_cliente'
+
+  // Mapeia status para visão simplificada do cliente
+  function statusCliente(sw) {
+    if (!sw || sw === 'rascunho') return 'Não Iniciado'
+    if (sw === 'aprovado') return 'Concluído'
+    return 'Em Análise' // em_analise, teste_pendente, ficha_gerada, em_revisao, reprovado
+  }
 
   if (loading) return <Spinner />
   if (!projeto) return <NoProjeto />
-  if (!area) return <div style={{ background: '#00112C', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, fontFamily: "'Montserrat', sans-serif" }}><div style={{ color: 'rgba(243,238,228,0.4)' }}>Área não encontrada.</div><button onClick={() => navigate('/')} style={{ marginTop: 12, padding: '6px 16px', borderRadius: 4, border: '1px solid rgba(243,238,228,0.1)', background: 'rgba(255,255,255,0.05)', color: '#F3EEE4', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11 }}>← Voltar</button></div>
+  if (!area) return <div style={{ background: 'var(--lt-bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, fontFamily: "'Montserrat', sans-serif" }}><div style={{ color: 'var(--lt-text3)' }}>Área não encontrada.</div><button onClick={() => navigate('/')} style={{ marginTop: 12, padding: '6px 16px', borderRadius: 999, border: '1px solid var(--lt-border)', background: 'var(--lt-card)', color: 'var(--lt-text)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11 }}>← Voltar</button></div>
 
   const somaPesos = areasCalc.reduce((s, a) => s + (a.peso||0), 0)
   const pesoEmpresa = somaPesos > 0 ? ((area.peso||0)/somaPesos*100).toFixed(1) : '0'
@@ -573,24 +591,24 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
     return { f: 'F1 — Diagnóstico', s: 'Teste Não Realizado' }
   }
 
-  // Badge helpers (tema escuro)
-  const bdgS = { display: 'inline-block', padding: '2px 8px', borderRadius: 3, fontSize: 10, fontWeight: 600 }
+  // Badge helpers (tema light)
+  const bdgS = { display: 'inline-block', padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 600 }
   function badgeR(r) {
-    if (!r || r === 'Teste Não Realizado') return <span style={{ ...bdgS, background: 'rgba(255,255,255,0.04)', color: 'rgba(243,238,228,0.3)' }}>{r||'—'}</span>
-    if (isEfetivo(r)) return <span style={{ ...bdgS, background: 'rgba(34,197,94,0.12)', color: '#22C55E' }}>Efetivo</span>
-    if (isInefetivo(r)) return <span style={{ ...bdgS, background: 'rgba(250,204,21,0.12)', color: '#FACC15' }}>Inefetivo</span>
-    if (isGap(r)) return <span style={{ ...bdgS, background: 'rgba(239,68,68,0.12)', color: '#EF4444' }}>GAP</span>
-    return <span style={{ ...bdgS, background: 'rgba(255,255,255,0.04)', color: 'rgba(243,238,228,0.3)' }}>{r}</span>
+    if (!r || r === 'Teste Não Realizado') return <span style={{ ...bdgS, background: 'rgba(10,37,64,0.05)', color: 'var(--lt-text3)' }}>{r||'—'}</span>
+    if (isEfetivo(r)) return <span style={{ ...bdgS, background: 'rgba(34,197,94,0.1)', color: '#16A34A' }}>Efetivo</span>
+    if (isInefetivo(r)) return <span style={{ ...bdgS, background: 'rgba(234,179,8,0.1)', color: '#CA8A04' }}>Inefetivo</span>
+    if (isGap(r)) return <span style={{ ...bdgS, background: 'rgba(239,68,68,0.1)', color: '#DC2626' }}>GAP</span>
+    return <span style={{ ...bdgS, background: 'rgba(10,37,64,0.05)', color: 'var(--lt-text3)' }}>{r}</span>
   }
-  const IMP_C = { Crítico: { bg: 'rgba(239,68,68,0.12)', c: '#EF4444' }, Alto: { bg: 'rgba(249,115,22,0.12)', c: '#F97316' }, Moderado: { bg: 'rgba(234,179,8,0.12)', c: '#EAB308' }, Baixo: { bg: 'rgba(34,197,94,0.12)', c: '#22C55E' } }
-  const PRB_C = { Extrema: { bg: 'rgba(239,68,68,0.12)', c: '#EF4444' }, Alta: { bg: 'rgba(249,115,22,0.12)', c: '#F97316' }, Média: { bg: 'rgba(234,179,8,0.12)', c: '#EAB308' }, Baixa: { bg: 'rgba(34,197,94,0.12)', c: '#22C55E' } }
-  const CRT_C = { 4: { bg: 'rgba(239,68,68,0.12)', c: '#EF4444', l: '4. Crítico' }, 3: { bg: 'rgba(249,115,22,0.12)', c: '#F97316', l: '3. Significativo' }, 2: { bg: 'rgba(234,179,8,0.12)', c: '#EAB308', l: '2. Moderado' }, 1: { bg: 'rgba(34,197,94,0.12)', c: '#22C55E', l: '1. Baixo' } }
-  function badgeImp(v) { const m = IMP_C[v]; return m ? <span style={{ ...bdgS, background: m.bg, color: m.c }}>{v}</span> : <span style={{ ...bdgS, background: 'rgba(255,255,255,0.04)', color: 'rgba(243,238,228,0.3)' }}>{v||'—'}</span> }
-  function badgeProb(v) { const m = PRB_C[v]; return m ? <span style={{ ...bdgS, background: m.bg, color: m.c }}>{v}</span> : <span style={{ ...bdgS, background: 'rgba(255,255,255,0.04)', color: 'rgba(243,238,228,0.3)' }}>{v||'—'}</span> }
-  function badgeCrit(v) { const m = CRT_C[v]; return m ? <span style={{ ...bdgS, background: m.bg, color: m.c }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block', marginRight: 4 }} />{m.l}</span> : <span style={{ ...bdgS, background: 'rgba(255,255,255,0.04)', color: 'rgba(243,238,228,0.3)' }}>{v||'—'}</span> }
+  const IMP_C = { Crítico: { bg: 'rgba(239,68,68,0.1)', c: '#DC2626' }, Alto: { bg: 'rgba(249,115,22,0.1)', c: '#EA580C' }, Moderado: { bg: 'rgba(234,179,8,0.1)', c: '#CA8A04' }, Baixo: { bg: 'rgba(34,197,94,0.1)', c: '#16A34A' } }
+  const PRB_C = { Extrema: { bg: 'rgba(239,68,68,0.1)', c: '#DC2626' }, Alta: { bg: 'rgba(249,115,22,0.1)', c: '#EA580C' }, Média: { bg: 'rgba(234,179,8,0.1)', c: '#CA8A04' }, Baixa: { bg: 'rgba(34,197,94,0.1)', c: '#16A34A' } }
+  const CRT_C = { 4: { bg: 'rgba(239,68,68,0.1)', c: '#DC2626', l: '4. Crítico' }, 3: { bg: 'rgba(249,115,22,0.1)', c: '#EA580C', l: '3. Significativo' }, 2: { bg: 'rgba(234,179,8,0.1)', c: '#CA8A04', l: '2. Moderado' }, 1: { bg: 'rgba(34,197,94,0.1)', c: '#16A34A', l: '1. Baixo' } }
+  function badgeImp(v) { const m = IMP_C[v]; return m ? <span style={{ ...bdgS, background: m.bg, color: m.c }}>{v}</span> : <span style={{ ...bdgS, background: 'rgba(10,37,64,0.05)', color: 'var(--lt-text3)' }}>{v||'—'}</span> }
+  function badgeProb(v) { const m = PRB_C[v]; return m ? <span style={{ ...bdgS, background: m.bg, color: m.c }}>{v}</span> : <span style={{ ...bdgS, background: 'rgba(10,37,64,0.05)', color: 'var(--lt-text3)' }}>{v||'—'}</span> }
+  function badgeCrit(v) { const m = CRT_C[v]; return m ? <span style={{ ...bdgS, background: m.bg, color: m.c }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block', marginRight: 4 }} />{m.l}</span> : <span style={{ ...bdgS, background: 'rgba(10,37,64,0.05)', color: 'var(--lt-text3)' }}>{v||'—'}</span> }
 
   const PA = paStyles
-  const tdS = { padding: '7px 8px', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 11, color: 'rgba(243,238,228,0.7)', whiteSpace: 'nowrap', verticalAlign: 'top' }
+  const tdS = { padding: '7px 8px', borderBottom: '1px solid var(--lt-border)', fontSize: 11, color: 'var(--lt-text2)', whiteSpace: 'nowrap', verticalAlign: 'top' }
   function Td({ children, w = 150 }) { return <td style={{ ...tdS, width: w, minWidth: w, maxWidth: w, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{children || '—'}</td> }
 
   return (
@@ -599,10 +617,10 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 6px', flexShrink: 0, position: 'relative' }}>
         <button onClick={() => navigate('/')} style={PA.btnVoltar}>← VOLTAR</button>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 600, color: '#F3EEE4' }}>{nome}</div>
-          <div style={{ fontSize: 10, color: 'rgba(243,238,228,0.35)', marginTop: 1 }}>{area.controles.length} controles · Peso empresa: {pesoEmpresa}%</div>
+          <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--lt-text)', fontFamily: "'Raleway', sans-serif" }}>{nome}</div>
+          <div style={{ fontSize: 10, color: 'var(--lt-text3)', marginTop: 1 }}>{area.controles.length} controles · Peso empresa: {pesoEmpresa}%</div>
         </div>
-        <div style={{ position: 'absolute', top: 12, right: 0, fontSize: 10, color: 'rgba(243,238,228,0.5)', fontWeight: 500, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, padding: '4px 10px' }}>Última atualização: {ultAtualArea}</div>
+        <div style={{ position: 'absolute', top: 12, right: 0, fontSize: 10, color: 'var(--lt-text3)', fontWeight: 500, background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 6, padding: '4px 10px' }}>Última atualização: {ultAtualArea}</div>
       </div>
 
       {/* ZONA SUPERIOR — HEATMAP + KPI GRID */}
@@ -618,7 +636,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
               {areaHeatmap.map((row, ri) => (
                 <div key={ri} style={PA.heatRow}>
                   {row.map((val, ci) => (
-                    <div key={ci} style={{ ...PA.heatCell, background: val === 0 ? 'rgba(255,255,255,0.04)' : HEAT_CORES[ri][ci] }}>
+                    <div key={ci} style={{ ...PA.heatCell, background: val === 0 ? 'rgba(10,37,64,0.04)' : HEAT_CORES[ri][ci] }}>
                       {val}
                     </div>
                   ))}
@@ -629,7 +647,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
           <div style={PA.heatXLabels}>
             {PROB_LABELS.map(l => <div key={l} style={PA.heatXLabel}>{l}</div>)}
           </div>
-          <div style={{ textAlign: 'center', marginTop: 1, fontSize: 7, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(243,238,228,0.2)' }}>Probabilidade →</div>
+          <div style={{ textAlign: 'center', marginTop: 1, fontSize: 7, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--lt-text3)' }}>Probabilidade →</div>
           <div style={PA.heatLegend}>
             {CRIT_LABELS.map((l, i) => (
               <div key={l} style={PA.legendItem}>
@@ -642,14 +660,14 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
 
         {/* KPI GRID 3×2 */}
         <div style={PA.kpiGrid}>
-          <div style={{ ...PA.kpiCard, borderTopColor: '#CC915E' }}>
+          <div style={{ ...PA.kpiCard, borderTopColor: 'var(--copper)' }}>
             <div style={PA.kpiLabel}>Maturidade</div>
-            <div style={{ ...PA.kpiValor, color: '#CC915E' }}>{(p*100).toFixed(1)}%</div>
+            <div style={{ ...PA.kpiValor, color: 'var(--copper)' }}>{(p*100).toFixed(1)}%</div>
             <NivelBadge pct={p} nivel={nv} />
           </div>
-          <div style={{ ...PA.kpiCard, borderTopColor: '#F3EEE4' }}>
+          <div style={{ ...PA.kpiCard, borderTopColor: 'var(--cream)' }}>
             <div style={PA.kpiLabel}>Total de Controles</div>
-            <div style={{ ...PA.kpiValor, color: '#F3EEE4' }}>{area.controles.length}</div>
+            <div style={{ ...PA.kpiValor, color: 'var(--cream)' }}>{area.controles.length}</div>
             <div style={PA.kpiSub}>Peso empresa: {pesoEmpresa}%</div>
           </div>
           <div style={{ ...PA.kpiCard, borderTopColor: '#22C55E' }}>
@@ -668,9 +686,9 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
             <div style={PA.kpiSub}>Riscos sem controle</div>
           </div>
           <div style={{ ...PA.kpiCard, borderTop: 'none', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #CC915E, #A6512F)' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #C8895C, #A6512F)' }} />
             <div style={PA.kpiLabel}>Planos de Ação</div>
-            <div style={{ ...PA.kpiValor, color: '#CC915E' }}>{planosAcao}</div>
+            <div style={{ ...PA.kpiValor, color: 'var(--copper)' }}>{planosAcao}</div>
             <div style={PA.kpiSub}>Em desenvolvimento</div>
           </div>
         </div>
@@ -682,8 +700,8 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
         <select value={filtCrit} onChange={e => setFiltCrit(e.target.value)} style={PA.filtroSel}><option value="">Todas criticidades</option>{crits.map(c => <option key={c} value={c}>{c}</option>)}</select>
         <select value={filtImp} onChange={e => setFiltImp(e.target.value)} style={PA.filtroSel}><option value="">Todos impactos</option>{imps.map(c => <option key={c} value={c}>{c}</option>)}</select>
         <select value={filtRes} onChange={e => setFiltRes(e.target.value)} style={PA.filtroSel}><option value="">Todos resultados F1</option>{ress.map(c => <option key={c} value={c}>{c}</option>)}</select>
-        <div style={{ fontSize: 10, color: 'rgba(243,238,228,0.3)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4, padding: '5px 10px' }}>{cf.length} controles</div>
-        {canEdit && <button onClick={() => setModalNovoRisco(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(204,145,94,0.12)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 4, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: '#CC915E', cursor: 'pointer', fontFamily: 'inherit' }} title="Criar novo risco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Risco</button>}
+        <div style={{ fontSize: 10, color: 'var(--lt-text3)', background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 10px' }}>{cf.length} controles</div>
+        {canEdit && <button onClick={() => setModalNovoRisco(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(200,137,92,0.1)', border: '1px solid rgba(200,137,92,0.25)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit' }} title="Criar novo risco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Risco</button>}
         <button onClick={() => exportarMRCExcel(cf, `MRC_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`, nome, projeto?.clientes?.nome || '', projeto?.nome || '')} style={PA.btnExport} title="Exportar Excel da área">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
           Excel
@@ -705,30 +723,52 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
                 { h: 'Recomendação', w: 180 }, { h: 'Impacto', w: 80 }, { h: 'Probab.', w: 80 },
                 { h: 'Criticidade', w: 100 }, { h: 'Fase Atual', w: 160 },
               ].map((col, i) =>
-                <th key={i} style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: '#F3EEE4', background: '#00203E', padding: '6px 8px', textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 2, width: col.w, minWidth: col.w }}>{col.h}</th>)}
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#F3EEE4', background: '#00203E', padding: '6px 8px', position: 'sticky', top: 0, zIndex: 2, width: 70, minWidth: 70 }}></th>
+                <th key={i} style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--navy)', background: 'var(--sand)', padding: '6px 8px', textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 2, width: col.w, minWidth: col.w, borderBottom: '2px solid var(--lt-border)' }}>{col.h}</th>)}
+              <th style={{ fontSize: 8, fontWeight: 700, color: 'var(--navy)', background: 'var(--sand)', padding: '6px 8px', position: 'sticky', top: 0, zIndex: 2, width: 70, minWidth: 70, borderBottom: '2px solid var(--lt-border)' }}></th>
             </tr></thead>
             <tbody>{cf.map((c, i) => { const fl = faseLabel(c); return (
-              <tr key={c.id||i} onMouseEnter={e => e.currentTarget.style.background='rgba(204,145,94,0.04)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+              <tr key={c.id||i} onMouseEnter={e => e.currentTarget.style.background='rgba(200,137,92,0.04)'} onMouseLeave={e => e.currentTarget.style.background=''}>
                 <Td w={100}>{c.dt_ult || '—'}</Td>
                 <Td w={120}>{c.ger}</Td><Td w={120}>{c.resp_sub}</Td><Td w={140}>{c.area}</Td><Td w={120}>{c.sub}</Td>
-                <td style={{ ...tdS, color: '#CC915E', fontWeight: 600, width: 80, minWidth: 80 }}>{c.rr}</td><Td w={200}>{c.dr}</Td>
-                <td style={{ ...tdS, color: '#CC915E', fontWeight: 600, width: 90, minWidth: 90 }}>{c.rc}</td><Td w={200}>{c.dc}</Td>
+                <td style={{ ...tdS, color: 'var(--copper)', fontWeight: 600, width: 80, minWidth: 80 }}>{c.rr}</td><Td w={200}>{c.dr}</Td>
+                <td style={{ ...tdS, color: 'var(--copper)', fontWeight: 600, width: 90, minWidth: 90 }}>{c.rc}</td><Td w={200}>{c.dc}</Td>
                 <Td w={110}>{c.cat}</Td><Td w={90}>{c.freq}</Td><Td w={80}>{c.nat}</Td><Td w={80}>{c.car}</Td><Td w={80}>{c.sis}</Td><Td w={80}>{c.chave}</Td>
                 <Td w={180}>{c.passos_f1}</Td><td style={{ ...tdS, width: 80, minWidth: 80 }}>{badgeR(c.r1)}</td><Td w={180}>{c.incons}</Td><Td w={180}>{c.rec}</Td>
                 <td style={{ ...tdS, width: 80, minWidth: 80 }}>{badgeImp(c.imp)}</td><td style={{ ...tdS, width: 80, minWidth: 80 }}>{badgeProb(c.prob)}</td><td style={{ ...tdS, width: 100, minWidth: 100 }}>{badgeCrit(c.crit)}</td>
-                <td style={{ ...tdS, width: 160, minWidth: 160 }}><div style={{ fontSize: 10, fontWeight: 500, color: '#F3EEE4', borderLeft: '3px solid #CC915E', paddingLeft: 6, lineHeight: 1.3 }}>{fl.f}</div><div style={{ fontSize: 9, color: 'rgba(243,238,228,0.3)', paddingLeft: 9 }}>{fl.s}</div></td>
-                <td style={{ ...tdS, textAlign: 'center', width: 70, minWidth: 70 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
-                    <button onClick={() => setModalRow(c)} style={{ background: 'rgba(243,238,228,0.06)', border: '1px solid rgba(243,238,228,0.1)', borderRadius: 3, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'rgba(243,238,228,0.6)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Ver</button>
-                    {canEdit && <button onClick={() => setAtualizarRow(c)} style={{ background: 'rgba(204,145,94,0.1)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 3, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: '#CC915E', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Atualizar</button>}
-                    {canEdit && <button onClick={() => setRowRegistrarResultado(c)} disabled={c.status_workflow !== 'ficha_gerada'} style={{ background: c.status_workflow === 'ficha_gerada' ? 'rgba(204,145,94,0.1)' : 'rgba(255,255,255,0.02)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 3, padding: '2px 10px', fontSize: 9, fontWeight: 600, color: c.status_workflow === 'ficha_gerada' ? '#CC915E' : 'rgba(243,238,228,0.2)', cursor: c.status_workflow === 'ficha_gerada' ? 'pointer' : 'not-allowed', fontFamily: 'inherit', width: '100%' }}>Resultado</button>}
-                    {c.status_workflow === 'em_analise' && <span style={{ fontSize: 8, fontWeight: 700, color: '#CC915E', background: 'rgba(204,145,94,0.15)', padding: '1px 6px', borderRadius: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Em Análise</span>}
-                    {c.status_workflow === 'teste_pendente' && <span style={{ fontSize: 8, fontWeight: 700, color: '#EAB308', background: 'rgba(234,179,8,0.15)', padding: '1px 6px', borderRadius: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Teste Pendente</span>}
-                    {c.status_workflow === 'ficha_gerada' && <span style={{ fontSize: 8, fontWeight: 700, color: '#F3EEE4', background: 'rgba(243,238,228,0.15)', padding: '1px 6px', borderRadius: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Ficha Gerada</span>}
-                  </div>
+                <td style={{ ...tdS, width: 160, minWidth: 160 }}><div style={{ fontSize: 10, fontWeight: 500, color: 'var(--lt-text)', borderLeft: '3px solid var(--copper)', paddingLeft: 6, lineHeight: 1.3 }}>{fl.f}</div><div style={{ fontSize: 9, color: 'var(--lt-text3)', paddingLeft: 9 }}>{fl.s}</div></td>
+                <td style={{ ...tdS, textAlign: 'center', width: 90, minWidth: 90 }}>
+                  {isCliente ? (
+                    /* ── Visão do cliente: status simplificado ── */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
+                      <button onClick={() => setModalRow(c)} style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'var(--lt-text2)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Ver</button>
+                      {(() => {
+                        const sc = statusCliente(c.status_workflow)
+                        const scCfg = {
+                          'Não Iniciado': { color: 'var(--lt-text3)', bg: 'rgba(10,37,64,0.05)' },
+                          'Em Análise': { color: 'var(--copper)', bg: 'rgba(200,137,92,0.1)' },
+                          'Concluído': { color: '#16A34A', bg: 'rgba(34,197,94,0.1)' },
+                        }[sc]
+                        return <span style={{ fontSize: 8, fontWeight: 700, color: scCfg.color, background: scCfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>{sc}</span>
+                      })()}
+                    </div>
+                  ) : (
+                    /* ── Visão admin/consultor: ações + status detalhado ── */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
+                      <button onClick={() => setModalRow(c)} style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'var(--lt-text2)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Ver</button>
+                      {canEdit && !['em_revisao','aprovado'].includes(c.status_workflow) && <button onClick={() => setAtualizarRow(c)} style={{ background: 'rgba(200,137,92,0.08)', border: '1px solid rgba(200,137,92,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Atualizar</button>}
+                      {canEdit && (c.status_workflow === 'ficha_gerada' || c.status_workflow === 'reprovado') && <button onClick={() => setRowRegistrarResultado(c)} style={{ background: 'rgba(200,137,92,0.08)', border: '1px solid rgba(200,137,92,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>{c.status_workflow === 'reprovado' ? '↩ Editar' : 'Resultado'}</button>}
+                      {isAdmin && c.status_workflow === 'em_revisao' && <button onClick={() => setRowRevisar(c)} style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 700, color: '#2563EB', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>🔍 Revisar</button>}
+                      {/* Badges de status */}
+                      {c.status_workflow === 'em_analise' && <span style={{ fontSize: 8, fontWeight: 700, color: 'var(--copper)', background: 'rgba(200,137,92,0.1)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Em Análise</span>}
+                      {c.status_workflow === 'teste_pendente' && <span style={{ fontSize: 8, fontWeight: 700, color: '#CA8A04', background: 'rgba(234,179,8,0.1)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Teste Pendente</span>}
+                      {c.status_workflow === 'ficha_gerada' && <span style={{ fontSize: 8, fontWeight: 700, color: 'var(--lt-text2)', background: 'rgba(10,37,64,0.06)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Ficha Gerada</span>}
+                      {c.status_workflow === 'em_revisao' && <span style={{ fontSize: 8, fontWeight: 700, color: '#2563EB', background: 'rgba(59,130,246,0.08)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Em Revisão</span>}
+                      {c.status_workflow === 'aprovado' && <span style={{ fontSize: 8, fontWeight: 700, color: '#16A34A', background: 'rgba(34,197,94,0.1)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Aprovado</span>}
+                      {c.status_workflow === 'reprovado' && <span style={{ fontSize: 8, fontWeight: 700, color: '#DC2626', background: 'rgba(239,68,68,0.1)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Reprovado</span>}
+                    </div>
+                  )}
                 </td>
-              </tr>)})}{cf.length === 0 && <tr><td colSpan={24} style={{ padding: 32, textAlign: 'center', color: 'rgba(243,238,228,0.3)' }}>Nenhum controle encontrado.</td></tr>}</tbody>
+              </tr>)})}{cf.length === 0 && <tr><td colSpan={24} style={{ padding: 32, textAlign: 'center', color: 'var(--lt-text3)' }}>Nenhum controle encontrado.</td></tr>}</tbody>
           </table>
         </div>
       </div>
@@ -736,6 +776,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
       {atualizarRow && <ModalAtualizar row={atualizarRow} onClose={() => setAtualizarRow(null)} onSaved={() => { setAtualizarRow(null); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} />}
       {modalNovoRisco && <ModalNovoRisco onClose={() => setModalNovoRisco(false)} onSaved={() => { setModalNovoRisco(false); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} />}
       {rowRegistrarResultado && <ModalRegistrarResultado row={rowRegistrarResultado} onClose={() => setRowRegistrarResultado(null)} onSaved={() => { setRowRegistrarResultado(null); if (projeto?.id) loadDados(projeto.id) }} responsaveis={[]} />}
+      {rowRevisar && <ModalRevisar row={rowRevisar} onClose={() => setRowRevisar(null)} onAction={() => { setRowRevisar(null); if (projeto?.id) loadDados(projeto.id) }} />}
     </div>
   )
 }
@@ -745,29 +786,29 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
 // ══════════════════════════════════════════════════════════════════════════════
 
 const paStyles = {
-  page: { background: '#00112C', height: '100vh', padding: '0 20px 12px', fontFamily: "'Montserrat', sans-serif", color: '#F3EEE4', fontSize: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
-  btnVoltar: { display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(243,238,228,0.06)', border: '1px solid rgba(243,238,228,0.1)', borderRadius: 4, padding: '4px 10px', fontSize: 10, fontWeight: 600, color: 'rgba(243,238,228,0.5)', cursor: 'pointer', fontFamily: 'inherit' },
+  page: { background: 'var(--lt-bg)', height: '100vh', padding: '0 20px 12px', fontFamily: "'Montserrat', sans-serif", color: 'var(--lt-text)', fontSize: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
+  btnVoltar: { display: 'inline-flex', alignItems: 'center', gap: 4, background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 999, padding: '4px 12px', fontSize: 10, fontWeight: 600, color: 'var(--lt-text2)', cursor: 'pointer', fontFamily: 'inherit' },
   zonaSuperior: { display: 'flex', gap: 10, flexShrink: 0, margin: '6px 0 8px' },
-  cardTitle: { fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(243,238,228,0.4)', marginBottom: 8 },
-  heatCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '12px 14px', width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column' },
+  cardTitle: { fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'var(--lt-text3)', marginBottom: 8 },
+  heatCard: { background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' },
   heatYLabels: { display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingRight: 6, width: 55, flexShrink: 0 },
-  heatYLabel: { fontSize: 8, fontWeight: 600, color: 'rgba(243,238,228,0.45)', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flex: 1 },
+  heatYLabel: { fontSize: 8, fontWeight: 600, color: 'var(--lt-text3)', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flex: 1 },
   heatGrid: { flex: 1, display: 'flex', flexDirection: 'column', gap: 2 },
   heatRow: { display: 'flex', gap: 2, flex: 1 },
   heatCell: { flex: 1, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', minHeight: 36 },
   heatXLabels: { display: 'flex', paddingLeft: 61, paddingTop: 4, gap: 2 },
-  heatXLabel: { flex: 1, textAlign: 'center', fontSize: 8, fontWeight: 600, color: 'rgba(243,238,228,0.45)' },
-  heatLegend: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.04)' },
-  legendItem: { display: 'flex', alignItems: 'center', gap: 4, fontSize: 8, color: 'rgba(243,238,228,0.4)' },
+  heatXLabel: { flex: 1, textAlign: 'center', fontSize: 8, fontWeight: 600, color: 'var(--lt-text3)' },
+  heatLegend: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--lt-border)' },
+  legendItem: { display: 'flex', alignItems: 'center', gap: 4, fontSize: 8, color: 'var(--lt-text3)' },
   kpiGrid: { flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: '1fr 1fr', gap: 8 },
-  kpiCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '12px 14px', borderTop: '3px solid', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
-  kpiLabel: { fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: 'rgba(243,238,228,0.45)', marginBottom: 4 },
+  kpiCard: { background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' },
+  kpiLabel: { fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--lt-text3)', marginBottom: 4 },
   kpiValor: { fontSize: 28, fontWeight: 300, lineHeight: 1 },
-  kpiSub: { fontSize: 10, color: 'rgba(243,238,228,0.3)', marginTop: 4 },
-  filtroInput: { flex: 1, minWidth: 200, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, padding: '6px 10px', fontFamily: 'inherit', fontSize: 11, outline: 'none', color: '#F3EEE4' },
-  filtroSel: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, padding: '5px 8px', fontFamily: 'inherit', fontSize: 10, color: 'rgba(243,238,228,0.6)', cursor: 'pointer', outline: 'none' },
-  btnExport: { display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(204,145,94,0.12)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 4, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: '#CC915E', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' },
-  tabelaWrap: { flex: 1, minHeight: 0, background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
+  kpiSub: { fontSize: 10, color: 'var(--lt-text3)', marginTop: 4 },
+  filtroInput: { flex: 1, minWidth: 200, background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '6px 10px', fontFamily: 'inherit', fontSize: 11, outline: 'none', color: 'var(--lt-text)' },
+  filtroSel: { background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit', fontSize: 10, color: 'var(--lt-text2)', cursor: 'pointer', outline: 'none' },
+  btnExport: { display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(200,137,92,0.1)', border: '1px solid rgba(200,137,92,0.25)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' },
+  tabelaWrap: { flex: 1, minHeight: 0, background: 'var(--lt-card)', borderRadius: 12, border: '1px solid var(--lt-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' },
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -775,9 +816,9 @@ const paStyles = {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const S = {
-  page: { background: '#F3EEE4', height: '100vh', padding: '8px 12px', fontFamily: "'Montserrat', sans-serif", color: '#333', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 6, overflow: 'hidden' },
-  header: { background: '#00203E', borderRadius: 6, padding: '8px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 },
-  headerText: { fontSize: 13, fontWeight: 400, color: '#F3EEE4', fontFamily: "'Montserrat', sans-serif" },
-  th: { fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: '#fff', background: '#00203E', padding: '5px 4px', textAlign: 'center', position: 'sticky', top: 0, zIndex: 2 },
-  tdCenter: { padding: '4px 4px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#00203E' },
+  page: { background: 'var(--lt-bg)', height: '100vh', padding: '8px 12px', fontFamily: "'Montserrat', sans-serif", color: 'var(--lt-text)', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 6, overflow: 'hidden' },
+  header: { background: 'var(--navy)', borderRadius: 12, padding: '8px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 },
+  headerText: { fontSize: 13, fontWeight: 400, color: 'var(--cream)', fontFamily: "'Raleway', sans-serif" },
+  th: { fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', background: 'var(--sand)', padding: '5px 4px', textAlign: 'center', position: 'sticky', top: 0, zIndex: 2, borderBottom: '2px solid var(--lt-border)' },
+  tdCenter: { padding: '4px 4px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--navy)' },
 }

@@ -671,7 +671,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
               </div>
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
+                  <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
                   Destino da transferência
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -762,7 +762,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
           {descChoice === 'sim' && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
+                <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
                 Editar descritivo do risco
               </div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Nova descrição do risco</label>
@@ -857,7 +857,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
           <div style={{ height: 1, background: '#e5e7eb', margin: '20px 0' }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
+            <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
             Editar descritivo do controle
           </div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Nova descrição do controle</label>
@@ -880,7 +880,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
           {/* CARACTERÍSTICAS */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
+              <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
               Características do Controle
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -960,7 +960,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
           {/* 6 PREMISSAS */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
+              <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
               6 Premissas do Controle
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1076,7 +1076,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         <button
           onClick={handleSaveFicha}
           disabled={saving}
-          style={{ background: '#CC915E', color: 'white', padding: '6px 12px', borderRadius: 4, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
+          style={{ background: '#C8895C', color: 'white', padding: '6px 12px', borderRadius: 4, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
         >
           .XLSX
         </button>
@@ -1166,7 +1166,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
                 else if (newStatus === 'transferido') handleTransferido()
               }}
               disabled={saving}
-              style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white' }}
+              style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#C8895C', color: 'white' }}
             >
               {saving ? 'Salvando...' : newStatus === 'evitado' ? 'Inativar' : 'Transferir'}
             </button>
@@ -1182,7 +1182,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
               <button
                 onClick={nextStep}
                 disabled={step === 1 ? !canAdvanceStep1 : step === 2 ? !canAdvanceStep2 : false}
-                style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 0.5 : 1 }}
+                style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#C8895C', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 0.5 : 1 }}
               >
                 {step === 3 ? 'Finalizar' : 'Próximo →'}
               </button>
