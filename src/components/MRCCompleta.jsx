@@ -246,23 +246,23 @@ export function ModalDetalhe({ row, onClose }) {
               </div>
             </div>
             <div className="ms"><div className="ms-t">Posição no Mapa de Calor</div>
-              <div style={{ display:'flex',gap:24,alignItems:'flex-start' }}>
-                <div style={{ display:'grid',gridTemplateColumns:'60px repeat(4,1fr)',gap:3,maxWidth:300 }}>
+              <div style={{ display:'flex',gap:20,alignItems:'flex-start' }}>
+                <div style={{ display:'grid',gridTemplateColumns:'60px repeat(4,1fr)',gap:3,maxWidth:260,flexShrink:0 }}>
                   {HM_IMPS.map((imp,ri) => (<div key={`row-${ri}`} style={{ display:'contents' }}><div style={{ fontSize:9,color:'var(--txt3)',display:'flex',alignItems:'center',justifyContent:'flex-end',paddingRight:6 }}>{imp}</div>{HM_PROBS.map((prob,ci) => { const bg=HM_COLORS[ri][ci]; const isThis=ri===impIdx&&ci===probIdx; return (<div key={`${ri}-${ci}`} style={{ background:bg,borderRadius:4,aspectRatio:'1',display:'flex',alignItems:'center',justifyContent:'center',opacity:isThis?1:0.35,outline:isThis?'3px solid var(--gold)':'none',outlineOffset:-2 }}>{isThis&&<div style={{ width:10,height:10,borderRadius:'50%',background:'#fff',boxShadow:'0 0 6px rgba(0,0,0,.4)' }}/>}</div>) })}</div>))}
                   <div/>{HM_PROBS.map(p => <div key={p} style={{ fontSize:8,color:'var(--txt3)',textAlign:'center',paddingTop:2 }}>{p}</div>)}
                 </div>
-                <div style={{ display:'flex',flexDirection:'column',gap:10,minWidth:140 }}>
-                  <div style={{ padding:'8px 12px',borderRadius:8,border:'1px solid var(--lt-border)',background:'var(--lt-bg)' }}>
-                    <div className="ml">Impacto</div>
-                    <div style={{ marginTop:3 }}>{row.imp ? <span className={`bd ${IMP_MAP[row.imp]||''}`}>{row.imp}</span> : <span style={{ color:'var(--txt3)',fontSize:11 }}>—</span>}</div>
+                <div style={{ flex:1,display:'flex',flexDirection:'column',justifyContent:'center',gap:6 }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:8,padding:'6px 10px',borderRadius:6,border:'1px solid var(--lt-border)',background:'var(--lt-bg)' }}>
+                    <span className="ml" style={{ marginBottom:0,minWidth:80 }}>Impacto</span>
+                    {row.imp ? <span className={`bd ${IMP_MAP[row.imp]||''}`}>{row.imp}</span> : <span style={{ color:'var(--txt3)',fontSize:11 }}>—</span>}
                   </div>
-                  <div style={{ padding:'8px 12px',borderRadius:8,border:'1px solid var(--lt-border)',background:'var(--lt-bg)' }}>
-                    <div className="ml">Probabilidade</div>
-                    <div style={{ marginTop:3 }}>{row.prob ? <span className={`bd ${PROB_MAP[row.prob]||''}`}>{row.prob}</span> : <span style={{ color:'var(--txt3)',fontSize:11 }}>—</span>}</div>
+                  <div style={{ display:'flex',alignItems:'center',gap:8,padding:'6px 10px',borderRadius:6,border:'1px solid var(--lt-border)',background:'var(--lt-bg)' }}>
+                    <span className="ml" style={{ marginBottom:0,minWidth:80 }}>Probabilidade</span>
+                    {row.prob ? <span className={`bd ${PROB_MAP[row.prob]||''}`}>{row.prob}</span> : <span style={{ color:'var(--txt3)',fontSize:11 }}>—</span>}
                   </div>
-                  <div style={{ padding:'8px 12px',borderRadius:8,border:'1px solid var(--lt-border)',background:'var(--lt-bg)' }}>
-                    <div className="ml">Criticidade</div>
-                    <div style={{ marginTop:3 }}>{critBadge(row.crit) || <span style={{ color:'var(--txt3)',fontSize:11 }}>—</span>}</div>
+                  <div style={{ display:'flex',alignItems:'center',gap:8,padding:'6px 10px',borderRadius:6,border:'1px solid var(--lt-border)',background:'var(--lt-bg)' }}>
+                    <span className="ml" style={{ marginBottom:0,minWidth:80 }}>Criticidade</span>
+                    {critBadge(row.crit) || <span style={{ color:'var(--txt3)',fontSize:11 }}>—</span>}
                   </div>
                 </div>
               </div>

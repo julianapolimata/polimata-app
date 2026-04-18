@@ -208,10 +208,12 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
 
     const NAVY   = 'FF00203E'
     const GOLD   = 'FFCC915E'
+    const COPPER = 'FFA6512F'
     const CREAM  = 'FFF3EEE4'
     const F8     = 'FFF8F6F2'
     const WHITE  = 'FFFFFFFF'
     const GRAY33 = 'FF333333'
+    const GRAY99 = 'FF999999'
     const GRAYBB = 'FFBBBBBB'
     const HAIR   = 'FFF0EDE8'
     const BGRAY  = 'FFD5CFC6'
@@ -234,19 +236,19 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
       ws.getRow(r).height = 15
     }
 
-    function applyRow(ws, r, labelText, valueText, editable = false) {
+    function applyRow(ws, r, labelText, valueText, editable = false, opts = {}) {
       // Label
       const lc = ws.getCell(r, 2)
       lc.value = labelText
       lc.font = fontBase({ bold: true, color: { argb: NAVY } })
-      lc.fill = fillSolid(WHITE)
+      lc.fill = fillSolid(opts.labelFill || WHITE)
       lc.alignment = alignVC
       lc.border = allHair
       // Value
       ws.mergeCells(r, 3, r, 9)
       const vc = ws.getCell(r, 3)
       vc.value = valueText || ''
-      vc.font = fontBase({ color: { argb: GRAY33 } })
+      vc.font = fontBase({ bold: !!opts.valueBold, color: { argb: opts.valueColor || GRAY33 } })
       vc.fill = fillSolid(editable ? WHITE : F8)
       vc.alignment = alignVCWrap
       vc.border = {
@@ -296,7 +298,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     applySection(ws, 4, '1. DADOS DO PROJETO')
     applyRow(ws, 5,  'CLIENTE',             projeto?.clientes?.nome || '—', false)
     applyRow(ws, 6,  'NATUREZA DO PROJETO', projeto?.nome || '—',           false)
-    applyRow(ws, 7,  'FASE EM CURSO',       'F2-E1 — Plano de Ação',        false)
+    applyRow(ws, 7,  'FASE EM CURSO',       'F2-E1 — Plano de Ação',        false, { valueBold: true, valueColor: COPPER })
     applyRow(ws, 8,  'EXECUTOR',            perfil?.nome || '—',            false)
     applyRow(ws, 9,  'DATA E HORÁRIO',      dtStr,                          false)
     applyRow(ws, 10, 'DOWNLOAD POR',        perfil?.email || '—',           false)
@@ -308,8 +310,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     applySection(ws, 14, '2. IDENTIFICAÇÃO DO RISCO E CONTROLE')
     applyRow(ws, 15, 'ÁREA / PROCESSO',      row.area || '—',                          false)
     applyRow(ws, 16, 'SUBPROCESSO',          row.sub  || '—',                          false)
-    applyRow(ws, 17, 'REF. RISCO',           row.rr   || '—',                          false)
-    applyRow(ws, 18, 'REF. CONTROLE',        row.rc   || '—',                          false)
+    applyRow(ws, 17, 'REF. RISCO',           row.rr   || '—',                          false, { valueBold: true, valueColor: COPPER })
+    applyRow(ws, 18, 'REF. CONTROLE',        row.rc   || '—',                          false, { valueBold: true, valueColor: COPPER })
     applyRow(ws, 19, 'GERÊNCIA',             row.ger  || '—',                          false)
     applyRow(ws, 20, 'RESP. SUBPROCESSO',    row.resp_sub || '—',                      false)
     applyRow(ws, 21, 'DESCRIÇÃO DO RISCO',   novaDescRisco || row.dr || '—',           false)
@@ -367,9 +369,9 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     ws.mergeCells(42, 2, 42, 9)
     const leg = ws.getCell(42, 2)
     leg.value = '✓ = Teste realizado com sucesso · ✗ = Não foi possível realizar o teste'
-    leg.font = fontBase({ size: 8, color: { argb: GOLD } })
-    leg.fill = fillSolid(F8)
-    leg.alignment = { horizontal: 'center', vertical: 'middle' }
+    leg.font = fontBase({ color: { argb: GRAY99 } })
+    leg.fill = fillSolid(WHITE)
+    leg.alignment = { horizontal: 'left', vertical: 'middle' }
     leg.border = allHair
     ws.getRow(42).height = 15
 
@@ -411,10 +413,10 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
 
     // ── Bloco 6: RESULTADO (55-60) ──
     applySection(ws, 55, '6. RESULTADO')
-    applyRow(ws, 56, 'RESULTADO',                  '', true)
-    applyRow(ws, 57, 'INCONSISTÊNCIA IDENTIFICADA','', true)
-    applyRow(ws, 58, 'MELHORIA IDENTIFICADA?',     '', true)
-    applyRow(ws, 59, 'DESCRIÇÃO DA MELHORIA',      '', true)
+    applyRow(ws, 56, 'RESULTADO',                  '', true, { labelFill: CREAM })
+    applyRow(ws, 57, 'INCONSISTÊNCIA IDENTIFICADA','', true, { labelFill: CREAM })
+    applyRow(ws, 58, 'MELHORIA IDENTIFICADA?',     '', true, { labelFill: CREAM })
+    applyRow(ws, 59, 'DESCRIÇÃO DA MELHORIA',      '', true, { labelFill: CREAM })
 
     // Validação Resultado C56:I56
     ws.dataValidations.add('C56:I56', {
@@ -436,8 +438,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     ws.mergeCells(60, 2, 60, 9)
     const nota = ws.getCell(60, 2)
     nota.value = '↑ Preencher apenas quando "Melhoria Identificada?" = Sim'
-    nota.font = fontBase({ size: 8, color: { argb: GOLD } })
-    nota.fill = fillSolid(F8)
+    nota.font = fontBase({ color: { argb: GRAY99 } })
+    nota.fill = fillSolid(WHITE)
     nota.alignment = { horizontal: 'left', vertical: 'middle' }
     nota.border = allHair
     ws.getRow(60).height = 15
@@ -547,9 +549,10 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         </div>
       </div>
 
-      {/* Q1: Status */}
+      {/* Q1: Situação do Risco */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#00203E', marginBottom: 12 }}>Houve alteração no status do risco?</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#00203E', marginBottom: 2 }}>Houve alteração na situação do risco?</div>
+        <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 12 }}>A situação pode ser: existente, evitado ou transferido.</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
           <button
             style={{
@@ -595,7 +598,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         <div>
           <div style={{ height: 1, background: '#e5e7eb', margin: '20px 0' }} />
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#00203E', marginBottom: 12 }}>Qual o novo status do risco?</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#00203E', marginBottom: 12 }}>Qual a nova situação do risco?</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <button
                 style={{
@@ -1067,31 +1070,26 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         </div>
       </div>
 
-      <div style={{ background: '#00203E', color: 'white', padding: 16, borderRadius: 8, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ fontSize: 24 }}>📊</div>
+      <div
+        onClick={!saving ? handleSaveFicha : undefined}
+        style={{ background: '#00203E', color: 'white', padding: 16, borderRadius: 8, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, cursor: saving ? 'wait' : 'pointer', transition: 'opacity .15s', opacity: saving ? 0.6 : 1 }}
+      >
+        <div style={{ background: '#C8895C', color: '#fff', padding: '6px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 0.5, flexShrink: 0 }}>.XLSX</div>
         <div style={{ flex: 1 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Salvar e Baixar Ficha de Risco</h3>
-          <p style={{ fontSize: 11, opacity: 0.9 }}>Ficha_de_Risco_{row.rc}.xlsx — pré-preenchida com os dados acima. Salva as alterações e baixa a ficha automaticamente.</p>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>Salvar e Baixar Ficha de Risco</div>
+          <div style={{ fontSize: 11, opacity: 0.75 }}>Ficha_de_Risco_{row.rc}.xlsx — pré-preenchida com os dados acima. Salva as alterações e baixa a ficha automaticamente.</div>
         </div>
-        <button
-          onClick={handleSaveFicha}
-          disabled={saving}
-          style={{ background: '#C8895C', color: 'white', padding: '6px 12px', borderRadius: 4, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
-        >
-          .XLSX
-        </button>
       </div>
 
-      <div style={{ background: '#e5e7eb', border: '2px dashed #9ca3af', padding: 16, borderRadius: 8, marginBottom: 16, textAlign: 'center' }}>
-        <p style={{ fontSize: 13, color: '#1f2937', fontWeight: 600, marginBottom: 8 }}>💾 Salvar sem gerar ficha</p>
-        <p style={{ fontSize: 12, color: '#374151', marginBottom: 12 }}>Salva as alterações, mas o teste ficará marcado como pendente.</p>
-        <button
-          onClick={handleSaveSemFicha}
-          disabled={saving}
-          style={{ marginTop: 8, background: '#6b7280', color: 'white', border: '1px solid #4b5563', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-        >
-          Salvar sem Ficha
-        </button>
+      <div
+        onClick={!saving ? handleSaveSemFicha : undefined}
+        style={{ background: '#f3f4f6', border: '1px solid #d1d5db', padding: 16, borderRadius: 8, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, cursor: saving ? 'wait' : 'pointer', transition: 'opacity .15s', opacity: saving ? 0.6 : 1 }}
+      >
+        <div style={{ background: '#6b7280', color: '#fff', padding: '6px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 0.5, flexShrink: 0 }}>💾</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#1f2937', marginBottom: 2 }}>Salvar sem gerar ficha</div>
+          <div style={{ fontSize: 11, color: '#6b7280' }}>Salva as alterações, mas o teste ficará marcado como pendente.</div>
+        </div>
       </div>
 
       <div style={{ background: '#FEF3C7', borderLeft: '3px solid #F59E0B', padding: 12, borderRadius: 6, fontSize: 12, color: '#92400E' }}>
