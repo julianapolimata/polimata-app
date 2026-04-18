@@ -37,9 +37,20 @@ export default function UsuariosConfig() {
   }
 
   async function suspenderUsuario(u) {
-    const novoAtivo = u.ativo === false ? true : false
-    await supabase.from('perfis').update({ ativo: novoAtivo }).eq('id', u.id)
+    const { data, error } = await supabase.functions.invoke('manage-user', {
+      body: { action: 'suspend', user_id: u.id, ativo_atual: u.ativo !== false }
+    })
+    if (error || data?.error) alert(data?.error || 'Erro ao atualizar')
     loadDados()
+  }
+
+  async function excluirUsuario(u) {
+    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o usuário "${u.nome}"?\n\nEssa ação não pode ser desfeita. O usuário perderá todo o acesso ao sistema.`)) return
+    const { data, error } = await supabase.functions.invoke('manage-user', {
+      body: { action: 'delete', user_id: u.id }
+    })
+    if (error || data?.error) alert(data?.error || 'Erro ao excluir')
+    else loadDados()
   }
 
   if (loading) return <div className="cfg-loading"><div className="spinner"/></div>
@@ -114,6 +125,18 @@ export default function UsuariosConfig() {
                     }}
                   >
                     {suspenso ? '↺ Reativar' : '⊘ Suspender'}
+                  </button>
+                  <button
+                    onClick={() => excluirUsuario(u)}
+                    style={{
+                      background: 'rgba(239,68,68,0.08)',
+                      color: '#EF4444',
+                      border: '1px solid rgba(239,68,68,0.25)',
+                      borderRadius: 5, padding: '3px 8px', fontSize: 11,
+                      cursor: 'pointer', whiteSpace: 'nowrap'
+                    }}
+                  >
+                    ✕ Excluir
                   </button>
                 </div>
               )}
@@ -292,7 +315,7 @@ function NovoUsuarioForm({ clientes, areas, projetos, onSave, onCancel }) {
 // ══════════════════════════════════════════════════════
 function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCancel }) {
   const [form, setForm] = useState({
-    nome: usuario.nome || '', papel: usuario.papel || 'usuario_cliente',
+    nome: usuario.nome || '', email: usuario.email || '', papel: usuario.papel || 'usuario_cliente',
     acesso_todas_areas: usuario.acesso_todas_areas !== false
   })
   const [clientesSel, setClientesSel] = useState([])
@@ -324,25 +347,27 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
   async function salvar() {
     setSaving(true); setErro('')
     try {
-      await supabase.from('perfis').update({
-        nome: form.nome, papel: form.papel,
-        cliente_id: precisaCliente ? clienteId : null,
-        projeto_id: precisaCliente ? projetoId : null,
-        acesso_todas_areas: form.acesso_todas_areas
-      }).eq('id', usuario.id)
-
-      await supabase.from('perfis_projetos').delete().eq('perfil_id', usuario.id)
-      if (isConsultor && projetosSel.length > 0) {
-        await supabase.from('perfis_projetos').insert(projetosSel.map(pid => ({ perfil_id: usuario.id, projeto_id: pid })))
-      }
-
-      await supabase.from('permissoes_area').delete().eq('perfil_id', usuario.id)
-      if (form.papel === 'usuario_cliente' && !form.acesso_todas_areas && areasSel.length > 0) {
-        await supabase.from('permissoes_area').insert(areasSel.map(aid => ({ perfil_id: usuario.id, area_id: aid, pode_editar: false })))
-      }
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'update',
+          user_id: usuario.id,
+          nome: form.nome,
+          email: form.email !== usuario.email ? form.email : undefined,
+          papel: form.papel,
+          cliente_id: precisaCliente ? clienteId : null,
+          projeto_id: precisaCliente ? projetoId : null,
+          acesso_todas_areas: form.acesso_todas_areas,
+          projetos_ids: isConsultor ? projetosSel : [],
+          areas_ids: (form.papel === 'usuario_cliente' && !form.acesso_todas_areas) ? areasSel : [],
+        }
+      })
+      if (error) throw new Error(error.message || 'Erro ao salvar')
+      if (data?.error) throw new Error(data.error)
       onSave()
     } catch (e) { setErro(e.message); setSaving(false) }
   }
+
+  const criadoEm = usuario.criado_em ? new Date(usuario.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
 
   return (
     <div className="cfg-inline-form" style={{ borderColor: 'rgba(200,137,92,0.3)' }}>
@@ -352,7 +377,22 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
       </div>
       {erro && <div className="cfg-erro" style={{ marginBottom: 12 }}>{erro}</div>}
 
-      <div className="cfg-field"><label>Nome</label><input className="input-light" value={form.nome} onChange={e => u('nome', e.target.value)} /></div>
+      {/* Campos read-only */}
+      <div className="cfg-row2" style={{ marginBottom: 12 }}>
+        <div className="cfg-field">
+          <label style={{ fontSize: 10, color: '#999' }}>ID do Usuário</label>
+          <div style={{ fontSize: 11, color: '#888', fontFamily: 'monospace', padding: '6px 0' }}>{usuario.id?.substring(0, 8)}...</div>
+        </div>
+        <div className="cfg-field">
+          <label style={{ fontSize: 10, color: '#999' }}>Cadastrado em</label>
+          <div style={{ fontSize: 12, color: '#666', padding: '6px 0' }}>{criadoEm}</div>
+        </div>
+      </div>
+
+      <div className="cfg-row2">
+        <div className="cfg-field"><label>Nome</label><input className="input-light" value={form.nome} onChange={e => u('nome', e.target.value)} /></div>
+        <div className="cfg-field"><label>Email</label><input className="input-light" type="email" value={form.email} onChange={e => u('email', e.target.value)} /></div>
+      </div>
 
       <div className="cfg-field">
         <label>Perfil de Acesso</label>
