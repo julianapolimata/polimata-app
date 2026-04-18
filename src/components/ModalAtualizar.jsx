@@ -1177,13 +1177,15 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
               >
                 ← Voltar
               </button>
-              <button
-                onClick={nextStep}
-                disabled={step === 1 ? !canAdvanceStep1 : step === 2 ? !canAdvanceStep2 : false}
-                style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#C8895C', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 0.5 : 1 }}
-              >
-                {step === 3 ? 'Finalizar' : 'Próximo →'}
-              </button>
+              {step < 3 && (
+                <button
+                  onClick={nextStep}
+                  disabled={step === 1 ? !canAdvanceStep1 : step === 2 ? !canAdvanceStep2 : false}
+                  style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#C8895C', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 0.5 : 1 }}
+                >
+                  Próximo →
+                </button>
+              )}
             </>
           )}
         </div>

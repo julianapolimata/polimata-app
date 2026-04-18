@@ -3,10 +3,14 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 
 const PAPEIS = [
-  { value: 'admin_polimata',    label: 'Admin Polímata',    desc: 'Acesso total a todos os clientes e configurações', cor: '#C8895C' },
-  { value: 'consultor_polimata',label: 'Consultor Polímata',desc: 'Edita análises, faz upload de fichas, baixa relatórios', cor: '#3B82F6' },
-  { value: 'gestor_cliente',    label: 'Gestor do Cliente', desc: 'Vê todas as áreas do projeto, somente consulta e download', cor: '#22C55E' },
-  { value: 'usuario_cliente',   label: 'Usuário Cliente',   desc: 'Acesso às áreas atribuídas, somente consulta e download', cor: '#A78BFA' },
+  { value: 'admin_polimata',     label: 'Admin Polímata',     desc: 'Acesso total a todos os clientes e configurações', cor: '#C8895C',
+    pode: ['Visualizar todos os clientes e projetos', 'Criar e gerenciar usuários', 'Editar todas as análises', 'Configurar o sistema'] },
+  { value: 'consultor_polimata', label: 'Consultor Polímata', desc: 'Edita análises, faz upload de fichas, baixa relatórios', cor: '#3B82F6',
+    pode: ['Editar análises nos projetos vinculados', 'Upload de fichas e documentos', 'Download de relatórios'] },
+  { value: 'gestor_cliente',     label: 'Gestor do Cliente',  desc: 'Vê todas as áreas do projeto, somente consulta e download', cor: '#22C55E',
+    pode: ['Visualizar todas as áreas do projeto', 'Download de relatórios', 'Consulta somente (sem edição)'] },
+  { value: 'usuario_cliente',    label: 'Usuário Cliente',    desc: 'Acesso às áreas atribuídas, somente consulta e download', cor: '#A78BFA',
+    pode: ['Visualizar áreas atribuídas', 'Download de relatórios', 'Consulta somente (sem edição)'] },
 ]
 
 export default function UsuariosConfig() {
@@ -17,7 +21,8 @@ export default function UsuariosConfig() {
   const [projetos, setProjetos] = useState([])
   const [loading, setLoading] = useState(true)
   const [showNovo, setShowNovo] = useState(false)
-  const [usuarioEditando, setUsuarioEditando] = useState(null)
+  const [selecionado, setSelecionado] = useState(null)
+  const [editando, setEditando] = useState(false)
 
   useEffect(() => { loadDados() }, [])
 
@@ -41,6 +46,8 @@ export default function UsuariosConfig() {
       body: { action: 'suspend', user_id: u.id, ativo_atual: u.ativo !== false }
     })
     if (error || data?.error) alert(data?.error || 'Erro ao atualizar')
+    const atualizado = { ...u, ativo: u.ativo === false ? true : false }
+    setSelecionado(atualizado)
     loadDados()
   }
 
@@ -50,8 +57,10 @@ export default function UsuariosConfig() {
       body: { action: 'delete', user_id: u.id }
     })
     if (error || data?.error) alert(data?.error || 'Erro ao excluir')
-    else loadDados()
+    else { setSelecionado(null); setEditando(false); loadDados() }
   }
+
+  function fecharPainel() { setSelecionado(null); setEditando(false) }
 
   if (loading) return <div className="cfg-loading"><div className="spinner"/></div>
 
@@ -60,9 +69,9 @@ export default function UsuariosConfig() {
       <div className="cfg-section-hdr">
         <div>
           <div className="cfg-section-title">Usuários</div>
-          <div className="cfg-section-sub">{usuarios.length} usuário{usuarios.length !== 1 ? 's' : ''}</div>
+          <div className="cfg-section-sub">{usuarios.length} usuário{usuarios.length !== 1 ? 's' : ''} cadastrado{usuarios.length !== 1 ? 's' : ''}</div>
         </div>
-        <button className="btn-cfg-add" onClick={() => setShowNovo(true)}>
+        <button className="btn-cfg-add" onClick={() => { setShowNovo(true); setSelecionado(null); setEditando(false) }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Novo Usuário
         </button>
@@ -76,75 +85,198 @@ export default function UsuariosConfig() {
         />
       )}
 
-      {usuarioEditando && (
-        <EditarUsuarioForm
-          usuario={usuarioEditando}
-          clientes={clientes} areas={areas} projetos={projetos}
-          onSave={() => { setUsuarioEditando(null); loadDados() }}
-          onCancel={() => setUsuarioEditando(null)}
-        />
+      <div className="usuarios-layout">
+        {/* Lista */}
+        <div className="usuarios-lista">
+          {usuarios.map(u => {
+            const papel = PAPEIS.find(p => p.value === u.papel)
+            const suspenso = u.ativo === false
+            const ativo = selecionado?.id === u.id
+            return (
+              <div key={u.id}
+                className={`usuario-card-v2 ${ativo ? 'ativo' : ''} ${suspenso ? 'suspenso' : ''}`}
+                onClick={() => { setSelecionado(u); setEditando(false); setShowNovo(false) }}>
+                <div className="usuario-avatar" style={{ background: suspenso ? '#6B7280' : (papel?.cor || 'var(--gold)') }}>
+                  {u.avatar_url
+                    ? <img src={u.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    : (u.nome?.[0]?.toUpperCase() || '?')}
+                </div>
+                <div className="usuario-info">
+                  <div className="usuario-nome">
+                    {u.nome}
+                    {u.id === meuperfil?.id && <span className="badge-voce">você</span>}
+                    {suspenso && <span className="badge-inativo">Suspenso</span>}
+                  </div>
+                  <div className="usuario-email">{u.email}</div>
+                  <div style={{ display: 'flex', gap: 5, marginTop: 5, flexWrap: 'wrap' }}>
+                    <span className="usuario-papel-badge" style={{ background: papel?.cor + '18', color: papel?.cor, border: `1px solid ${papel?.cor}33` }}>
+                      {papel?.label || u.papel}
+                    </span>
+                  </div>
+                </div>
+                <svg className="usuario-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            )
+          })}
+          {!usuarios.length && <div className="cfg-empty">Nenhum usuário cadastrado.</div>}
+        </div>
+
+        {/* Painel de detalhes */}
+        {selecionado && !editando && (
+          <PainelDetalhes
+            usuario={selecionado}
+            meuperfil={meuperfil}
+            projetos={projetos}
+            areas={areas}
+            onEditar={() => setEditando(true)}
+            onSuspender={() => suspenderUsuario(selecionado)}
+            onExcluir={() => excluirUsuario(selecionado)}
+            onFechar={fecharPainel}
+          />
+        )}
+
+        {selecionado && editando && (
+          <EditarUsuarioForm
+            usuario={selecionado}
+            clientes={clientes} areas={areas} projetos={projetos}
+            onSave={() => { setEditando(false); setSelecionado(null); loadDados() }}
+            onCancel={() => setEditando(false)}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════
+// PAINEL DE DETALHES (visualização)
+// ══════════════════════════════════════════════════════
+function PainelDetalhes({ usuario, meuperfil, projetos, areas, onEditar, onSuspender, onExcluir, onFechar }) {
+  const papel = PAPEIS.find(p => p.value === usuario.papel)
+  const suspenso = usuario.ativo === false
+  const criadoEm = usuario.criado_em ? new Date(usuario.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
+  const isMe = usuario.id === meuperfil?.id
+
+  const [permAreas, setPermAreas] = useState([])
+  const [permProjetos, setPermProjetos] = useState([])
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('permissoes_area').select('area_id').eq('perfil_id', usuario.id),
+      supabase.from('perfis_projetos').select('projeto_id').eq('perfil_id', usuario.id),
+    ]).then(([{ data: pa }, { data: pp }]) => {
+      setPermAreas((pa || []).map(x => x.area_id))
+      setPermProjetos((pp || []).map(x => x.projeto_id))
+    })
+  }, [usuario.id])
+
+  const nomesAreas = permAreas.map(id => areas.find(a => a.id === id)?.nome).filter(Boolean)
+  const nomesProjetos = permProjetos.map(id => projetos.find(p => p.id === id)?.nome).filter(Boolean)
+
+  return (
+    <div className="painel-detalhe">
+      <div className="painel-header">
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt1)' }}>Detalhes do Usuário</span>
+        <button className="btn-cfg-remove" onClick={onFechar} title="Fechar">✕</button>
+      </div>
+
+      {/* Avatar + nome */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+        <div className="usuario-avatar" style={{ width: 52, height: 52, fontSize: 20, background: suspenso ? '#6B7280' : (papel?.cor || 'var(--gold)') }}>
+          {usuario.avatar_url
+            ? <img src={usuario.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            : (usuario.nome?.[0]?.toUpperCase() || '?')}
+        </div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--txt1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            {usuario.nome}
+            {suspenso && <span className="badge-inativo">Suspenso</span>}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>{usuario.email}</div>
+        </div>
+      </div>
+
+      <div className="painel-divider" />
+
+      {/* Info grid */}
+      <div className="painel-info-grid">
+        <div className="painel-info-item">
+          <div className="painel-info-label">Usuário</div>
+          <div className="painel-info-value">{usuario.email?.split('@')[0] || '—'}</div>
+        </div>
+        <div className="painel-info-item">
+          <div className="painel-info-label">Cadastrado em</div>
+          <div className="painel-info-value">{criadoEm}</div>
+        </div>
+        <div className="painel-info-item">
+          <div className="painel-info-label">Status</div>
+          <div className="painel-info-value">
+            <span className={`status-dot ${suspenso ? 'inativo' : 'ativo'}`} />
+            {suspenso ? 'Suspenso' : 'Ativo'}
+          </div>
+        </div>
+        <div className="painel-info-item">
+          <div className="painel-info-label">Perfil</div>
+          <div className="painel-info-value" style={{ color: papel?.cor, fontWeight: 600 }}>{papel?.label || usuario.papel}</div>
+        </div>
+      </div>
+
+      {/* Descrição do perfil */}
+      <div className="painel-perfil-box" style={{ borderLeftColor: papel?.cor }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', marginBottom: 6 }}>Permissões deste perfil</div>
+        {papel?.pode?.map((p, i) => (
+          <div key={i} style={{ fontSize: 11, color: 'var(--txt3)', padding: '2px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: papel?.cor, fontSize: 10 }}>●</span> {p}
+          </div>
+        ))}
+      </div>
+
+      {/* Cliente / Projeto / Áreas */}
+      {usuario.clientes?.nome && (
+        <div className="painel-info-item" style={{ marginTop: 12 }}>
+          <div className="painel-info-label">Cliente</div>
+          <div className="painel-info-value">{usuario.clientes.nome}</div>
+        </div>
+      )}
+      {usuario.papel === 'admin_polimata' && (
+        <div className="painel-info-item" style={{ marginTop: 8 }}>
+          <div className="painel-info-label">Acesso</div>
+          <div className="painel-info-value" style={{ color: 'var(--gold)' }}>Todos os clientes e projetos</div>
+        </div>
+      )}
+      {nomesProjetos.length > 0 && (
+        <div className="painel-info-item" style={{ marginTop: 8 }}>
+          <div className="painel-info-label">Projetos vinculados</div>
+          <div className="painel-tags">{nomesProjetos.map((n, i) => <span key={i} className="painel-tag">{n}</span>)}</div>
+        </div>
+      )}
+      {usuario.papel === 'usuario_cliente' && (
+        <div className="painel-info-item" style={{ marginTop: 8 }}>
+          <div className="painel-info-label">Áreas</div>
+          <div className="painel-info-value">
+            {usuario.acesso_todas_areas ? 'Todas as áreas' : (nomesAreas.length > 0
+              ? <div className="painel-tags">{nomesAreas.map((n, i) => <span key={i} className="painel-tag">{n}</span>)}</div>
+              : 'Nenhuma área atribuída')}
+          </div>
+        </div>
       )}
 
-      <div className="usuarios-grid">
-        {usuarios.map(u => {
-          const papel = PAPEIS.find(p => p.value === u.papel)
-          const suspenso = u.ativo === false
-          return (
-            <div key={u.id} className="usuario-card" style={suspenso ? { opacity: 0.55 } : {}}>
-              <div className="usuario-avatar" style={{ background: suspenso ? '#6B7280' : (papel?.cor || 'var(--gold)') }}>
-                {u.nome?.[0]?.toUpperCase() || '?'}
-              </div>
-              <div className="usuario-info">
-                <div className="usuario-nome">
-                  {u.nome}
-                  {u.id === meuperfil?.id && <span className="badge-voce">você</span>}
-                  {suspenso && <span className="badge-inativo" style={{ marginLeft: 4 }}>Suspenso</span>}
-                </div>
-                <div className="usuario-email">{u.email}</div>
-                <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                  <span className="usuario-papel-badge" style={{ background: papel?.cor + '22', color: papel?.cor, border: `1px solid ${papel?.cor}44` }}>
-                    {papel?.label || u.papel}
-                  </span>
-                  {u.clientes?.nome && <span className="badge-cliente">{u.clientes.nome}</span>}
-                  {u.papel === 'admin_polimata' && (
-                    <span className="badge-cliente" style={{ background: 'rgba(200,137,92,0.1)', color: 'var(--gold)' }}>Todos os clientes</span>
-                  )}
-                </div>
-              </div>
-              {u.id !== meuperfil?.id && (
-                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                  <button className="btn-tbl-edit" onClick={() => setUsuarioEditando(u)} title="Editar">✏</button>
-                  <button
-                    onClick={() => suspenderUsuario(u)}
-                    style={{
-                      background: suspenso ? 'rgba(34,197,94,0.1)' : 'rgba(251,191,36,0.1)',
-                      color: suspenso ? '#22C55E' : '#FBBF24',
-                      border: `1px solid ${suspenso ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.3)'}`,
-                      borderRadius: 5, padding: '3px 8px', fontSize: 11,
-                      cursor: 'pointer', whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {suspenso ? '↺ Reativar' : '⊘ Suspender'}
-                  </button>
-                  <button
-                    onClick={() => excluirUsuario(u)}
-                    style={{
-                      background: 'rgba(239,68,68,0.08)',
-                      color: '#EF4444',
-                      border: '1px solid rgba(239,68,68,0.25)',
-                      borderRadius: 5, padding: '3px 8px', fontSize: 11,
-                      cursor: 'pointer', whiteSpace: 'nowrap'
-                    }}
-                  >
-                    ✕ Excluir
-                  </button>
-                </div>
-              )}
-            </div>
-          )
-        })}
-        {!usuarios.length && <div className="cfg-empty">Nenhum usuário cadastrado.</div>}
-      </div>
+      {/* Ações */}
+      {!isMe && (
+        <>
+          <div className="painel-divider" style={{ marginTop: 16 }} />
+          <div className="painel-acoes">
+            <button className="painel-btn primary" onClick={onEditar}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Editar
+            </button>
+            <button className="painel-btn warning" onClick={onSuspender}>
+              {suspenso ? '↺ Reativar' : '⊘ Suspender'}
+            </button>
+            <button className="painel-btn danger" onClick={onExcluir}>✕ Excluir</button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -169,6 +301,7 @@ function NovoUsuarioForm({ clientes, areas, projetos, onSave, onCancel }) {
   const projetosDoCliente = projetos.filter(p => p.cliente_id === clienteId)
   const areasDoProj = areas.filter(a => a.projeto_id === projetoId)
   const projetosDisponiveis = clientesSel.length > 0 ? projetos.filter(p => clientesSel.includes(p.cliente_id)) : projetos
+  const papelSel = PAPEIS.find(p => p.value === form.papel)
 
   async function salvar() {
     if (!form.nome.trim() || !form.email.trim()) { setErro('Nome e email são obrigatórios'); return }
@@ -217,18 +350,22 @@ function NovoUsuarioForm({ clientes, areas, projetos, onSave, onCancel }) {
         <div className="cfg-field"><label>Email <span className="req">*</span></label><input className="input-light" type="email" value={form.email} onChange={e => u('email', e.target.value)} placeholder="email@empresa.com" /></div>
       </div>
 
+      {/* Perfil simplificado: select + resumo */}
       <div className="cfg-field">
         <label>Perfil de Acesso <span className="req">*</span></label>
-        <div className="perfil-grid">
-          {PAPEIS.map(p => (
-            <div key={p.value} className={`perfil-card ${form.papel === p.value ? 'selected' : ''}`}
-              onClick={() => u('papel', p.value)}
-              style={form.papel === p.value ? { borderColor: p.cor, background: p.cor + '11' } : {}}>
-              <div className="perfil-card-nome" style={form.papel === p.value ? { color: p.cor } : {}}>{p.label}</div>
-              <div className="perfil-card-desc">{p.desc}</div>
-            </div>
-          ))}
-        </div>
+        <select className="input-light" value={form.papel} onChange={e => u('papel', e.target.value)}>
+          {PAPEIS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+        {papelSel && (
+          <div className="perfil-resumo" style={{ borderLeftColor: papelSel.cor }}>
+            <div style={{ fontSize: 11, color: 'var(--txt2)', marginBottom: 4 }}>{papelSel.desc}</div>
+            {papelSel.pode?.map((p, i) => (
+              <div key={i} style={{ fontSize: 10, color: 'var(--txt3)', padding: '1px 0', display: 'flex', gap: 5, alignItems: 'center' }}>
+                <span style={{ color: papelSel.cor, fontSize: 8 }}>●</span> {p}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {isConsultor && (
@@ -311,7 +448,7 @@ function NovoUsuarioForm({ clientes, areas, projetos, onSave, onCancel }) {
 }
 
 // ══════════════════════════════════════════════════════
-// FORMULÁRIO EDITAR USUÁRIO
+// FORMULÁRIO EDITAR USUÁRIO (dentro do painel)
 // ══════════════════════════════════════════════════════
 function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCancel }) {
   const [form, setForm] = useState({
@@ -332,6 +469,9 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
   const projetosDoCliente = projetos.filter(p => p.cliente_id === clienteId)
   const areasDoProj = areas.filter(a => a.projeto_id === projetoId)
   const projetosDisponiveis = clientesSel.length > 0 ? projetos.filter(p => clientesSel.includes(p.cliente_id)) : projetos
+  const papelSel = PAPEIS.find(p => p.value === form.papel)
+
+  const criadoEm = usuario.criado_em ? new Date(usuario.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
 
   useEffect(() => {
     Promise.all([
@@ -367,25 +507,24 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
     } catch (e) { setErro(e.message); setSaving(false) }
   }
 
-  const criadoEm = usuario.criado_em ? new Date(usuario.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
-
   return (
-    <div className="cfg-inline-form" style={{ borderColor: 'rgba(200,137,92,0.3)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <div className="cfg-group-title" style={{ fontSize: 13 }}>Editando: {usuario.nome}</div>
+    <div className="painel-detalhe">
+      <div className="painel-header">
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt1)' }}>Editar Usuário</span>
         <button className="btn-cfg-remove" onClick={onCancel}>✕</button>
       </div>
+
       {erro && <div className="cfg-erro" style={{ marginBottom: 12 }}>{erro}</div>}
 
-      {/* Campos read-only */}
-      <div className="cfg-row2" style={{ marginBottom: 12 }}>
-        <div className="cfg-field">
-          <label style={{ fontSize: 10, color: '#999' }}>Usuário</label>
-          <div style={{ fontSize: 12, color: '#888', padding: '6px 0' }}>{usuario.email?.split('@')[0] || '—'}</div>
+      {/* Read-only info */}
+      <div className="painel-info-grid" style={{ marginBottom: 16 }}>
+        <div className="painel-info-item">
+          <div className="painel-info-label">Usuário</div>
+          <div className="painel-info-value">{usuario.email?.split('@')[0] || '—'}</div>
         </div>
-        <div className="cfg-field">
-          <label style={{ fontSize: 10, color: '#999' }}>Cadastrado em</label>
-          <div style={{ fontSize: 12, color: '#666', padding: '6px 0' }}>{criadoEm}</div>
+        <div className="painel-info-item">
+          <div className="painel-info-label">Cadastrado em</div>
+          <div className="painel-info-value">{criadoEm}</div>
         </div>
       </div>
 
@@ -394,18 +533,22 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
         <div className="cfg-field"><label>Email</label><input className="input-light" type="email" value={form.email} onChange={e => u('email', e.target.value)} /></div>
       </div>
 
+      {/* Perfil simplificado */}
       <div className="cfg-field">
         <label>Perfil de Acesso</label>
-        <div className="perfil-grid">
-          {PAPEIS.map(p => (
-            <div key={p.value} className={`perfil-card ${form.papel === p.value ? 'selected' : ''}`}
-              onClick={() => u('papel', p.value)}
-              style={form.papel === p.value ? { borderColor: p.cor, background: p.cor + '11' } : {}}>
-              <div className="perfil-card-nome" style={form.papel === p.value ? { color: p.cor } : {}}>{p.label}</div>
-              <div className="perfil-card-desc">{p.desc}</div>
-            </div>
-          ))}
-        </div>
+        <select className="input-light" value={form.papel} onChange={e => u('papel', e.target.value)}>
+          {PAPEIS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+        {papelSel && (
+          <div className="perfil-resumo" style={{ borderLeftColor: papelSel.cor }}>
+            <div style={{ fontSize: 11, color: 'var(--txt2)', marginBottom: 4 }}>{papelSel.desc}</div>
+            {papelSel.pode?.map((p, i) => (
+              <div key={i} style={{ fontSize: 10, color: 'var(--txt3)', padding: '1px 0', display: 'flex', gap: 5, alignItems: 'center' }}>
+                <span style={{ color: papelSel.cor, fontSize: 8 }}>●</span> {p}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {isConsultor && (
@@ -424,7 +567,6 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
           </div>
           <div className="cfg-field">
             <label>Projetos vinculados</label>
-            <div style={{ fontSize: 10, color: 'var(--txt3)', marginBottom: 6 }}>Sem projeto selecionado o consultor não verá nada.</div>
             <div className="areas-check-grid">
               {projetosDisponiveis.map(p => (
                 <label key={p.id} className="area-check">
@@ -478,8 +620,8 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
       )}
 
       <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-        <button className="btn-cfg-cancel" onClick={onCancel}>Cancelar</button>
-        <button className="btn-cfg-save" onClick={salvar} disabled={saving}>{saving ? 'Salvando...' : '✓ Salvar'}</button>
+        <button className="btn-cfg-cancel" onClick={onCancel}>Voltar</button>
+        <button className="btn-cfg-save" onClick={salvar} disabled={saving}>{saving ? 'Salvando...' : '✓ Salvar Alterações'}</button>
       </div>
     </div>
   )
