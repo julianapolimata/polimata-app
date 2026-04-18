@@ -197,6 +197,12 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
           .from('notificacoes')
           .insert(notifs)
         if (notErr) console.error('Erro ao criar notificação:', notErr)
+        // Enviar email para cada revisor (admin)
+        admins.forEach(a => {
+          supabase.functions.invoke('send-email', {
+            body: { type: 'review_submitted', data: { revisor_id: a.id, autor_id: user?.id, ref: row.rc || row.rr, descricao: row.dc || '', area_id: row.area_id } }
+          }).catch(err => console.error('Erro ao enviar email de revisão:', err))
+        })
       }
 
       onSaved?.(row)

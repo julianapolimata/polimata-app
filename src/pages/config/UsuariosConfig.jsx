@@ -176,6 +176,13 @@ function NovoUsuarioForm({ clientes, areas, projetos, onSave, onCancel }) {
         await supabase.from('permissoes_area').insert(areasSel.map(aid => ({ perfil_id: authData.user.id, area_id: aid, pode_editar: false })))
       }
       await supabase.auth.resetPasswordForEmail(form.email.trim(), { redirectTo: window.location.origin })
+      // Enviar email de boas-vindas personalizado via Edge Function
+      const pNome = isConsultor
+        ? (projetos.find(p => projetosSel.includes(p.id))?.nome || 'Polímata GRC')
+        : (projetos.find(p => p.id === projetoId)?.nome || 'Polímata GRC')
+      supabase.functions.invoke('send-email', {
+        body: { type: 'welcome', data: { nome: form.nome.trim(), email: form.email.trim(), projeto: pNome } }
+      }).catch(err => console.error('Erro ao enviar email de boas-vindas:', err))
       setSucesso(`Usuário criado! Email enviado para ${form.email}`)
       setTimeout(() => onSave(), 1500)
     } catch (e) { setErro(e.message); setSaving(false) }

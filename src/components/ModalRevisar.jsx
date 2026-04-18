@@ -93,6 +93,10 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
           lida: false,
           mrc_id: row.id,
         })
+        // Enviar email de aprovação
+        supabase.functions.invoke('send-email', {
+          body: { type: 'review_completed', data: { autor_id: row.submetido_por, revisor_id: user?.id, ref: row.rc || row.rr, resultado: 'aprovado', nota: notaAprovar || '', area_id: row.area_id } }
+        }).catch(err => console.error('Erro ao enviar email:', err))
       }
 
       onAction?.('aprovado')
@@ -139,6 +143,10 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
           lida: false,
           mrc_id: row.id,
         })
+        // Enviar email de reprovação
+        supabase.functions.invoke('send-email', {
+          body: { type: 'review_completed', data: { autor_id: row.submetido_por, revisor_id: user?.id, ref: row.rc || row.rr, resultado: 'reprovado', nota: nota, area_id: row.area_id } }
+        }).catch(err => console.error('Erro ao enviar email:', err))
       }
 
       onAction?.('reprovado')
