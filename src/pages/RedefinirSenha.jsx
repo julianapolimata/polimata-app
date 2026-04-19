@@ -7,8 +7,8 @@ function Logo() {
     <div className="login-logo">
       <div className="login-logo-icon">
         <svg viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg" width="36">
-          <path d="M7 5 L7 45" stroke="#C8895C" strokeWidth="3.5" strokeLinecap="round"/>
-          <path d="M7 5 Q26 5 26 16 Q26 27 7 27" stroke="#C8895C" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+          <path d="M7 5 L7 45" stroke="#CC915E" strokeWidth="3.5" strokeLinecap="round"/>
+          <path d="M7 5 Q26 5 26 16 Q26 27 7 27" stroke="#CC915E" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
           <path d="M7 27 Q22 27 22 36 Q22 45 7 45" stroke="#A6512F" strokeWidth="3" strokeLinecap="round" fill="none"/>
         </svg>
       </div>

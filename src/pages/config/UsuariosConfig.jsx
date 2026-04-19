@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 
 const PAPEIS = [
-  { value: 'admin_polimata',     label: 'Admin Polímata',     desc: 'Acesso total a todos os clientes e configurações', cor: '#C8895C',
+  { value: 'admin_polimata',     label: 'Admin Polímata',     desc: 'Acesso total a todos os clientes e configurações', cor: '#CC915E',
     pode: ['Visualizar todos os clientes e projetos', 'Criar e gerenciar usuários', 'Editar todas as análises', 'Configurar o sistema'] },
   { value: 'consultor_polimata', label: 'Consultor Polímata', desc: 'Edita análises, faz upload de fichas, baixa relatórios', cor: '#3B82F6',
     pode: ['Editar análises nos projetos vinculados', 'Upload de fichas e documentos', 'Download de relatórios'] },

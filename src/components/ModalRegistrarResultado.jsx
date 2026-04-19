@@ -1,22 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-
-// Helper: determina nome completo da fase atual do controle
-function getFaseAtual(c) {
-  if (c.r_f5 && c.r_f5 !== 'Teste Não Realizado') return 'Auditoria Independente'
-  if (c.r_f4c2 && c.r_f4c2 !== 'Teste Não Realizado') return 'Auditoria Contínua'
-  if (c.r_f4c1 && c.r_f4c1 !== 'Teste Não Realizado') return 'Auditoria Contínua'
-  if (c.r3 && c.r3 !== 'Teste Não Realizado') return 'Controles Internos'
-  if (c.r_ader && c.r_ader !== 'Teste Não Realizado') return 'Teste de Aderência'
-  if (c.st_pa && c.st_pa !== '') return 'Plano de Ação e Teste de Desenho'
-  if (c.r1 && c.r1 !== 'Teste Não Realizado') {
-    // Se F1 efetivo, pula pra Controles Internos (atalho)
-    if (c.r1.toLowerCase() === 'efetivo') return 'Controles Internos'
-    return 'Plano de Ação e Teste de Desenho'
-  }
-  return 'Diagnóstico Inicial'
-}
+import { getFaseAtual } from '../lib/fases'
 
 const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
   // ═══ STATE ═══
@@ -242,9 +227,9 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
         {/* HEADER */}
         <div style={{
           background: 'linear-gradient(135deg, #00203E 0%, #1D3B5C 100%)',
-          color: '#F7F3EE',
+          color: '#F3EEE4',
           padding: '1.5rem 2rem',
-          borderBottom: '3px solid #C8895C'
+          borderBottom: '3px solid #CC915E'
         }}>
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 500 }}>Registrar Resultado do Teste</h2>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '12px', opacity: 0.85 }}>
@@ -277,7 +262,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
               <div style={{ fontSize: 10, color: '#999', marginTop: 6 }}>
                 Reprovado por <strong style={{ color: '#666' }}>{notaReprovacao.autor?.nome || '—'}</strong> em{' '}
                 {new Date(notaReprovacao.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                {' · '}<span style={{ color: '#C8895C' }}>{faseAtual}</span>
+                {' · '}<span style={{ color: '#CC915E' }}>{faseAtual}</span>
               </div>
             </div>
           )}
@@ -292,7 +277,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
               letterSpacing: '0.5px',
               marginBottom: '1rem',
               paddingBottom: '0.75rem',
-              borderBottom: '2px solid #C8895C'
+              borderBottom: '2px solid #CC915E'
             }}>
               1. Resultado da Execução do Teste
             </div>
@@ -321,7 +306,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
                     alignItems: 'center',
                     gap: '1rem',
                     padding: '0.8rem',
-                    border: resultado === opt.value ? '2px solid #C8895C' : '1px solid #E0E0E0',
+                    border: resultado === opt.value ? '2px solid #CC915E' : '1px solid #E0E0E0',
                     borderRadius: '4px',
                     background: resultado === opt.value ? '#F9F7F3' : 'white',
                     cursor: 'pointer'
@@ -333,7 +318,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
                     value={opt.value}
                     checked={resultado === opt.value}
                     onChange={() => {}}
-                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#C8895C' }}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#CC915E' }}
                   />
                   <span style={{ fontSize: '14px', fontWeight: 500 }}>{opt.label}</span>
                   <span style={{
@@ -372,7 +357,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
           {showInconsistencia && (
             <div style={{
               background: '#F9F7F3',
-              borderLeft: '3px solid #C8895C',
+              borderLeft: '3px solid #CC915E',
               padding: '1.5rem',
               borderRadius: '4px',
               marginBottom: '1.5rem'
@@ -441,7 +426,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
                     value={opt.value}
                     checked={melhoria === opt.value}
                     onChange={e => setMelhoria(e.target.value)}
-                    style={{ accentColor: '#C8895C' }}
+                    style={{ accentColor: '#CC915E' }}
                   />
                   <span style={{ fontSize: '14px' }}>{opt.label}</span>
                 </label>
@@ -490,7 +475,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
               letterSpacing: '0.5px',
               marginBottom: '1rem',
               paddingBottom: '0.75rem',
-              borderBottom: '2px solid #C8895C'
+              borderBottom: '2px solid #CC915E'
             }}>
               2. Avaliação da Criticidade
             </div>
@@ -562,7 +547,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
             </div>
             {criticidade && (
               <div style={{
-                background: '#F7F3EE',
+                background: '#F3EEE4',
                 border: '1px solid #E0D5C7',
                 padding: '1rem',
                 borderRadius: '4px',
@@ -592,7 +577,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
           {showPA && (
             <div style={{
               background: '#F9F7F3',
-              borderLeft: '3px solid #C8895C',
+              borderLeft: '3px solid #CC915E',
               padding: '1.5rem',
               borderRadius: '4px'
             }}>
@@ -629,7 +614,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
                       value={opt.value}
                       checked={temPA === opt.value}
                       onChange={e => setTemPA(e.target.value)}
-                      style={{ accentColor: '#C8895C' }}
+                      style={{ accentColor: '#CC915E' }}
                     />
                     <span style={{ fontSize: '14px' }}>{opt.label}</span>
                   </label>
@@ -792,7 +777,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
 
         {/* FASE ATUAL */}
         <div style={{
-          background: '#F7F3EE',
+          background: '#F3EEE4',
           borderTop: '1px solid #E0D5C7',
           padding: '0.75rem 2rem',
           display: 'flex',
@@ -864,9 +849,9 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
               padding: '0.8rem 1.5rem',
               fontSize: '13px',
               fontWeight: 600,
-              border: '1px solid #C8895C',
+              border: '1px solid #CC915E',
               borderRadius: '4px',
-              background: 'linear-gradient(135deg, #C8895C 0%, #A6512F 100%)',
+              background: 'linear-gradient(135deg, #CC915E 0%, #A6512F 100%)',
               color: 'white',
               cursor: !canSave || saving || submitting ? 'not-allowed' : 'pointer',
               opacity: !canSave || saving || submitting ? 0.5 : 1,

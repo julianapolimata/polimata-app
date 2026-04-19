@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { exportarMRCExcel } from '../lib/exportMRC'
+import { getFaseInfo as getFaseInfoUtil } from '../lib/fases'
 
 // ─── CONSTANTES ──────────────────────────────────────────────────────────────
 
@@ -99,13 +100,10 @@ function ExpCell({ text, maxLen = 80, expanded = false }) {
   )
 }
 
-// ─── FASE ATUAL ──────────────────────────────────────────────────────────────
+// ─── FASE ATUAL (centralizado em lib/fases.js) ─────────────────────────────
 
 function getFaseInfo(row) {
-  if (row.r3 && row.r3 !== 'Teste Não Realizado') return { label: 'F3 — Revisão', resultado: row.r3, cor: 'var(--f3c)' }
-  if (row.r_ader && row.r_ader !== 'Teste Não Realizado') return { label: 'F2-E2 — Teste de Aderência', resultado: row.r_ader, cor: 'var(--f2e2c)' }
-  if (row.dc_novo && row.dc_novo.trim() !== '') return { label: 'F2-E1 — Plano de Ação', resultado: row.st_pa || '—', cor: 'var(--f2e1c)' }
-  return { label: 'F1 — Diagnóstico', resultado: row.r1 || '—', cor: 'var(--f1c)' }
+  return getFaseInfoUtil(row)
 }
 
 function FaseAtual({ row }) {

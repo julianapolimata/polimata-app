@@ -1,6 +1,7 @@
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useEffect, useState, useMemo } from 'react'
+import { getFaseNumero } from '../lib/fases'
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom'
 import Configuracoes from './Configuracoes'
 import Perfil from './Perfil'
@@ -73,13 +74,7 @@ function getBarGradient(pct100) {
 // HELPERS
 // ══════════════════════════════════════════════════════════════════════════════
 
-function getFaseAtual(c) {
-  if (c.r3 && c.r3 !== 'Teste Não Realizado') return 3
-  if (c.r_ader && c.r_ader !== 'Teste Não Realizado') return 2
-  if (c.st_pa && c.st_pa !== '') return 2
-  if (c.r1 && c.r1 !== 'Teste Não Realizado') return 1
-  return 1
-}
+function getFaseAtual(c) { return getFaseNumero(c) }
 function isEfetivo(r) { return (r || '').toLowerCase() === 'efetivo' }
 function isInefetivo(r) { return (r || '').toLowerCase() === 'inefetivo' }
 function isGap(r) { const v = (r || '').toLowerCase(); return v === 'gap' || v === 'gap de processo' }
@@ -252,7 +247,7 @@ function SideNavItem({ icon, label, active, onClick, open, badge }) {
     <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick} style={open ? {} : { justifyContent: 'center', padding: '9px 0' }} title={open ? undefined : label}>
       <span className="nav-icon">{icon}</span>
       {open && <span>{label}</span>}
-      {open && badge && <span style={{ marginLeft: 'auto', fontSize: 9, background: 'rgba(200,137,92,.15)', padding: '1px 6px', borderRadius: 999, color: 'var(--copper)' }}>{badge}</span>}
+      {open && badge && <span style={{ marginLeft: 'auto', fontSize: 9, background: 'rgba(204,145,94,.15)', padding: '1px 6px', borderRadius: 999, color: 'var(--copper)' }}>{badge}</span>}
     </button>
   )
 }
@@ -368,7 +363,7 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
           <div style={D.kpiSub}>Riscos sem controle identificado</div>
         </div>
         <div style={{ ...D.kpiCard, borderTop: 'none', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #C8895C, #A6512F)' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #CC915E, #A6512F)' }} />
           <div style={D.kpiLabel}>Planos de Ação</div>
           <div style={{ ...D.kpiValor, color: 'var(--copper)' }}>{kpis.pa}</div>
           <div style={D.kpiSub}>Em desenvolvimento</div>
@@ -453,8 +448,8 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
                 {critPorArea.map(a => {
                   const ativo = areaFiltro === a.nome
                   return (
-                    <tr key={a.nome} onClick={() => toggleAreaFiltro(a.nome)} style={{ cursor: 'pointer', background: ativo ? 'rgba(200,137,92,0.08)' : 'transparent' }}
-                      onMouseEnter={e => { if (!ativo) e.currentTarget.style.background = 'rgba(200,137,92,0.04)' }}
+                    <tr key={a.nome} onClick={() => toggleAreaFiltro(a.nome)} style={{ cursor: 'pointer', background: ativo ? 'rgba(204,145,94,0.08)' : 'transparent' }}
+                      onMouseEnter={e => { if (!ativo) e.currentTarget.style.background = 'rgba(204,145,94,0.04)' }}
                       onMouseLeave={e => { if (!ativo) e.currentTarget.style.background = '' }}>
                       <td style={D.critTdArea}>{a.nome}</td>
                       {a.crit.map((v, i) => <td key={i} style={{ ...D.critTdNum, color: v > 0 ? CRIT_CORES[i] : 'rgba(247,243,238,0.15)' }}>{v}</td>)}
@@ -496,7 +491,7 @@ const dashStyles = {
   kpiBadge: { display: 'inline-block', fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 999, color: '#fff' },
   cardDark: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '14px 16px', marginBottom: 8, flexShrink: 0 },
   cardTitle: { fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(247,243,238,0.4)', marginBottom: 10 },
-  limparFiltro: { background: 'rgba(200,137,92,0.15)', border: '1px solid rgba(200,137,92,0.3)', borderRadius: 999, padding: '3px 10px', fontSize: 9, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit' },
+  limparFiltro: { background: 'rgba(204,145,94,0.15)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 999, padding: '3px 10px', fontSize: 9, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit' },
   areaList: { maxHeight: 340, overflowY: 'auto', paddingRight: 4 },
   areaRow: { display: 'flex', alignItems: 'center', padding: '6px 4px', gap: 10, borderRadius: 4, transition: 'background .15s' },
   areaRank: { fontSize: 10, fontWeight: 500, color: 'rgba(247,243,238,0.25)', width: 18, textAlign: 'right', flexShrink: 0 },
@@ -694,7 +689,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
             <div style={PA.kpiSub}>Riscos sem controle</div>
           </div>
           <div style={{ ...PA.kpiCard, borderTop: 'none', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #C8895C, #A6512F)' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #CC915E, #A6512F)' }} />
             <div style={PA.kpiLabel}>Planos de Ação</div>
             <div style={{ ...PA.kpiValor, color: 'var(--copper)' }}>{planosAcao}</div>
             <div style={PA.kpiSub}>Em desenvolvimento</div>
@@ -709,7 +704,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
         <select value={filtImp} onChange={e => setFiltImp(e.target.value)} style={PA.filtroSel}><option value="">Todos impactos</option>{imps.map(c => <option key={c} value={c}>{c}</option>)}</select>
         <select value={filtRes} onChange={e => setFiltRes(e.target.value)} style={PA.filtroSel}><option value="">Todos resultados F1</option>{ress.map(c => <option key={c} value={c}>{c}</option>)}</select>
         <div style={{ fontSize: 10, color: 'var(--lt-text3)', background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 10px' }}>{cf.length} controles</div>
-        {canEdit && <button onClick={() => setModalNovoRisco(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(200,137,92,0.1)', border: '1px solid rgba(200,137,92,0.25)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit' }} title="Criar novo risco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Risco</button>}
+        {canEdit && <button onClick={() => setModalNovoRisco(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(204,145,94,0.1)', border: '1px solid rgba(204,145,94,0.25)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit' }} title="Criar novo risco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Risco</button>}
         <button onClick={() => exportarMRCExcel(cf, `MRC_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`, nome, projeto?.clientes?.nome || '', projeto?.nome || '')} style={PA.btnExport} title="Exportar Excel da área">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
           Excel
@@ -735,7 +730,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
               <th style={{ fontSize: 8, fontWeight: 700, color: 'var(--navy)', background: 'var(--sand)', padding: '6px 8px', position: 'sticky', top: 0, zIndex: 2, width: 70, minWidth: 70, borderBottom: '2px solid var(--lt-border)' }}></th>
             </tr></thead>
             <tbody>{cf.map((c, i) => { const fl = faseLabel(c); return (
-              <tr key={c.id||i} onMouseEnter={e => e.currentTarget.style.background='rgba(200,137,92,0.04)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+              <tr key={c.id||i} onMouseEnter={e => e.currentTarget.style.background='rgba(204,145,94,0.04)'} onMouseLeave={e => e.currentTarget.style.background=''}>
                 <Td w={100}>{c.dt_ult || '—'}</Td>
                 <Td w={120}>{c.ger}</Td><Td w={120}>{c.resp_sub}</Td><Td w={140}>{c.area}</Td><Td w={120}>{c.sub}</Td>
                 <td style={{ ...tdS, color: 'var(--copper)', fontWeight: 600, width: 80, minWidth: 80 }}>{c.rr}</td><Td w={200}>{c.dr}</Td>
@@ -753,7 +748,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
                         const sc = statusCliente(c.status_workflow)
                         const scCfg = {
                           'Não Iniciado': { color: 'var(--lt-text3)', bg: 'rgba(10,37,64,0.05)' },
-                          'Em Análise': { color: 'var(--copper)', bg: 'rgba(200,137,92,0.1)' },
+                          'Em Análise': { color: 'var(--copper)', bg: 'rgba(204,145,94,0.1)' },
                           'Concluído': { color: '#16A34A', bg: 'rgba(34,197,94,0.1)' },
                         }[sc]
                         return <span style={{ fontSize: 8, fontWeight: 700, color: scCfg.color, background: scCfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>{sc}</span>
@@ -763,11 +758,11 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
                     /* ── Visão admin/consultor: ações + status detalhado ── */
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
                       <button onClick={() => setModalRow(c)} style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'var(--lt-text2)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Ver</button>
-                      {canEdit && !['em_revisao','aprovado'].includes(c.status_workflow) && <button onClick={() => setAtualizarRow(c)} style={{ background: 'rgba(200,137,92,0.08)', border: '1px solid rgba(200,137,92,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Atualizar</button>}
-                      {canEdit && (c.status_workflow === 'ficha_gerada' || c.status_workflow === 'reprovado') && <button onClick={() => setRowRegistrarResultado(c)} style={{ background: 'rgba(200,137,92,0.08)', border: '1px solid rgba(200,137,92,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>{c.status_workflow === 'reprovado' ? '↩ Editar' : 'Resultado'}</button>}
+                      {canEdit && !['em_revisao','aprovado'].includes(c.status_workflow) && <button onClick={() => setAtualizarRow(c)} style={{ background: 'rgba(204,145,94,0.08)', border: '1px solid rgba(204,145,94,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Atualizar</button>}
+                      {canEdit && (c.status_workflow === 'ficha_gerada' || c.status_workflow === 'reprovado') && <button onClick={() => setRowRegistrarResultado(c)} style={{ background: 'rgba(204,145,94,0.08)', border: '1px solid rgba(204,145,94,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>{c.status_workflow === 'reprovado' ? '↩ Editar' : 'Resultado'}</button>}
                       {isAdmin && c.status_workflow === 'em_revisao' && <button onClick={() => setRowRevisar(c)} style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 700, color: '#2563EB', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>🔍 Revisar</button>}
                       {/* Badges de status */}
-                      {c.status_workflow === 'em_analise' && <span style={{ fontSize: 8, fontWeight: 700, color: 'var(--copper)', background: 'rgba(200,137,92,0.1)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Em Análise</span>}
+                      {c.status_workflow === 'em_analise' && <span style={{ fontSize: 8, fontWeight: 700, color: 'var(--copper)', background: 'rgba(204,145,94,0.1)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Em Análise</span>}
                       {c.status_workflow === 'teste_pendente' && <span style={{ fontSize: 8, fontWeight: 700, color: '#CA8A04', background: 'rgba(234,179,8,0.1)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Teste Pendente</span>}
                       {c.status_workflow === 'ficha_gerada' && <span style={{ fontSize: 8, fontWeight: 700, color: 'var(--lt-text2)', background: 'rgba(10,37,64,0.06)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Ficha Gerada</span>}
                       {c.status_workflow === 'em_revisao' && <span style={{ fontSize: 8, fontWeight: 700, color: '#2563EB', background: 'rgba(59,130,246,0.08)', padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>Em Revisão</span>}
@@ -815,7 +810,7 @@ const paStyles = {
   kpiSub: { fontSize: 10, color: 'var(--lt-text3)', marginTop: 4 },
   filtroInput: { flex: 1, minWidth: 200, background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '6px 10px', fontFamily: 'inherit', fontSize: 11, outline: 'none', color: 'var(--lt-text)' },
   filtroSel: { background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit', fontSize: 10, color: 'var(--lt-text2)', cursor: 'pointer', outline: 'none' },
-  btnExport: { display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(200,137,92,0.1)', border: '1px solid rgba(200,137,92,0.25)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' },
+  btnExport: { display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(204,145,94,0.1)', border: '1px solid rgba(204,145,94,0.25)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' },
   tabelaWrap: { flex: 1, minHeight: 0, background: 'var(--lt-card)', borderRadius: 12, border: '1px solid var(--lt-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' },
 }
 

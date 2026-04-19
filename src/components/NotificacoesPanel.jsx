@@ -6,7 +6,7 @@ const TIPO_CONFIG = {
   submissao: { icon: '📤', label: 'Submissão', color: '#3B82F6' },
   aprovacao: { icon: '✅', label: 'Aprovado', color: '#22C55E' },
   reprovacao: { icon: '↩', label: 'Reprovado', color: '#EF4444' },
-  sistema: { icon: '🔔', label: 'Sistema', color: '#C8895C' },
+  sistema: { icon: '🔔', label: 'Sistema', color: '#CC915E' },
 }
 
 function timeAgo(dateStr) {
@@ -91,8 +91,8 @@ const NotificacoesPanel = () => {
           justifyContent: 'center',
           width: 36,
           height: 36,
-          background: open ? 'rgba(200,137,92,0.12)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${open ? 'rgba(200,137,92,0.3)' : 'rgba(255,255,255,0.08)'}`,
+          background: open ? 'rgba(204,145,94,0.12)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${open ? 'rgba(204,145,94,0.3)' : 'rgba(255,255,255,0.08)'}`,
           borderRadius: 8,
           cursor: 'pointer',
           transition: 'all .15s',
@@ -120,7 +120,7 @@ const NotificacoesPanel = () => {
           right: 0,
           width: 380,
           maxHeight: 'calc(100vh - 100px)',
-          background: '#0A1628',
+          background: '#001530',
           border: '1px solid rgba(255,255,255,0.06)',
           borderRadius: 12,
           boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
@@ -134,14 +134,14 @@ const NotificacoesPanel = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)'
           }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#F7F3EE' }}>🔔 Notificações</span>
-            <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(247,243,238,0.4)', cursor: 'pointer', fontSize: 16, padding: 4 }}>✕</button>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#F3EEE4' }}>🔔 Notificações</span>
+            <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(243,238,228,0.4)', cursor: 'pointer', fontSize: 16, padding: 4 }}>✕</button>
           </div>
 
           {/* Body */}
           <div style={{ flex: 1, overflowY: 'auto', maxHeight: 400 }}>
             {notifs.length === 0 ? (
-              <div style={{ padding: 32, textAlign: 'center', color: 'rgba(247,243,238,0.3)', fontSize: 12 }}>
+              <div style={{ padding: 32, textAlign: 'center', color: 'rgba(243,238,228,0.3)', fontSize: 12 }}>
                 Nenhuma notificação
               </div>
             ) : (
@@ -156,8 +156,8 @@ const NotificacoesPanel = () => {
                       borderBottom: '1px solid rgba(255,255,255,0.03)',
                       cursor: 'pointer',
                       transition: 'background .15s',
-                      background: n.lida ? 'transparent' : 'rgba(200,137,92,0.04)',
-                      borderLeft: n.lida ? 'none' : '3px solid #C8895C',
+                      background: n.lida ? 'transparent' : 'rgba(204,145,94,0.04)',
+                      borderLeft: n.lida ? 'none' : '3px solid #CC915E',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -165,11 +165,11 @@ const NotificacoesPanel = () => {
                         {cfg.icon} {cfg.label}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'rgba(247,243,238,0.7)', lineHeight: 1.5 }}>
-                      {n.de?.nome && <strong style={{ color: '#F7F3EE', fontWeight: 600 }}>{n.de.nome} </strong>}
+                    <div style={{ fontSize: 11, color: 'rgba(243,238,228,0.7)', lineHeight: 1.5 }}>
+                      {n.de?.nome && <strong style={{ color: '#F3EEE4', fontWeight: 600 }}>{n.de.nome} </strong>}
                       {n.mensagem}
                     </div>
-                    <div style={{ fontSize: 9, color: 'rgba(247,243,238,0.25)', marginTop: 4 }}>
+                    <div style={{ fontSize: 9, color: 'rgba(243,238,228,0.25)', marginTop: 4 }}>
                       {timeAgo(n.criado_em)}
                     </div>
                   </div>
@@ -188,7 +188,7 @@ const NotificacoesPanel = () => {
                 onClick={markAllRead}
                 disabled={naoLidas === 0}
                 style={{
-                  fontSize: 10, color: naoLidas > 0 ? '#C8895C' : 'rgba(247,243,238,0.25)',
+                  fontSize: 10, color: naoLidas > 0 ? '#CC915E' : 'rgba(243,238,228,0.25)',
                   background: 'none', border: 'none', cursor: naoLidas > 0 ? 'pointer' : 'default',
                   fontFamily: "'Montserrat', sans-serif", fontWeight: 600
                 }}

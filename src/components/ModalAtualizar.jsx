@@ -674,7 +674,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
               </div>
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
+                  <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
                   Destino da transferência
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -765,7 +765,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
           {descChoice === 'sim' && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
+                <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
                 Editar descritivo do risco
               </div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Nova descrição do risco</label>
@@ -860,7 +860,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
           <div style={{ height: 1, background: '#e5e7eb', margin: '20px 0' }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
+            <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
             Editar descritivo do controle
           </div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Nova descrição do controle</label>
@@ -883,7 +883,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
           {/* CARACTERÍSTICAS */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
+              <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
               Características do Controle
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -963,7 +963,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
           {/* 6 PREMISSAS */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 3, height: 16, background: '#C8895C', borderRadius: 2 }}></span>
+              <span style={{ width: 3, height: 16, background: '#CC915E', borderRadius: 2 }}></span>
               6 Premissas do Controle
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1074,7 +1074,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         onClick={!saving ? handleSaveFicha : undefined}
         style={{ background: '#00203E', color: 'white', padding: 16, borderRadius: 8, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, cursor: saving ? 'wait' : 'pointer', transition: 'opacity .15s', opacity: saving ? 0.6 : 1 }}
       >
-        <div style={{ background: '#C8895C', color: '#fff', padding: '6px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 0.5, flexShrink: 0 }}>.XLSX</div>
+        <div style={{ background: '#CC915E', color: '#fff', padding: '6px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 0.5, flexShrink: 0 }}>.XLSX</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>Salvar e Baixar Ficha de Risco</div>
           <div style={{ fontSize: 11, opacity: 0.75 }}>Ficha_de_Risco_{row.rc}.xlsx — pré-preenchida com os dados acima. Salva as alterações e baixa a ficha automaticamente.</div>
@@ -1164,7 +1164,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
                 else if (newStatus === 'transferido') handleTransferido()
               }}
               disabled={saving}
-              style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#C8895C', color: 'white' }}
+              style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white' }}
             >
               {saving ? 'Salvando...' : newStatus === 'evitado' ? 'Inativar' : 'Transferir'}
             </button>
@@ -1181,7 +1181,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
                 <button
                   onClick={nextStep}
                   disabled={step === 1 ? !canAdvanceStep1 : step === 2 ? !canAdvanceStep2 : false}
-                  style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#C8895C', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 0.5 : 1 }}
+                  style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 0.5 : 1 }}
                 >
                   Próximo →
                 </button>

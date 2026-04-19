@@ -51,12 +51,12 @@
 
 .btn-cfg-sm {
   padding: 4px 12px; border-radius: 5px;
-  background: rgba(200,137,92,.1); color: var(--gold);
-  border: 1px solid rgba(200,137,92,.3);
+  background: rgba(204,145,94,.1); color: var(--gold);
+  border: 1px solid rgba(204,145,94,.3);
   font-family: inherit; font-size: 11px; cursor: pointer;
   transition: all .15s;
 }
-.btn-cfg-sm:hover { background: rgba(200,137,92,.2); }
+.btn-cfg-sm:hover { background: rgba(204,145,94,.2); }
 
 .btn-cfg-remove {
   background: transparent; border: none;
@@ -103,7 +103,7 @@
   flex-shrink: 0;
 }
 .cfg-card-info { flex: 1; }
-.cfg-card-nome { font-size: 13px; font-weight: 600; color: var(--txt1); }
+.cfg-card-nome { font-size: 13px; font-weight: 400; color: var(--txt1); }
 .cfg-card-meta { font-size: 11px; color: var(--txt3); margin-top: 2px; display: flex; align-items: center; gap: 8px; }
 .cfg-card-arrow { color: var(--txt3); font-size: 20px; }
 
@@ -119,8 +119,8 @@
   padding: 1px 8px; border-radius: 999px; font-size: 10px;
 }
 .badge-voce {
-  background: rgba(200,137,92,.1); color: var(--gold);
-  border: 1px solid rgba(200,137,92,.25);
+  background: rgba(204,145,94,.1); color: var(--gold);
+  border: 1px solid rgba(204,145,94,.25);
   padding: 1px 7px; border-radius: 999px; font-size: 9px;
 }
 
@@ -224,11 +224,11 @@
   color: var(--txt1); vertical-align: middle;
 }
 .cfg-table tbody tr:last-child td { border-bottom: none; }
-.cfg-table tbody tr:hover td { background: rgba(200,137,92,.04); }
+.cfg-table tbody tr:hover td { background: rgba(204,145,94,.04); }
 
 .tag-prefixo {
-  background: rgba(200,137,92,.1); color: var(--gold);
-  border: 1px solid rgba(200,137,92,.25);
+  background: rgba(204,145,94,.1); color: var(--gold);
+  border: 1px solid rgba(204,145,94,.25);
   padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600;
   font-family: monospace;
 }
@@ -286,11 +286,11 @@
 .cnpj-row { display:flex; align-items:flex-end; gap:10px; }
 .btn-cnpj {
   padding:8px 14px; border-radius:7px; white-space:nowrap;
-  background:rgba(200,137,92,0.1); color:var(--gold);
-  border:1px solid rgba(200,137,92,0.3); font-family:inherit;
+  background:rgba(204,145,94,0.1); color:var(--gold);
+  border:1px solid rgba(204,145,94,0.3); font-family:inherit;
   font-size:11px; font-weight:600; cursor:pointer; transition:all .15s;
 }
-.btn-cnpj:hover { background:rgba(200,137,92,0.2); }
+.btn-cnpj:hover { background:rgba(204,145,94,0.2); }
 .btn-cnpj:disabled { opacity:.5; cursor:not-allowed; }
 .field-erro { font-size:10px; color:#F87171; margin-top:3px; display:block; }
 
@@ -306,7 +306,7 @@
   transition:border-color .15s;
   outline:none; width:100%;
 }
-.input-light:focus { border-color:#C8895C !important; box-shadow:0 0 0 3px rgba(200,137,92,0.15) !important; }
+.input-light:focus { border-color:#CC915E !important; box-shadow:0 0 0 3px rgba(204,145,94,0.15) !important; }
 .input-light::placeholder { color:#9CA3AF; }
 
 /* ══ Botões de tabela ══ */
@@ -348,7 +348,7 @@
 .usuario-nome { font-size:13px; font-weight:600; color:var(--txt1); display:flex; align-items:center; gap:8px; }
 .usuario-email { font-size:11px; color:var(--txt3); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .usuario-papel-badge { padding:2px 8px; border-radius:999px; font-size:10px; font-weight:600; }
-.badge-cliente { background:rgba(200,137,92,0.1); color:var(--gold); border:1px solid rgba(200,137,92,0.25); padding:2px 8px; border-radius:999px; font-size:10px; }
+.badge-cliente { background:rgba(204,145,94,0.1); color:var(--gold); border:1px solid rgba(204,145,94,0.25); padding:2px 8px; border-radius:999px; font-size:10px; }
 
 /* ══ Modal de Usuário (overlay + card centralizado) ══ */
 .usr-modal-overlay {
@@ -374,7 +374,7 @@
   padding:20px 24px 16px; border-bottom:1px solid var(--brd);
   flex-shrink:0;
 }
-.usr-modal-title { font-size:15px; font-weight:700; color:var(--txt1); }
+.usr-modal-title { font-family:'Raleway', sans-serif; font-size:16px; font-weight:200; color:var(--txt1); letter-spacing:.3px; }
 .usr-modal-close {
   background:none; border:none; cursor:pointer;
   color:var(--txt3); padding:4px; border-radius:6px;
@@ -402,7 +402,7 @@
   display:flex; align-items:center; justify-content:center;
   font-size:22px; font-weight:700; color:#fff; flex-shrink:0;
 }
-.usr-profile-name { font-size:17px; font-weight:700; color:var(--txt1); display:flex; align-items:center; }
+.usr-profile-name { font-family:'Raleway', sans-serif; font-size:17px; font-weight:300; color:var(--txt1); display:flex; align-items:center; letter-spacing:.3px; }
 .usr-profile-email { font-size:12px; color:var(--txt3); margin-top:2px; }
 
 /* ══ Info grid ══ */
@@ -420,7 +420,7 @@
   background:var(--bg2); border-radius:10px; padding:14px 16px;
   border-left:3px solid var(--gold);
 }
-.usr-perms-title { font-size:11px; font-weight:700; color:var(--txt2); margin-bottom:8px; text-transform:uppercase; letter-spacing:.3px; }
+.usr-perms-title { font-size:11px; font-weight:400; color:var(--txt2); margin-bottom:8px; text-transform:uppercase; letter-spacing:.5px; }
 .usr-perm-item { font-size:12px; color:var(--txt3); padding:3px 0; display:flex; align-items:center; gap:8px; }
 .usr-perm-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 

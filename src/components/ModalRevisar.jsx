@@ -1,21 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-
-// Helper: nomes completos das fases
-function getFaseAtual(c) {
-  if (c.r_f5 && c.r_f5 !== 'Teste Não Realizado') return 'Auditoria Independente'
-  if (c.r_f4c2 && c.r_f4c2 !== 'Teste Não Realizado') return 'Auditoria Contínua'
-  if (c.r_f4c1 && c.r_f4c1 !== 'Teste Não Realizado') return 'Auditoria Contínua'
-  if (c.r3 && c.r3 !== 'Teste Não Realizado') return 'Controles Internos'
-  if (c.r_ader && c.r_ader !== 'Teste Não Realizado') return 'Teste de Aderência'
-  if (c.st_pa && c.st_pa !== '') return 'Plano de Ação e Teste de Desenho'
-  if (c.r1 && c.r1 !== 'Teste Não Realizado') {
-    if (c.r1.toLowerCase() === 'efetivo') return 'Controles Internos'
-    return 'Plano de Ação e Teste de Desenho'
-  }
-  return 'Diagnóstico Inicial'
-}
+import { getFaseAtual } from '../lib/fases'
 
 const CRIT_MAP = {
   4: { label: 'Crítico', bg: '#FFEBEE', color: '#C62828' },
@@ -162,7 +148,7 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
   const S = {
     overlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 },
     modal: { background: 'white', borderRadius: 8, width: '100%', maxWidth: 680, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', maxHeight: '90vh' },
-    header: { background: 'linear-gradient(135deg, #00203E 0%, #1D3B5C 100%)', color: '#F7F3EE', padding: '1.25rem 1.5rem', borderBottom: '3px solid #C8895C' },
+    header: { background: 'linear-gradient(135deg, #00203E 0%, #1D3B5C 100%)', color: '#F3EEE4', padding: '1.25rem 1.5rem', borderBottom: '3px solid #CC915E' },
     body: { padding: '1.5rem', overflowY: 'auto', flex: 1, fontFamily: "'Montserrat', sans-serif" },
     footer: { background: '#FAFAFA', borderTop: '1px solid #E0E0E0', padding: '1rem 1.5rem', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' },
     label: { fontSize: 10, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5 },
@@ -252,7 +238,7 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: cor }}>{icon} {label}</span>
                       <span style={{ fontSize: 11, color: '#666' }}>por {h.autor?.nome || 'Desconhecido'}</span>
-                      {h.fase && <span style={{ fontSize: 9, fontWeight: 600, color: '#C8895C', background: 'rgba(200,137,92,0.1)', padding: '1px 6px', borderRadius: 3 }}>{h.fase}</span>}
+                      {h.fase && <span style={{ fontSize: 9, fontWeight: 400, color: '#CC915E', background: 'rgba(204,145,94,0.1)', padding: '1px 6px', borderRadius: 3 }}>{h.fase}</span>}
                     </div>
                     {h.nota && <div style={{ fontSize: 12, color: '#444', lineHeight: 1.5, paddingLeft: 4, fontStyle: 'italic' }}>"{h.nota}"</div>}
                     <div style={{ fontSize: 10, color: '#999', marginTop: 4 }}>
@@ -280,7 +266,7 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>🔍 Revisão de Análise</h2>
               <p style={{ margin: '0.3rem 0 0', fontSize: 11, opacity: 0.8 }}>{row?.rc} · {row?.rr} — {row?.area}</p>
             </div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#F7F3EE', fontSize: 20, cursor: 'pointer', padding: 4, opacity: 0.7 }}>✕</button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#F3EEE4', fontSize: 20, cursor: 'pointer', padding: 4, opacity: 0.7 }}>✕</button>
           </div>
         </div>
         <div style={S.body}>
@@ -306,7 +292,7 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
             </div>
             <div style={S.section}>
               <div style={S.label}>Fase</div>
-              <div style={{ ...S.value, fontSize: 11, color: '#C8895C', fontWeight: 600 }}>{faseAtual}</div>
+              <div style={{ ...S.value, fontSize: 11, color: '#CC915E', fontWeight: 600 }}>{faseAtual}</div>
             </div>
           </div>
 
@@ -361,7 +347,7 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
           {row?.arquivo_ficha_url && (
             <div style={S.section}>
               <div style={S.sectionTitle}>Ficha de Risco</div>
-              <a href={row.arquivo_ficha_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#C8895C', fontWeight: 500 }}>
+              <a href={row.arquivo_ficha_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#CC915E', fontWeight: 500 }}>
                 📄 Abrir ficha
               </a>
             </div>

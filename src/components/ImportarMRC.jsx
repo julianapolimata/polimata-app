@@ -331,8 +331,8 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
                 {preview.rows.slice(0, 20).map((row, i) => (
                   <tr key={i}>
                     <td style={S.td}>{i + 1}</td>
-                    <td style={{ ...S.td, color: '#C8895C', fontWeight: 600 }}>{row[7] || '—'}</td>
-                    <td style={{ ...S.td, color: '#C8895C', fontWeight: 600 }}>{row[9] || '—'}</td>
+                    <td style={{ ...S.td, color: '#CC915E', fontWeight: 600 }}>{row[7] || '—'}</td>
+                    <td style={{ ...S.td, color: '#CC915E', fontWeight: 600 }}>{row[9] || '—'}</td>
                     <td style={S.td}>{row[PREVIEW_COL_PROCESSO] || '—'}</td>
                     <td style={S.td}>{row[6] || '—'}</td>
                     <td style={S.td}>{row[18] || '—'}</td>
@@ -407,8 +407,8 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
 const S = {
   wrap: { padding: '24px 32px', maxWidth: 900, fontFamily: "'Montserrat', sans-serif" },
   header: { marginBottom: 24 },
-  title: { fontSize: 18, fontWeight: 600, color: '#F7F3EE' },
-  subtitle: { fontSize: 12, color: 'rgba(247,243,238,0.6)', marginTop: 4 },
+  title: { fontSize: 18, fontWeight: 600, color: '#F3EEE4' },
+  subtitle: { fontSize: 12, color: 'rgba(243,238,228,0.6)', marginTop: 4 },
 
   // Aviso amarelo chamativo
   warningBox: {
@@ -420,20 +420,20 @@ const S = {
   warningText: { fontSize: 12, color: '#1a1a1a', lineHeight: 1.5 },
 
   section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 12, fontWeight: 700, color: '#C8895C', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
-  select: { width: '100%', maxWidth: 400, padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(247,243,238,0.2)', fontFamily: 'inherit', fontSize: 12, color: '#F7F3EE', background: '#1D3B5C', cursor: 'pointer' },
-  fileInput: { fontFamily: 'inherit', fontSize: 12, color: '#F7F3EE' },
-  hint: { fontSize: 10, color: 'rgba(247,243,238,0.5)', marginTop: 4 },
-  loading: { fontSize: 11, color: '#C8895C', marginTop: 6 },
+  sectionTitle: { fontSize: 12, fontWeight: 700, color: '#CC915E', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  select: { width: '100%', maxWidth: 400, padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(243,238,228,0.2)', fontFamily: 'inherit', fontSize: 12, color: '#F3EEE4', background: '#1D3B5C', cursor: 'pointer' },
+  fileInput: { fontFamily: 'inherit', fontSize: 12, color: '#F3EEE4' },
+  hint: { fontSize: 10, color: 'rgba(243,238,228,0.5)', marginTop: 4 },
+  loading: { fontSize: 11, color: '#CC915E', marginTop: 6 },
   error: { fontSize: 11, color: '#EF4444', marginTop: 6, background: 'rgba(239,68,68,0.12)', padding: '6px 10px', borderRadius: 4 },
-  previewWrap: { maxHeight: 400, overflow: 'auto', border: '1px solid rgba(247,243,238,0.15)', borderRadius: 6 },
+  previewWrap: { maxHeight: 400, overflow: 'auto', border: '1px solid rgba(243,238,228,0.15)', borderRadius: 6 },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
-  th: { padding: '8px 10px', textAlign: 'left', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5, color: '#F7F3EE', background: '#1D3B5C', position: 'sticky', top: 0, zIndex: 2 },
-  td: { padding: '6px 10px', borderBottom: '1px solid rgba(247,243,238,0.1)', color: 'rgba(247,243,238,0.85)', background: 'rgba(0,32,62,0.4)', fontSize: 11 },
-  confirmBox: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(29,59,92,0.4)', border: '1px solid rgba(200,137,92,0.3)', borderRadius: 8, padding: '14px 18px', gap: 16 },
-  confirmText: { fontSize: 12, color: '#F7F3EE', lineHeight: 1.5 },
-  btnImportar: { background: '#C8895C', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' },
-  resultado: { marginTop: 16, padding: '12px 16px', borderRadius: 6, border: '1px solid', fontSize: 12, fontWeight: 500, color: '#F7F3EE' },
+  th: { padding: '8px 10px', textAlign: 'left', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5, color: '#F3EEE4', background: '#1D3B5C', position: 'sticky', top: 0, zIndex: 2 },
+  td: { padding: '6px 10px', borderBottom: '1px solid rgba(243,238,228,0.1)', color: 'rgba(243,238,228,0.85)', background: 'rgba(0,32,62,0.4)', fontSize: 11 },
+  confirmBox: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(29,59,92,0.4)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 8, padding: '14px 18px', gap: 16 },
+  confirmText: { fontSize: 12, color: '#F3EEE4', lineHeight: 1.5 },
+  btnImportar: { background: '#CC915E', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' },
+  resultado: { marginTop: 16, padding: '12px 16px', borderRadius: 6, border: '1px solid', fontSize: 12, fontWeight: 500, color: '#F3EEE4' },
 
   // Pop-up de confirmação
   overlay: {
@@ -449,11 +449,11 @@ const S = {
   },
   modalIcon: { fontSize: 40, marginBottom: 8 },
   modalTitle: { fontSize: 16, fontWeight: 700, color: '#FBBF24', marginBottom: 12 },
-  modalBody: { fontSize: 13, color: '#F7F3EE', lineHeight: 1.6, marginBottom: 24, textAlign: 'left' },
+  modalBody: { fontSize: 13, color: '#F3EEE4', lineHeight: 1.6, marginBottom: 24, textAlign: 'left' },
   modalActions: { display: 'flex', gap: 12, justifyContent: 'center' },
   btnCancelar: {
-    background: 'transparent', color: '#F7F3EE',
-    border: '1px solid rgba(247,243,238,0.3)', borderRadius: 6,
+    background: 'transparent', color: '#F3EEE4',
+    border: '1px solid rgba(243,238,228,0.3)', borderRadius: 6,
     padding: '10px 24px', fontSize: 12, fontWeight: 600,
     fontFamily: 'inherit', cursor: 'pointer',
   },

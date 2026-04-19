@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs'
+import { getFaseLabel as getFaseLabelUtil } from './fases'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPORT MRC PARA EXCEL (.xlsx) — Polímata brand
@@ -68,11 +69,7 @@ function impToIdx(v) { return { 'Crítico': 0, 'Alto': 1, 'Moderado': 2, 'Baixo'
 function probToIdx(v) { return { 'Extrema': 0, 'Alta': 1, 'Média': 2, 'Baixa': 3 }[v] ?? -1 }
 
 function getFaseLabel(row) {
-  if (row.r3 && row.r3 !== 'Teste Não Realizado') return 'F3 — Revisão'
-  if (row.r_ader && row.r_ader !== 'Teste Não Realizado') return 'F2-E2 — Teste de Aderência'
-  if (row.st_pa && row.st_pa !== '') return 'F2-E1 — Plano de Ação'
-  if (row.r1 && row.r1 !== 'Teste Não Realizado') return 'F2-E2 — Teste de Aderência'
-  return 'F1 — Diagnóstico'
+  return getFaseLabelUtil(row)
 }
 
 function getResultadoColor(valor) {

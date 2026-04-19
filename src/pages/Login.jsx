@@ -141,7 +141,7 @@ function TelaEnviado({ onVoltar }) {
           <div style={{fontSize:16, fontWeight:600, color:'var(--txt1)', marginBottom:8}}>Email enviado!</div>
           <div style={{fontSize:12, color:'var(--txt3)', lineHeight:1.7, maxWidth:300}}>Verifique sua caixa de entrada e clique no link para redefinir sua senha. O link expira em 1 hora.</div>
         </div>
-        <div style={{background:'rgba(200,137,92,0.06)', border:'1px solid var(--brd)', borderRadius:12, padding:'10px 16px', fontSize:11, color:'var(--txt3)', lineHeight:1.6}}>
+        <div style={{background:'rgba(204,145,94,0.06)', border:'1px solid var(--brd)', borderRadius:12, padding:'10px 16px', fontSize:11, color:'var(--txt3)', lineHeight:1.6}}>
           Não recebeu? Verifique a pasta de spam ou tente novamente.
         </div>
       </div>

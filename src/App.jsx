@@ -19,7 +19,7 @@ function LoadingScreen() {
           <p style={{ color: '#8b9cb6', fontSize: 13, marginBottom: 12 }}>Carregando...</p>
           <button
             onClick={() => window.location.reload()}
-            style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #C8895C', background: '#C8895C', color: '#fff', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 12 }}
+            style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #CC915E', background: '#CC915E', color: '#fff', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 12 }}
           >
             Recarregar página
           </button>
