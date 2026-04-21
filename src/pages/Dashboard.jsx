@@ -16,10 +16,10 @@ import {
   calcularPercentualArea,
   calcularIndiceEmpresa,
   getNivelMaturidade,
-  PESO_FASE,
 } from '../lib/calculoMaturidade'
 import { exportarMRCExcel } from '../lib/exportMRC'
 import { getStatusConfig, canEditControl, canRegisterResult, isDevolvido, isAguardandoRevisao, STATUS } from '../lib/statusWorkflow'
+import { carregarConstantes } from '../lib/constantesLoader'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -127,7 +127,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [areaExpanded, setAreaExpanded] = useState(true)
 
-  useEffect(() => { loadProjetos() }, [])
+  useEffect(() => { carregarConstantes().then(() => loadProjetos()) }, [])
 
   async function loadProjetos() {
     const { data } = await supabase.from('projetos').select('*, clientes(nome, slug)').eq('ativo', true).order('criado_em', { ascending: false })

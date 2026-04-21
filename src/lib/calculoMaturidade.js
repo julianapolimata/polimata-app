@@ -1,36 +1,29 @@
 // ─── ENGINE DE CÁLCULO — CI Polímata ────────────────────────────────────────
 // Implementa METODOLOGIA_CALCULO.md v3 (validada 26/03/2026)
 // Módulo puro — sem dependências React
+// Constantes carregadas do banco via constantesLoader.js (com fallback local)
 
-// ─── CONSTANTES ─────────────────────────────────────────────────────────────
+import { getConstantesSync } from './constantesLoader'
 
-/** Multiplicadores de criticidade (seção 3 da metodologia) */
-const MULTIPLICADORES = {
-  4: 0.40,  // Crítico
-  3: 0.30,  // Significativo
-  2: 0.20,  // Moderado
-  1: 0.10,  // Baixo
-}
+// ─── CONSTANTES (fallback — fonte de verdade está no banco) ─────────────────
 
-/** Pesos de cada fase na trilha (seção 1) */
-const PESO_FASE = {
-  F1:    0.10,
-  F2E1:  0.125,
-  F2E2:  0.125,
-  F3:    0.25,
-  F4C1:  0.15,
-  F4C2:  0.15,
-  F5:    0.10,
-}
-
-/** Régua de maturidade N1-N5 (seção 9) */
-const REGUA = [
+const DEFAULTS_MULTIPLICADORES = { 4: 0.40, 3: 0.30, 2: 0.20, 1: 0.10 }
+const DEFAULTS_PESO_FASE = { F1: 0.10, F2E1: 0.125, F2E2: 0.125, F3: 0.25, F4C1: 0.15, F4C2: 0.15, F5: 0.10 }
+const DEFAULTS_REGUA = [
   { nivel: 'N1', nome: 'Não confiável',  min: 0,    max: 0.10  },
   { nivel: 'N2', nome: 'Informal',       min: 0.101, max: 0.25  },
   { nivel: 'N3', nome: 'Padronizado',    min: 0.251, max: 0.50  },
   { nivel: 'N4', nome: 'Monitorado',     min: 0.501, max: 0.80  },
   { nivel: 'N5', nome: 'Otimizado',      min: 0.801, max: 1.00  },
 ]
+
+/** Retorna constantes do banco (cache) ou defaults locais */
+function getMultiplicadores() { return getConstantesSync().multiplicadores || DEFAULTS_MULTIPLICADORES }
+function getPesoFase() { return getConstantesSync().peso_fase || DEFAULTS_PESO_FASE }
+function getRegua() { return getConstantesSync().regua || DEFAULTS_REGUA }
+
+// Alias para manter compatibilidade com exports existentes
+export const PESO_FASE = DEFAULTS_PESO_FASE
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────
 
@@ -64,9 +57,10 @@ function isAtivo(controle) {
  */
 function getMultiplicador(controle) {
   const crit = controle.crit ?? controle.criticidade
-  if (typeof crit === 'number') return MULTIPLICADORES[crit] || 0.10
+  const mult = getMultiplicadores()
+  if (typeof crit === 'number') return mult[crit] || 0.10
   // Fallback para texto
-  const map = { 'crítico': 0.40, 'critico': 0.40, 'significativo': 0.30, 'moderado': 0.20, 'baixo': 0.10 }
+  const map = { 'crítico': mult[4]||0.40, 'critico': mult[4]||0.40, 'significativo': mult[3]||0.30, 'moderado': mult[2]||0.20, 'baixo': mult[1]||0.10 }
   return map[(crit || '').toLowerCase()] || 0.10
 }
 
@@ -123,6 +117,7 @@ export function calcularPesosControles(controlesArea) {
  */
 export function calcularContribuicaoControle(controle, pesoControle, options = {}) {
   const { requireAprovado = false } = options
+  const PESO_FASE = getPesoFase()
 
   // Se workflow ativo e controle não aprovado → contribui 0
   if (requireAprovado && controle.status_workflow && controle.status_workflow !== 'aprovado') {
@@ -358,7 +353,8 @@ export function calcularPercentualArea(controlesArea, f1Concluida = true, option
   }
 
   // F1 é fixa: 10% quando diagnóstico concluído (seção 2)
-  const baseF1 = f1Concluida ? PESO_FASE.F1 : 0
+  const PF = getPesoFase()
+  const baseF1 = f1Concluida ? PF.F1 : 0
 
   // Calcular contribuição de cada controle
   const detalhePorControle = comPesos.map(({ controle, multiplicador, pesoControle }) => {
@@ -411,18 +407,23 @@ export function calcularPercentualArea(controlesArea, f1Concluida = true, option
  * @returns {Object} { nivel, nome }
  */
 export function getNivelMaturidade(percentual) {
+  const regua = getRegua()
   // Tratar edge case
-  if (percentual <= 0) return { nivel: 'N1', nome: 'Não confiável' }
-  if (percentual > 1) return { nivel: 'N5', nome: 'Otimizado' }
+  if (percentual <= 0) return { nivel: regua[0]?.nivel || 'N1', nome: regua[0]?.nome || 'Não confiável' }
+  if (percentual > 1) {
+    const ultimo = regua[regua.length - 1]
+    return { nivel: ultimo?.nivel || 'N5', nome: ultimo?.nome || 'Otimizado' }
+  }
 
-  // Percentual em inteiro pra comparar com faixas
-  const pct = Math.round(percentual * 100)
-
-  if (pct <= 10) return { nivel: 'N1', nome: 'Não confiável' }
-  if (pct <= 25) return { nivel: 'N2', nome: 'Informal' }
-  if (pct <= 50) return { nivel: 'N3', nome: 'Padronizado' }
-  if (pct <= 80) return { nivel: 'N4', nome: 'Monitorado' }
-  return { nivel: 'N5', nome: 'Otimizado' }
+  // Percorrer régua do banco
+  for (const faixa of regua) {
+    if (percentual <= faixa.max) {
+      return { nivel: faixa.nivel, nome: faixa.nome }
+    }
+  }
+  // Fallback
+  const ultimo = regua[regua.length - 1]
+  return { nivel: ultimo?.nivel || 'N5', nome: ultimo?.nome || 'Otimizado' }
 }
 
 // ─── ÍNDICE CONSOLIDADO DA EMPRESA (seção 10) ───────────────────────────────
@@ -525,11 +526,11 @@ export function validarExemploCompras() {
 // ─── EXPORTS ────────────────────────────────────────────────────────────────
 
 export {
-  MULTIPLICADORES,
-  PESO_FASE,
-  REGUA,
   isEfetivo,
   isReprovado,
   isAtivo,
   getMultiplicador,
+  getMultiplicadores,
+  getPesoFase,
+  getRegua,
 }

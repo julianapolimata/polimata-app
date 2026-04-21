@@ -57,9 +57,14 @@ const COL_GROUPS = [
   ]},
   { label: 'Teste & Resultado', cols: [
     { id: 'passos_f1', label: 'Passos de Teste', default: true },
-    { id: 'r1', label: 'Resultado', default: true },
+    { id: 'r1', label: 'F1 Resultado', default: true },
     { id: 'incons', label: 'Descrição da Inconsistência', default: true },
     { id: 'rec', label: 'Recomendação / Melhoria', default: true },
+    { id: 'r_ader', label: 'F2 Aderência', default: false },
+    { id: 'r3', label: 'F3 Resultado', default: false },
+    { id: 'r_f4c1', label: 'F4-C1 Resultado', default: false },
+    { id: 'r_f4c2', label: 'F4-C2 Resultado', default: false },
+    { id: 'r_f5', label: 'F5 Resultado', default: false },
   ]},
   { label: 'Avaliação', cols: [
     { id: 'imp', label: 'Impacto', default: true },
@@ -287,6 +292,18 @@ export function ModalDetalhe({ row, onClose }) {
             <div className="ms"><div className="ms-t">Revisão dos Controles</div><div className="mr">{field('Status F3', row.st_f3 ? badge(R1_MAP[row.st_f3]||'b-na', row.st_f3) : null)}{field('Resultado F3', row.r3 ? badge(R1_MAP[row.r3]||'b-na', row.r3) : null)}</div>{fieldText('Inconsistências F3', row.incons_f3)}{fieldText('Recomendações F3', row.rec_f3)}</div>
           </div>)}
 
+          {tab === 'f4c1' && (<div className="tp active">
+            <div className="ms"><div className="ms-t">Auditoria Contínua — Ciclo 1</div><div className="mr">{field('Resultado F4-C1', row.r_f4c1 ? badge(R1_MAP[row.r_f4c1]||'b-na', row.r_f4c1) : null)}</div>{fieldText('Inconsistências', row.incons_f4c1)}{fieldText('Recomendações', row.rec_f4c1)}</div>
+          </div>)}
+
+          {tab === 'f4c2' && (<div className="tp active">
+            <div className="ms"><div className="ms-t">Auditoria Contínua — Ciclo 2</div><div className="mr">{field('Resultado F4-C2', row.r_f4c2 ? badge(R1_MAP[row.r_f4c2]||'b-na', row.r_f4c2) : null)}</div>{fieldText('Inconsistências', row.incons_f4c2)}{fieldText('Recomendações', row.rec_f4c2)}</div>
+          </div>)}
+
+          {tab === 'f5' && (<div className="tp active">
+            <div className="ms"><div className="ms-t">Auditoria Independente</div><div className="mr">{field('Resultado F5', row.r_f5 ? badge(R1_MAP[row.r_f5]||'b-na', row.r_f5) : null)}</div>{fieldText('Inconsistências', row.incons_f5)}{fieldText('Recomendações', row.rec_f5)}</div>
+          </div>)}
+
         </div>
         <div className="modal-ftr"><button className="btn btn-ghost btn-sm" onClick={onClose}>Fechar</button></div>
       </div>
@@ -316,9 +333,14 @@ function TabelaMRC({ rows, visCols, onOpenModal, expandAll }) {
       {v('sis')&&<th>Sistema</th>}
       {v('chave')&&<th>Ctrl Chave?</th>}
       {v('passos_f1')&&<th>Passos de Teste</th>}
-      {v('r1')&&<th>Resultado</th>}
+      {v('r1')&&<th>F1 Resultado</th>}
       {v('incons')&&<th>Descrição da Inconsistência</th>}
       {v('rec')&&<th>Recomendação / Melhoria</th>}
+      {v('r_ader')&&<th>F2 Aderência</th>}
+      {v('r3')&&<th>F3 Resultado</th>}
+      {v('r_f4c1')&&<th>F4-C1 Resultado</th>}
+      {v('r_f4c2')&&<th>F4-C2 Resultado</th>}
+      {v('r_f5')&&<th>F5 Resultado</th>}
       {v('imp')&&<th>Impacto</th>}
       {v('prob')&&<th>Probabilidade</th>}
       {v('crit')&&<th>Criticidade</th>}
@@ -346,6 +368,11 @@ function TabelaMRC({ rows, visCols, onOpenModal, expandAll }) {
           {v('r1')&&<td>{badge(R1_MAP[row.r1]||'b-na', row.r1)}</td>}
           {v('incons')&&<td><ExpCell text={row.incons} maxLen={ml} expanded={expandAll}/></td>}
           {v('rec')&&<td><ExpCell text={row.rec} maxLen={ml} expanded={expandAll}/></td>}
+          {v('r_ader')&&<td>{badge(R1_MAP[row.r_ader]||'b-na', row.r_ader)}</td>}
+          {v('r3')&&<td>{badge(R1_MAP[row.r3]||'b-na', row.r3)}</td>}
+          {v('r_f4c1')&&<td>{badge(R1_MAP[row.r_f4c1]||'b-na', row.r_f4c1)}</td>}
+          {v('r_f4c2')&&<td>{badge(R1_MAP[row.r_f4c2]||'b-na', row.r_f4c2)}</td>}
+          {v('r_f5')&&<td>{badge(R1_MAP[row.r_f5]||'b-na', row.r_f5)}</td>}
           {v('imp')&&<td>{badge(IMP_MAP[row.imp]||'b-na', row.imp)}</td>}
           {v('prob')&&<td>{badge(PROB_MAP[row.prob]||'b-na', row.prob)}</td>}
           {v('crit')&&<td>{critBadge(row.crit)}</td>}
