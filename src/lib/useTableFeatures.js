@@ -27,11 +27,11 @@ export function useSort(defaultKey = null, defaultDir = null) {
         const da = new Date(va), db = new Date(vb)
         if (!isNaN(da) && !isNaN(db)) return sortDir === 'asc' ? da - db : db - da
       }
-      // strings
-      va = String(va).toLowerCase(); vb = String(vb).toLowerCase()
-      if (va < vb) return sortDir === 'asc' ? -1 : 1
-      if (va > vb) return sortDir === 'asc' ? 1 : -1
-      return 0
+      // strings — localeCompare for proper accent/pt-BR handling
+      va = String(va).trim()
+      vb = String(vb).trim()
+      const cmp = va.localeCompare(vb, 'pt-BR', { sensitivity: 'base', numeric: true })
+      return sortDir === 'asc' ? cmp : -cmp
     })
     return sorted
   }, [sortKey, sortDir])
