@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { exportarMRCExcel } from '../lib/exportMRC'
 import { getFaseInfo as getFaseInfoUtil } from '../lib/fases'
@@ -35,65 +35,6 @@ const NIVEIS = [
 
 const MAX_ROWS = 200
 
-const COL_GROUPS = [
-  { label: 'Identificação', cols: [
-    { id: 'dt_ult', label: 'Data Últ. Atualização', default: true },
-    { id: 'ger', label: 'Gerência', default: false },
-    { id: 'resp_sub', label: 'Resp. Processo', default: false },
-    { id: 'area', label: 'Processo', default: false },
-    { id: 'sub', label: 'Subprocesso', default: true },
-  ]},
-  { label: 'Risco & Controle', cols: [
-    { id: 'rr', label: 'Ref. Risco', default: true },
-    { id: 'dr', label: 'Descrição do Risco', default: true },
-    { id: 'rc', label: 'Ref. Controle', default: true },
-    { id: 'dc', label: 'Descrição do Controle', default: true },
-  ]},
-  { label: 'Atributos', cols: [
-    { id: 'cat', label: 'Categoria', default: false },
-    { id: 'freq', label: 'Frequência', default: false },
-    { id: 'nat', label: 'Natureza', default: false },
-    { id: 'car', label: 'Característica', default: false },
-    { id: 'sis', label: 'Sistema', default: false },
-    { id: 'chave', label: 'Ctrl Chave?', default: false },
-  ]},
-  { label: 'Teste & Resultado', cols: [
-    { id: 'passos_f1', label: 'Passos de Teste', default: false },
-    { id: 'r1_result', label: 'Resultado', default: true },
-    { id: 'incons', label: 'Descrição da Inconsistência', default: false },
-    { id: 'rec', label: 'Recomendação / Melhoria', default: false },
-  ]},
-  { label: 'Avaliação', cols: [
-    { id: 'imp', label: 'Impacto', default: false },
-    { id: 'prob', label: 'Probabilidade', default: false },
-    { id: 'crit', label: 'Criticidade', default: true },
-  ]},
-  { label: 'Histórico por Fase', cols: [
-    { id: 'hist_f1', label: 'Fase 1 Diagnóstico', default: true },
-    { id: 'hist_f2d', label: 'Fase 2 Desenho', default: true },
-    { id: 'hist_f2a', label: 'Fase 2 Aderência', default: true },
-    { id: 'hist_f3', label: 'Fase 3 Revisão Integral', default: true },
-    { id: 'hist_f4c1', label: 'Fase 4 AI - Ciclo 1', default: true },
-    { id: 'hist_f4c2', label: 'Fase 4 AI - Ciclo 2', default: true },
-    { id: 'hist_f5', label: 'Fase 5 Auditoria Interna', default: true },
-  ]},
-  { label: 'Status', cols: [
-    { id: 'status_atual', label: 'Status Atual', default: true },
-  ]},
-]
-
-// Cores dos headers das colunas de fase
-const FASE_HEADER_COLORS = {
-  hist_f1:   '#00203E', // navy
-  hist_f2d:  '#1D3B5C', // navy claro
-  hist_f2a:  '#1D3B5C', // navy claro
-  hist_f3:   '#660033', // bordô
-  hist_f4c1: '#660066', // roxo
-  hist_f4c2: '#660066', // roxo
-  hist_f5:   '#A6512F', // terracota
-}
-
-const DEFAULT_COLS = new Set(COL_GROUPS.flatMap(g => g.cols.filter(c => c.default).map(c => c.id)))
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -107,19 +48,6 @@ function critBadge(crit) {
   const m = CRIT_MAP[crit]
   if (!m) return null
   return <span className={`cb ${m.cls}`}><span className="cdot" />{m.label}</span>
-}
-
-function ExpCell({ text, maxLen = 80, expanded = false }) {
-  const [open, setOpen] = useState(false)
-  const isOpen = expanded || open
-  if (!text || text === 'N/A' || text.trim() === '') return <span style={{ color: 'var(--txt3)', fontSize: 11 }}>—</span>
-  if (text.length <= maxLen) return <span style={{ fontSize: 11.5, lineHeight: 1.5 }}>{text}</span>
-  return (
-    <div className="exp-row">
-      <span className="exp-btn" onClick={e => { e.stopPropagation(); setOpen(o => !o) }}>{isOpen ? '−' : '+'}</span>
-      {isOpen ? <span className="exp-open">{text}</span> : <span className="exp-col">{text.slice(0, maxLen)}…</span>}
-    </div>
-  )
 }
 
 // ─── FASE ATUAL (centralizado em lib/fases.js) ─────────────────────────────
@@ -233,18 +161,6 @@ function Regua({ data, filtroNivel, onToggleNivel }) {
 
 // ─── PAINEL COLUNAS ──────────────────────────────────────────────────────────
 
-function ColunasPanel({ visCols, setVisCols, open, onClose }) {
-  const ref = useRef(null)
-  useEffect(() => { function h(e) { if (ref.current && !ref.current.contains(e.target)) onClose() }; if (open) document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h) }, [open, onClose])
-  const toggle = id => { setVisCols(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n }) }
-  return (
-    <div ref={ref} className={`col-panel ${open ? 'open' : ''}`}>
-      <div className="cp-ttl">Colunas Visíveis</div>
-      {COL_GROUPS.map(g => (<div key={g.label}><div className="cp-grp">{g.label}</div>{g.cols.map(c => (<label key={c.id} className="cp-row"><input type="checkbox" checked={visCols.has(c.id)} onChange={() => toggle(c.id)} />{c.label}</label>))}</div>))}
-    </div>
-  )
-}
-
 // ─── MODAL ───────────────────────────────────────────────────────────────────
 
 export function ModalDetalhe({ row, onClose }) {
@@ -339,140 +255,115 @@ export function ModalDetalhe({ row, onClose }) {
 
 // ─── TABELA MRC ──────────────────────────────────────────────────────────────
 
-const MRC_COLS = [
-  { id:'dt_ult', label:'Data Últ. Atualização', k:'dt_ult' },
-  { id:'ger', label:'Gerência', k:'ger' },
-  { id:'resp_sub', label:'Resp. Processo', k:'resp_sub' },
-  { id:'area', label:'Processo', k:'area' },
-  { id:'sub', label:'Subprocesso', k:'sub' },
-  { id:'rr', label:'Ref. Risco', k:'rr' },
-  { id:'dr', label:'Descrição do Risco', k:'dr' },
-  { id:'rc', label:'Ref. Controle', k:'rc' },
-  { id:'dc', label:'Descrição do Controle', k:'dc' },
-  { id:'cat', label:'Categoria de Controle', k:'cat' },
-  { id:'freq', label:'Frequência', k:'freq' },
-  { id:'nat', label:'Natureza', k:'nat' },
-  { id:'car', label:'Característica', k:'car' },
-  { id:'sis', label:'Sistema', k:'sis' },
-  { id:'chave', label:'Ctrl Chave?', k:'chave' },
-  { id:'passos_f1', label:'Passos de Teste', k:'passos_f1' },
-  { id:'r1_result', label:'Resultado', k:'r1' },
-  { id:'incons', label:'Descrição da Inconsistência', k:'incons' },
-  { id:'rec', label:'Recomendação / Melhoria', k:'rec' },
-  { id:'imp', label:'Impacto', k:'imp' },
-  { id:'prob', label:'Probabilidade', k:'prob' },
-  { id:'crit', label:'Criticidade', k:'crit' },
-  // Histórico por fase (headers coloridos)
-  { id:'hist_f1', label:'Fase 1\nDiagnóstico', k:'r1', fase: true },
-  { id:'hist_f2d', label:'Fase 2\nDesenho', k:'st_pa', fase: true },
-  { id:'hist_f2a', label:'Fase 2\nAderência', k:'r_ader', fase: true },
-  { id:'hist_f3', label:'Fase 3\nRevisão Integral', k:'r3', fase: true },
-  { id:'hist_f4c1', label:'Fase 4\nAI - Ciclo 1', k:'r_f4c1', fase: true },
-  { id:'hist_f4c2', label:'Fase 4\nAI - Ciclo 2', k:'r_f4c2', fase: true },
-  { id:'hist_f5', label:'Fase 5\nAuditoria Interna', k:'r_f5', fase: true },
-  { id:'status_atual', label:'Status Atual', k:'status_workflow' },
-]
-
-function faseBadge(val) {
-  if (!val || val === 'Teste Não Realizado') {
-    return <span style={{ fontSize: 9, color: 'var(--lt-text3)', fontStyle: 'italic' }}>Não iniciado</span>
-  }
-  if (val === 'N/A') {
-    return <span style={{ fontSize: 9, color: 'var(--lt-text3)' }}>N/A</span>
-  }
-  // Capitalizar primeira letra
-  const label = val.charAt(0).toUpperCase() + val.slice(1)
-  const cls = R1_MAP[val] || R1_MAP[label] || 'b-na'
-  return <span className={`bd ${cls}`}>{label}</span>
-}
-
-function TabelaMRC({ rows, visCols, onOpenModal, expandAll }) {
-  const v = id => visCols.has(id); const ml = expandAll ? 9999 : 70
-  const { sortKey, sortDir, toggleSort, sortData, sortIndicator } = useSort()
+function TabelaMRC({ rows, onOpenModal }) {
+  const { sortKey, toggleSort, sortData, sortIndicator } = useSort()
   const { onResizeStart, getWidth } = useColumnResize({})
   const sorted = sortData(rows)
 
-  // Mapa de dados para colunas de fase
-  // Atalho: se F1=Efetivo, F2 é pulada → mostra N/A
-  const getFaseVal = (row, colId) => {
-    const f1Efetivo = row.r1 && row.r1.toLowerCase() === 'efetivo'
-    if (f1Efetivo && (colId === 'hist_f2d' || colId === 'hist_f2a')) return 'N/A'
-    const map = { hist_f1: row.r1, hist_f2d: row.st_pa, hist_f2a: row.r_ader, hist_f3: row.r3, hist_f4c1: row.r_f4c1, hist_f4c2: row.r_f4c2, hist_f5: row.r_f5 }
-    return map[colId]
+  const thS = { fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--lt-text3)', background: 'var(--lt-card)', padding: '12px 16px', textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--lt-border)', cursor: 'pointer', userSelect: 'none' }
+  const tdS = { padding: '7px 8px', borderBottom: '1px solid var(--lt-border)', fontSize: 11, color: 'var(--lt-text2)', whiteSpace: 'nowrap', verticalAlign: 'top' }
+  const bdgS = { display: 'inline-block', padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 600 }
+
+  function badgeR(r) {
+    if (!r || r === 'Teste Não Realizado') return <span style={{ ...bdgS, background: 'rgba(10,37,64,0.05)', color: 'var(--lt-text3)' }}>{r||'—'}</span>
+    const v = (r||'').toLowerCase()
+    if (v === 'efetivo') return <span style={{ ...bdgS, background: 'rgba(34,197,94,0.1)', color: '#16A34A' }}>Efetivo</span>
+    if (v === 'inefetivo') return <span style={{ ...bdgS, background: 'rgba(234,179,8,0.1)', color: '#CA8A04' }}>Inefetivo</span>
+    if (v === 'gap' || v === 'gap de processo') return <span style={{ ...bdgS, background: 'rgba(239,68,68,0.1)', color: '#DC2626' }}>GAP</span>
+    return <span style={{ ...bdgS, background: 'rgba(10,37,64,0.05)', color: 'var(--lt-text3)' }}>{r}</span>
   }
+  const CRT_C = { 4: { bg: 'rgba(239,68,68,0.1)', c: '#DC2626', l: '4. Crítico' }, 3: { bg: 'rgba(249,115,22,0.1)', c: '#EA580C', l: '3. Significativo' }, 2: { bg: 'rgba(234,179,8,0.1)', c: '#CA8A04', l: '2. Moderado' }, 1: { bg: 'rgba(34,197,94,0.1)', c: '#16A34A', l: '1. Baixo' } }
+  function badgeCrit(v) { const m = CRT_C[v]; return m ? <span style={{ ...bdgS, background: m.bg, color: m.c }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block', marginRight: 4 }} />{m.l}</span> : <span style={{ ...bdgS, background: 'rgba(10,37,64,0.05)', color: 'var(--lt-text3)' }}>{v||'—'}</span> }
+  function faseBdg(val) {
+    if (!val || val === 'Teste Não Realizado') return <span style={{ fontSize: 9, color: 'var(--lt-text3)', fontStyle: 'italic' }}>Não iniciado</span>
+    if (val === 'N/A') return <span style={{ fontSize: 9, color: 'var(--lt-text3)' }}>N/A</span>
+    const label = val.charAt(0).toUpperCase() + val.slice(1)
+    return badgeR(label)
+  }
+  function Td({ children, w = 150 }) { return <td style={{ ...tdS, width: w, minWidth: w, maxWidth: w, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{children || '—'}</td> }
+
+  const COLS = [
+    { h: 'Data Últ. Atual.', w: 100, k: 'dt_ult' },
+    { h: 'Processo', w: 120, k: 'area' },
+    { h: 'Subprocesso', w: 120, k: 'sub' },
+    { h: 'Ref. Risco', w: 80, k: 'rr' },
+    { h: 'Desc. Risco', w: 200, k: 'dr' },
+    { h: 'Ref. Controle', w: 90, k: 'rc' },
+    { h: 'Desc. Controle', w: 200, k: 'dc' },
+    { h: 'Resultado', w: 80, k: 'r1' },
+    { h: 'Criticidade', w: 100, k: 'crit' },
+  ]
+  const FASE_COLS = [
+    { h1: 'Fase 1', h2: 'Diagnóstico', w: 110, k: 'r1', color: '#00203E' },
+    { h1: 'Fase 2', h2: 'Desenho', w: 110, k: 'st_pa', color: '#1D3B5C' },
+    { h1: 'Fase 2', h2: 'Aderência', w: 110, k: 'r_ader', color: '#1D3B5C' },
+    { h1: 'Fase 3', h2: 'Revisão Integral', w: 110, k: 'r3', color: '#660033' },
+    { h1: 'Fase 4', h2: 'AI - Ciclo 1', w: 110, k: 'r_f4c1', color: '#660066' },
+    { h1: 'Fase 4', h2: 'AI - Ciclo 2', w: 110, k: 'r_f4c2', color: '#660066' },
+    { h1: 'Fase 5', h2: 'Auditoria Interna', w: 110, k: 'r_f5', color: '#A6512F' },
+  ]
 
   return (
-    <div className="tbl-sc"><table><thead><tr>
-      {MRC_COLS.filter(c => v(c.id)).map(c => {
-        const faseColor = c.fase ? FASE_HEADER_COLORS[c.id] : null
-        if (faseColor) {
-          const [linha1, linha2] = c.label.split('\n')
-          return (
-            <th key={c.id} className={`th-sort${sortKey===c.k?' sorted':''}`}
-              style={{ minWidth: getWidth(c.id, 110), width: 110, background: faseColor, color: 'white', textAlign: 'center', padding: '8px 8px', verticalAlign: 'middle', borderLeft: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px 8px 0 0' }}
-              onClick={() => toggleSort(c.k)}>
-              <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, opacity: 0.85 }}>{linha1}</div>
-              <div style={{ fontSize: 9, fontWeight: 600, marginTop: 2 }}>{linha2}</div>
-              <span className="resize-handle" onClick={e => e.stopPropagation()} onMouseDown={e => onResizeStart(e, c.id)} />
+    <div style={{ flex: 1, overflowX: 'scroll', overflowY: 'auto', minHeight: 0 }}>
+      <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
+        <thead><tr>
+          {COLS.map((col, i) => {
+            const cw = getWidth(col.k, col.w)
+            return <th key={i} className={`th-sort${sortKey===col.k?' sorted':''}`} onClick={() => toggleSort(col.k)} style={{ ...thS, width: cw, minWidth: cw }}>
+              {col.h}<span className="sort-arrow">{sortIndicator(col.k)}</span>
+              <span className="resize-handle" onClick={e => e.stopPropagation()} onMouseDown={e => onResizeStart(e, col.k)} />
             </th>
-          )
-        }
-        return (
-          <th key={c.id} className={`th-sort${sortKey===c.k?' sorted':''}`}
-            style={{ minWidth: getWidth(c.id, undefined) }}
-            onClick={() => toggleSort(c.k)}>
-            {c.label}<span className="sort-arrow">{sortIndicator(c.k)}</span>
-            <span className="resize-handle" onClick={e => e.stopPropagation()} onMouseDown={e => onResizeStart(e, c.id)} />
-          </th>
-        )
-      })}
-    </tr></thead><tbody>
-      {sorted.length === 0 && <tr><td colSpan={23} className="empty">Nenhum controle encontrado com os filtros aplicados.</td></tr>}
-      {sorted.map(row => (
-        <tr key={row.id} style={{ cursor:'pointer' }} onClick={() => onOpenModal(row)}>
-          {v('dt_ult')&&<td style={{minWidth:getWidth('dt_ult',undefined)}}><span style={{fontSize:11,whiteSpace:'nowrap'}}>{row.dt_ult ? new Date(row.dt_ult).toLocaleDateString('pt-BR') : '—'}</span></td>}
-          {v('ger')&&<td style={{minWidth:getWidth('ger',undefined)}}><span style={{fontSize:11}}>{row.ger||'—'}</span></td>}
-          {v('resp_sub')&&<td style={{minWidth:getWidth('resp_sub',undefined)}}><span style={{fontSize:11}}>{row.resp_sub||'—'}</span></td>}
-          {v('area')&&<td style={{minWidth:getWidth('area',undefined)}}><span style={{fontSize:11}}>{row.area}</span></td>}
-          {v('sub')&&<td style={{minWidth:getWidth('sub',undefined)}}><span style={{fontSize:11}}>{row.sub}</span></td>}
-          {v('rr')&&<td style={{minWidth:getWidth('rr',undefined)}}><span style={{fontSize:11,color:'var(--gold)',fontWeight:600}}>{row.rr}</span></td>}
-          {v('dr')&&<td style={{minWidth:getWidth('dr',undefined)}}><ExpCell text={row.dr} maxLen={ml} expanded={expandAll}/></td>}
-          {v('rc')&&<td style={{minWidth:getWidth('rc',undefined)}}><span style={{fontSize:11,color:'var(--gold)',fontWeight:600}}>{row.rc}</span></td>}
-          {v('dc')&&<td style={{minWidth:getWidth('dc',undefined)}}><ExpCell text={row.dc} maxLen={ml} expanded={expandAll}/></td>}
-          {v('cat')&&<td style={{minWidth:getWidth('cat',undefined)}}><span style={{fontSize:11}}>{row.cat||'—'}</span></td>}
-          {v('freq')&&<td style={{minWidth:getWidth('freq',undefined)}}><span style={{fontSize:11}}>{row.freq||'—'}</span></td>}
-          {v('nat')&&<td style={{minWidth:getWidth('nat',undefined)}}><span style={{fontSize:11}}>{row.nat||'—'}</span></td>}
-          {v('car')&&<td style={{minWidth:getWidth('car',undefined)}}><span style={{fontSize:11}}>{row.car||'—'}</span></td>}
-          {v('sis')&&<td style={{minWidth:getWidth('sis',undefined)}}><span style={{fontSize:11}}>{row.sis||'—'}</span></td>}
-          {v('chave')&&<td style={{minWidth:getWidth('chave',undefined)}}><span style={{fontSize:11}}>{row.chave||'—'}</span></td>}
-          {v('passos_f1')&&<td style={{minWidth:getWidth('passos_f1',undefined)}}><ExpCell text={row.passos_f1} maxLen={ml} expanded={expandAll}/></td>}
-          {v('r1_result')&&<td style={{minWidth:getWidth('r1_result',undefined)}}>{badge(R1_MAP[row.r1]||'b-na', row.r1)}</td>}
-          {v('incons')&&<td style={{minWidth:getWidth('incons',undefined)}}><ExpCell text={row.incons} maxLen={ml} expanded={expandAll}/></td>}
-          {v('rec')&&<td style={{minWidth:getWidth('rec',undefined)}}><ExpCell text={row.rec} maxLen={ml} expanded={expandAll}/></td>}
-          {v('imp')&&<td style={{minWidth:getWidth('imp',undefined)}}>{badge(IMP_MAP[row.imp]||'b-na', row.imp)}</td>}
-          {v('prob')&&<td style={{minWidth:getWidth('prob',undefined)}}>{badge(PROB_MAP[row.prob]||'b-na', row.prob)}</td>}
-          {v('crit')&&<td style={{minWidth:getWidth('crit',undefined)}}>{critBadge(row.crit)}</td>}
-          {/* Colunas de histórico por fase */}
-          {['hist_f1','hist_f2d','hist_f2a','hist_f3','hist_f4c1','hist_f4c2','hist_f5'].map(fid => v(fid) && (
-            <td key={fid} style={{ minWidth: getWidth(fid, 100), textAlign: 'center' }}>
-              {faseBadge(getFaseVal(row, fid))}
-            </td>
-          ))}
-          {v('status_atual') && (() => {
-            const fi = getFaseInfo(row)
-            const cfg = getStatusConfig(row.status_workflow, 'admin_polimata')
-            return (
-              <td key="status_atual" style={{ minWidth: getWidth('status_atual', 140), textAlign: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                  <span style={{ fontSize: 8, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{fi.nome}</span>
-                  <span style={{ fontSize: 8, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>{cfg.label}</span>
-                </div>
+          })}
+          {FASE_COLS.map((col, i) => {
+            const cw = getWidth(col.k, col.w)
+            return <th key={`f${i}`} className={`th-sort${sortKey===col.k?' sorted':''}`} onClick={() => toggleSort(col.k)} style={{ color: 'white', background: col.color, padding: '8px 8px', textAlign: 'center', verticalAlign: 'middle', position: 'sticky', top: 0, zIndex: 2, width: cw, minWidth: cw, borderBottom: '1px solid var(--lt-border)', borderLeft: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px 8px 0 0', cursor: 'pointer', userSelect: 'none' }}>
+              <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, opacity: 0.85 }}>{col.h1}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, marginTop: 2 }}>{col.h2}</div>
+              <span className="resize-handle" onClick={e => e.stopPropagation()} onMouseDown={e => onResizeStart(e, col.k)} />
+            </th>
+          })}
+          <th style={{ ...thS, width: 140, minWidth: 140, textAlign: 'center' }}>Status Atual</th>
+        </tr></thead>
+        <tbody>
+          {sorted.length === 0 && <tr><td colSpan={17} style={{ padding: 32, textAlign: 'center', color: 'var(--lt-text3)' }}>Nenhum controle encontrado.</td></tr>}
+          {sorted.map((c, i) => (
+            <tr key={c.id||i} onClick={() => onOpenModal(c)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='rgba(204,145,94,0.04)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+              <Td w={getWidth('dt_ult',100)}>{c.dt_ult ? new Date(c.dt_ult).toLocaleDateString('pt-BR') : '—'}</Td>
+              <Td w={getWidth('area',120)}>{c.area}</Td>
+              <Td w={getWidth('sub',120)}>{c.sub}</Td>
+              <td style={{ ...tdS, color: 'var(--copper)', fontWeight: 600, width: getWidth('rr',80), minWidth: getWidth('rr',80) }}>{c.rr}</td>
+              <Td w={getWidth('dr',200)}>{c.dr}</Td>
+              <td style={{ ...tdS, color: 'var(--copper)', fontWeight: 600, width: getWidth('rc',90), minWidth: getWidth('rc',90) }}>{c.rc}</td>
+              <Td w={getWidth('dc',200)}>{c.dc}</Td>
+              <td style={{ ...tdS, width: getWidth('r1',80), minWidth: getWidth('r1',80) }}>{badgeR(c.r1)}</td>
+              <td style={{ ...tdS, width: getWidth('crit',100), minWidth: getWidth('crit',100) }}>{badgeCrit(c.crit)}</td>
+              {(() => {
+                const f1Ef = c.r1 && c.r1.toLowerCase() === 'efetivo'
+                const vals = [c.r1, f1Ef ? 'N/A' : c.st_pa, f1Ef ? 'N/A' : c.r_ader, c.r3, c.r_f4c1, c.r_f4c2, c.r_f5]
+                const keys = ['r1','st_pa','r_ader','r3','r_f4c1','r_f4c2','r_f5']
+                return vals.map((val, fi) => (
+                  <td key={fi} style={{ ...tdS, textAlign: 'center', width: getWidth(keys[fi], 100), minWidth: 100 }}>
+                    {faseBdg(val)}
+                  </td>
+                ))
+              })()}
+              <td style={{ ...tdS, textAlign: 'center', width: 140, minWidth: 140 }}>
+                {(() => {
+                  const fi = getFaseInfo(c)
+                  const cfg = getStatusConfig(c.status_workflow, 'admin_polimata')
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
+                      <span style={{ fontSize: 8, fontWeight: 600, color: 'var(--lt-text3)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{fi.nome}</span>
+                      <span style={{ fontSize: 8, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>{cfg.label}</span>
+                    </div>
+                  )
+                })()}
               </td>
-            )
-          })()}
-        </tr>
-      ))}
-    </tbody></table></div>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
@@ -484,8 +375,7 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
   const [filtroImp, setFiltroImp] = useState(''); const [filtroProb, setFiltroProb] = useState(''); const [filtroR1, setFiltroR1] = useState(''); const [filtroNivel, setFiltroNivel] = useState('')
   const [filtroFase, setFiltroFase] = useState('')
   const [filtroStatus, setFiltroStatus] = useState('')
-  const visCols = DEFAULT_COLS
-  const [expandAll, setExpandAll] = useState(false); const [modalRow, setModalRow] = useState(null)
+  const [modalRow, setModalRow] = useState(null)
 
   useEffect(() => {
     if (!projetoId) return
@@ -669,12 +559,11 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
           <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={FS}><option value="">Todos status</option>{statusDisponiveis.map(s => <option key={s} value={s}>{s}</option>)}</select>
           <div style={{ fontSize: 10, color: 'var(--lt-text3)', background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 10px' }}>{filtered.length} controles</div>
           {temFiltro && <button onClick={limparFiltros} style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 999, padding: '4px 10px', fontSize: 10, fontWeight: 600, color: '#DC2626', cursor: 'pointer', fontFamily: 'inherit' }}>✕ Limpar filtros</button>}
-          <button onClick={() => setExpandAll(o => !o)} style={{ background: 'rgba(0,32,62,0.06)', border: '1px solid rgba(0,32,62,0.15)', borderRadius: 999, padding: '4px 10px', fontSize: 10, fontWeight: 600, color: 'var(--lt-text2)', cursor: 'pointer', fontFamily: 'inherit' }}>⊞ {expandAll ? 'Recolher' : 'Expandir'}</button>
           <button onClick={() => exportarMRCExcel(filtered, 'MRC_Completa_' + new Date().toISOString().slice(0,10), 'MRC Completa', clienteNome, projetoNome)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(204,145,94,0.1)', border: '1px solid rgba(204,145,94,0.25)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' }} title="Exportar Excel"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>Excel</button>
         </div>
 
         {isLimited && <div className="warn-strip">Exibindo {MAX_ROWS} de {filtered.length} — refine os filtros</div>}
-        <TabelaMRC rows={visibleRows} visCols={visCols} onOpenModal={setModalRow} expandAll={expandAll} />
+        <TabelaMRC rows={visibleRows} onOpenModal={setModalRow} />
       </div>
 
       {modalRow && <ModalDetalhe row={modalRow} onClose={() => setModalRow(null)} />}
