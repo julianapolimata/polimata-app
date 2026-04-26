@@ -235,14 +235,14 @@ export default function Dashboard() {
 
       <main className={mainLightClass} style={{ flex: 1, overflowY: 'auto', background: isHomeDash ? 'var(--bg0)' : 'var(--lt-bg)', position: 'relative' }}>
         {/* Notificações — canto superior direito (sticky top-bar). Oculto na MRC pois o header lá inclui o sino */}
-        {location.pathname !== '/mrc' && (
+        {location.pathname !== '/mrc' && !location.pathname.startsWith('/area/') && (
           <div className="top-bar" style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 16px 0', background: isHomeDash ? 'var(--bg0)' : 'var(--lt-bg)' }}>
             <NotificacoesPanel />
           </div>
         )}
         <Routes>
           <Route path="/" element={<HomeDash projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} ultimaAtualizacao={ultimaAtualizacao} />} />
-          <Route path="/area/:areaId" element={<PorArea projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} navigate={navigate} loadDados={loadDados} />} />
+          <Route path="/area/:areaId" element={<PorArea projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} navigate={navigate} loadDados={loadDados} notificacoes={<NotificacoesPanel />} />} />
           <Route path="/mrc" element={<MRCCompleta projetoId={projetoAtivo?.id} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} notificacoes={<NotificacoesPanel />} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
           <Route path="/importar-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
@@ -532,7 +532,7 @@ const dashStyles = {
 // TELA 2 — POR ÁREA (REDESIGN v2 — TEMA ESCURO + HEATMAP + KPI GRID)
 // ══════════════════════════════════════════════════════════════════════════════
 
-function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDados }) {
+function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDados, notificacoes }) {
   const { areaId } = useParams()
   const { perfil } = useAuth()
   const area = areasCalc.find(a => a.id === areaId)
@@ -651,14 +651,16 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
 
   return (
     <div style={PA.page}>
-      {/* HEADER — barra compacta */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0 6px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      {/* HEADER — barra fixa igual MRC Completa */}
+      <div className="mrc-header-bar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => navigate('/')} style={PA.btnVoltar}>← VOLTAR</button>
-          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--lt-text)', fontFamily: "'Raleway', sans-serif" }}>{nome}</div>
-          <div style={{ fontSize: 9, color: 'var(--lt-text3)' }}>{area.controles.length} controles · Peso empresa: {pesoEmpresa}%</div>
+          <div className="dash-ttl" style={{ marginBottom: 0 }}>{nome}</div>
         </div>
-        <div style={{ fontSize: 9, color: 'var(--lt-text3)', background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 6, padding: '4px 10px', whiteSpace: 'nowrap' }}>Última atualização: {ultAtualArea}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ fontSize: 10, color: 'var(--lt-text3)', background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 6, padding: '4px 10px', whiteSpace: 'nowrap' }}>Última atualização: {ultAtualArea}</div>
+          {notificacoes}
+        </div>
       </div>
 
       {/* ZONA SUPERIOR — HEATMAP + KPI GRID */}
