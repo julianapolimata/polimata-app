@@ -218,7 +218,7 @@ export default function Dashboard() {
             badge={todosControles.length > 0 ? todosControles.length : null} />
           {isAdmin && (<>{sidebarOpen && <div className="sb-sep">Administração</div>}
             <SideNavItem icon="⚙️" label="Configurações" active={location.pathname.startsWith('/configuracoes')} onClick={() => navigate('/configuracoes')} open={sidebarOpen} />
-            <SideNavItem icon="📥" label="Importar MRC" active={location.pathname === '/importar-mrc'} onClick={() => navigate('/importar-mrc')} open={sidebarOpen} /></>)}
+            <SideNavItem icon="🛠" label="Manutenção MRC" active={location.pathname === '/manutencao-mrc'} onClick={() => navigate('/manutencao-mrc')} open={sidebarOpen} /></>)}
         </nav>
         <button onClick={() => setSidebarOpen(o => !o)} style={{ background: 'transparent', border: 'none', borderTop: '1px solid var(--brd)', color: 'var(--txt3)', padding: '10px', cursor: 'pointer', fontSize: 14, textAlign: 'center', width: '100%' }}>
           {sidebarOpen ? '◂' : '▸'}
@@ -246,7 +246,7 @@ export default function Dashboard() {
           <Route path="/area/:areaId" element={<PorArea projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} navigate={navigate} loadDados={loadDados} notificacoes={<NotificacoesPanel />} />} />
           <Route path="/mrc" element={<MRCCompleta projetoId={projetoAtivo?.id} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} notificacoes={<NotificacoesPanel />} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
-          <Route path="/importar-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
+          <Route path="/manutencao-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
           <Route path="/perfil" element={<Perfil />} />
         </Routes>
       </main>

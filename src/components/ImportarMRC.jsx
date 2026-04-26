@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { gerarTemplateMRC } from '../lib/templateMRC'
 import ExcelJS from 'exceljs'
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -273,13 +274,31 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
   return (
     <div style={S.wrap}>
       <div style={S.header}>
-        <div style={S.title}>Importar MRC</div>
-        <div style={S.subtitle}>Upload de matriz Excel para sobrescrever os controles de uma área.</div>
-        <div style={S.warningBox}>
-          <div style={S.warningIcon}>⚠</div>
-          <div style={S.warningText}>
-            <strong>ATENÇÃO:</strong> Esta ação apaga TODOS os controles existentes da área selecionada e insere os do arquivo. Essa operação não pode ser desfeita.
-          </div>
+        <div style={S.title}>Manutenção MRC</div>
+        <div style={S.subtitle}>Gerencie a Matriz de Riscos e Controles — baixe o template ou importe dados em massa.</div>
+      </div>
+
+      {/* ════ TEMPLATE DOWNLOAD ════ */}
+      <div style={S.templateCard}>
+        <div style={{ flex: 1 }}>
+          <div style={S.templateTitle}>📄 Template MRC</div>
+          <div style={S.templateDesc}>Planilha vazia com todos os campos e validações de dados. Use como base para o mapeamento de processos antes de importar no sistema.</div>
+        </div>
+        <button onClick={() => gerarTemplateMRC()} style={S.btnTemplate}>⬇ Baixar Template</button>
+      </div>
+
+      <div style={S.divider} />
+
+      {/* ════ IMPORTAÇÃO EM MASSA ════ */}
+      <div style={S.sectionHeader}>
+        <div style={S.sectionHeaderTitle}>📥 Importar MRC por Área</div>
+        <div style={S.sectionHeaderSub}>Upload de matriz Excel para sobrescrever os controles de uma área.</div>
+      </div>
+
+      <div style={S.warningBox}>
+        <div style={S.warningIcon}>⚠</div>
+        <div style={S.warningText}>
+          <strong>ATENÇÃO:</strong> Esta ação apaga TODOS os controles existentes da área selecionada e insere os do arquivo. Essa operação não pode ser desfeita.
         </div>
       </div>
 
@@ -406,9 +425,31 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
 
 const S = {
   wrap: { padding: '24px 32px', maxWidth: 900, fontFamily: "'Montserrat', sans-serif" },
-  header: { marginBottom: 24 },
+  header: { marginBottom: 20 },
   title: { fontSize: 18, fontWeight: 600, color: '#F3EEE4' },
   subtitle: { fontSize: 12, color: 'rgba(243,238,228,0.6)', marginTop: 4 },
+
+  // Template card
+  templateCard: {
+    display: 'flex', alignItems: 'center', gap: 16,
+    background: 'rgba(29,59,92,0.4)', border: '1px solid rgba(204,145,94,0.25)',
+    borderRadius: 10, padding: '18px 20px', marginBottom: 20,
+  },
+  templateTitle: { fontSize: 13, fontWeight: 700, color: '#F3EEE4', marginBottom: 4 },
+  templateDesc: { fontSize: 11, color: 'rgba(243,238,228,0.6)', lineHeight: 1.5 },
+  btnTemplate: {
+    background: 'rgba(204,145,94,0.15)', color: '#CC915E',
+    border: '1px solid rgba(204,145,94,0.35)', borderRadius: 8,
+    padding: '10px 20px', fontSize: 12, fontWeight: 700,
+    fontFamily: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap',
+    flexShrink: 0,
+  },
+
+  divider: { height: 1, background: 'rgba(243,238,228,0.12)', margin: '4px 0 20px' },
+
+  sectionHeader: { marginBottom: 12 },
+  sectionHeaderTitle: { fontSize: 14, fontWeight: 600, color: '#F3EEE4' },
+  sectionHeaderSub: { fontSize: 11, color: 'rgba(243,238,228,0.5)', marginTop: 3 },
 
   // Aviso amarelo chamativo
   warningBox: {

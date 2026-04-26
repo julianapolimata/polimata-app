@@ -77,6 +77,15 @@
 .btn-cfg-save:hover { filter: brightness(1.08); }
 .btn-cfg-save:disabled { opacity: .5; cursor: not-allowed; }
 
+.btn-cfg-template {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 7px;
+  background: rgba(204,145,94,0.12); border: 1px solid rgba(204,145,94,0.3);
+  color: var(--gold); font-family: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+}
+.btn-cfg-template:hover { background: rgba(204,145,94,0.2); }
+
 .btn-cfg-cancel {
   padding: 8px 16px; border-radius: 7px;
   background: transparent; border: 1px solid var(--brd2);

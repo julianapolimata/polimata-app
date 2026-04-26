@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useSort } from '../../lib/useTableFeatures'
+import { gerarTemplateMRC } from '../../lib/templateMRC'
 
 export default function ClientesConfig() {
   const [clientes, setClientes] = useState([])
@@ -202,6 +203,7 @@ function NovoClienteForm({ onSave, onCancel }) {
       </div>
       <div className="cfg-form-footer">
         <button className="btn-cfg-cancel" onClick={onCancel}>Cancelar</button>
+        <button className="btn-cfg-template" onClick={() => gerarTemplateMRC(nome || 'Novo_Cliente')} title="Baixar planilha vazia para mapeamento de processos">📄 Baixar Template MRC</button>
         <button className="btn-cfg-save" onClick={salvar} disabled={saving}>{saving?'Salvando...':'✓ Salvar Cliente'}</button>
       </div>
     </div>
@@ -312,6 +314,7 @@ function DetalheCliente({ cliente, onBack }) {
             {cliente.ativo ? <span className="badge-ativo">Ativo</span> : <span className="badge-inativo">Inativo</span>}
           </div>
         </div>
+        <button className="btn-cfg-template" onClick={() => gerarTemplateMRC(cliente.nome)} title="Baixar planilha vazia para mapeamento de processos">📄 Template MRC</button>
       </div>
       <div className="cfg-tabs" style={{marginBottom:20}}>
         {['areas','sistemas','projetos'].map(t => (
