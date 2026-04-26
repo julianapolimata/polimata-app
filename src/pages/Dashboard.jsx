@@ -778,7 +778,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
             </tr></thead>
             <tbody>{cf.map((c, i) => { const fl = faseLabel(c); return (
               <tr key={c.id||i} onClick={() => setModalRow(c)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='rgba(204,145,94,0.04)'} onMouseLeave={e => e.currentTarget.style.background=''}>
-                <Td w={100}>{c.dt_ult || '—'}</Td>
+                <Td w={100}>{c.dt_ult ? new Date(c.dt_ult).toLocaleDateString('pt-BR') : '—'}</Td>
                 <Td w={120}>{c.ger}</Td><Td w={120}>{c.resp_sub}</Td><Td w={140}>{c.area}</Td><Td w={120}>{c.sub}</Td>
                 <td style={{ ...tdS, color: 'var(--copper)', fontWeight: 600, width: 80, minWidth: 80 }}>{c.rr}</td><Td w={200}>{c.dr}</Td>
                 <td style={{ ...tdS, color: 'var(--copper)', fontWeight: 600, width: 90, minWidth: 90 }}>{c.rc}</td><Td w={200}>{c.dc}</Td>

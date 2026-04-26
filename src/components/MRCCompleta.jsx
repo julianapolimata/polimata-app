@@ -358,7 +358,7 @@ function TabelaMRC({ rows, visCols, onOpenModal, expandAll }) {
       {rows.length === 0 && <tr><td colSpan={23} className="empty">Nenhum controle encontrado com os filtros aplicados.</td></tr>}
       {rows.map(row => (
         <tr key={row.id} style={{ cursor:'pointer' }} onClick={() => onOpenModal(row)}>
-          {v('dt_ult')&&<td><span style={{fontSize:11,whiteSpace:'nowrap'}}>{row.dt_ult||'—'}</span></td>}
+          {v('dt_ult')&&<td><span style={{fontSize:11,whiteSpace:'nowrap'}}>{row.dt_ult ? new Date(row.dt_ult).toLocaleDateString('pt-BR') : '—'}</span></td>}
           {v('ger')&&<td><span style={{fontSize:11}}>{row.ger||'—'}</span></td>}
           {v('resp_sub')&&<td><span style={{fontSize:11}}>{row.resp_sub||'—'}</span></td>}
           {v('area')&&<td><span style={{fontSize:11}}>{row.area}</span></td>}
