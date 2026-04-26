@@ -104,13 +104,23 @@ function NovoClienteForm({ onSave, onCancel }) {
     if (nums.length !== 14) { setCnpjErro('CNPJ deve ter 14 dígitos'); return }
     setCnpjLoading(true); setCnpjErro('')
     try {
-      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${nums}`)
-      if (!res.ok) throw new Error('CNPJ não encontrado')
-      const data = await res.json()
+      let data = null
+      // Tenta BrasilAPI primeiro, fallback para CNPJ.ws
+      const apis = [
+        `https://brasilapi.com.br/api/cnpj/v1/${nums}`,
+        `https://publica.cnpj.ws/cnpj/${nums}`,
+      ]
+      for (const url of apis) {
+        try {
+          const res = await fetch(url)
+          if (res.ok) { data = await res.json(); break }
+        } catch { /* tenta próxima */ }
+      }
+      if (!data) throw new Error('not found')
       setNome(data.razao_social || '')
       setNomeFantasia(data.nome_fantasia || '')
     } catch(e) {
-      setCnpjErro('CNPJ não encontrado na Receita Federal')
+      setCnpjErro('CNPJ não encontrado. Verifique o número ou tente novamente em instantes.')
     }
     setCnpjLoading(false)
   }
