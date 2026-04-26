@@ -180,12 +180,14 @@ function Heatmap({ data, filtroImp, filtroProb, onFilterCell }) {
       <div className="hm-legend">
         {[4,3,2,1].map(cv => {
           const k = `C${cv}`; const t = totais[k]; const color = legColors[k] === '#FFFF00' ? '#D4A030' : legColors[k]
+          const bgMap = { C4: 'rgba(239,68,68,.18)', C3: 'rgba(249,115,22,.18)', C2: 'rgba(234,179,8,.18)', C1: 'rgba(34,197,94,.18)' }
+          const borderMap = { C4: 'rgba(239,68,68,.35)', C3: 'rgba(249,115,22,.35)', C2: 'rgba(234,179,8,.35)', C1: 'rgba(34,197,94,.35)' }
           return (
-            <div key={cv} className="hm-leg" style={{ borderLeftColor: legColors[k] }}><div>
-              <div className="hm-lbl">{legLabels[k]}</div>
+            <div key={cv} className="hm-leg" style={{ background: bgMap[k], borderColor: borderMap[k] }}>
               <div className="hm-lnum" style={{ color }}>{t.n}</div>
+              <div className="hm-lbl" style={{ color }}>{legLabels[k]}</div>
               <div className="hm-lsub">E:{t.e} · I:{t.i} · G:{t.g}</div>
-            </div></div>
+            </div>
           )
         })}
       </div>
@@ -200,7 +202,7 @@ function Regua({ data, filtroNivel, onToggleNivel }) {
   data.forEach(r => { const res = r.r1; if (res === 'Inefetivo') c.N1++; else if (res === 'GAP') c.N2++; else if (res === 'Efetivo') c.N5++ })
   return (
     <div className="regua">
-      {NIVEIS.map(n => (<div key={n.id} className={`rn ${n.cls} ${filtroNivel === n.id ? 'ativo' : ''}`} onClick={() => onToggleNivel(filtroNivel === n.id ? '' : n.id)}><div className="rn-c">{c[n.id]}</div><div className="rn-n">{n.nome}</div></div>))}
+      {NIVEIS.map(n => (<div key={n.id} className={`rn ${n.cls} ${filtroNivel === n.id ? 'ativo' : ''}`} onClick={() => onToggleNivel(filtroNivel === n.id ? '' : n.id)}><div><div className="rn-n">{n.nome}</div><div className="rn-c">{c[n.id]}</div></div></div>))}
     </div>
   )
 }
@@ -442,10 +444,12 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
         </div>
       </div>
 
-      <div className="mrc-hm-compact">
-        <Heatmap data={filtered} filtroImp={filtroImp} filtroProb={filtroProb} onFilterCell={handleHeatmapCell} />
+      <div className="mrc-hm-compact" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <Heatmap data={filtered} filtroImp={filtroImp} filtroProb={filtroProb} onFilterCell={handleHeatmapCell} />
+        </div>
+        <Regua data={mrc} filtroNivel={filtroNivel} onToggleNivel={setFiltroNivel} />
       </div>
-      <Regua data={mrc} filtroNivel={filtroNivel} onToggleNivel={setFiltroNivel} />
 
       <div className="card">
         <div className="filters">
