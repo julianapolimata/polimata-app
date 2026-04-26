@@ -85,7 +85,7 @@ function NovoClienteForm({ onSave, onCancel }) {
   const [nomeFantasia, setNomeFantasia] = useState('')
   const [nomeProj, setNomeProj] = useState('Controles Internos 2025')
   const [sistemas, setSistemas] = useState([{ nome: '' }])
-  const [areas, setAreas] = useState([{ nome: '', prefixo: '', peso: '', gerente: '', subprocessos: [{ nome: '', responsavel: '' }] }])
+  const [areas, setAreas] = useState([{ nome: '', prefixo: '', peso: '', gerente: '', resp_processo: '', subprocessos: [{ nome: '', responsavel: '' }] }])
   const [saving, setSaving] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -134,7 +134,7 @@ function NovoClienteForm({ onSave, onCancel }) {
       for (let i = 0; i < areas.length; i++) {
         const a = areas[i]
         if (!a.nome.trim()) continue
-        await supabase.from('areas').insert({ projeto_id: proj.id, nome: a.nome.trim(), prefixo: a.prefixo.trim().toUpperCase(), peso: parseFloat(a.peso)||0, gerente: a.gerente.trim(), ordem: i+1 })
+        await supabase.from('areas').insert({ projeto_id: proj.id, nome: a.nome.trim(), prefixo: a.prefixo.trim().toUpperCase(), peso: parseFloat(a.peso)||0, gerente: a.gerente.trim(), resp_processo: (a.resp_processo||'').trim(), ordem: i+1 })
       }
       onSave()
     } catch(e) { setErro(e.message); setSaving(false) }
@@ -173,7 +173,7 @@ function NovoClienteForm({ onSave, onCancel }) {
         ))}
       </div>
       <div className="cfg-group">
-        <div className="cfg-group-hdr"><div className="cfg-group-title">Processos / Áreas</div><button className="btn-cfg-sm" onClick={()=>setAreas([...areas,{nome:'',prefixo:'',peso:'',gerente:'',subprocessos:[{nome:'',responsavel:''}]}])}>+ Área</button></div>
+        <div className="cfg-group-hdr"><div className="cfg-group-title">Processos / Áreas</div><button className="btn-cfg-sm" onClick={()=>setAreas([...areas,{nome:'',prefixo:'',peso:'',gerente:'',resp_processo:'',subprocessos:[{nome:'',responsavel:''}]}])}>+ Área</button></div>
         {areas.map((a,ai) => (
           <div key={ai} className="cfg-area-block">
             <div className="cfg-area-hdr"><span className="cfg-area-num">Área {ai+1}</span>{areas.length>1 && <button className="btn-cfg-remove" onClick={()=>setAreas(areas.filter((_,i)=>i!==ai))}>✕ Remover</button>}</div>
@@ -182,7 +182,10 @@ function NovoClienteForm({ onSave, onCancel }) {
               <div className="cfg-field"><label>Prefixo <span className="req">*</span></label><input className="input-light" value={a.prefixo} onChange={e=>{const n=[...areas];n[ai].prefixo=e.target.value.toUpperCase();setAreas(n)}} placeholder="COM" maxLength={8} /></div>
               <div className="cfg-field"><label>Peso (%)</label><input className="input-light" type="number" value={a.peso} onChange={e=>{const n=[...areas];n[ai].peso=e.target.value;setAreas(n)}} placeholder="13.5" /></div>
             </div>
-            <div className="cfg-field" style={{marginTop:10}}><label>Gerente</label><input className="input-light" value={a.gerente} onChange={e=>{const n=[...areas];n[ai].gerente=e.target.value;setAreas(n)}} placeholder="Nome do gerente" /></div>
+            <div className="cfg-row2" style={{marginTop:10}}>
+              <div className="cfg-field"><label>Gerente</label><input className="input-light" value={a.gerente} onChange={e=>{const n=[...areas];n[ai].gerente=e.target.value;setAreas(n)}} placeholder="Nome do gerente" /></div>
+              <div className="cfg-field"><label>Responsável do Processo</label><input className="input-light" value={a.resp_processo||''} onChange={e=>{const n=[...areas];n[ai].resp_processo=e.target.value;setAreas(n)}} placeholder="Nome do responsável" /></div>
+            </div>
             <div className="cfg-sub-section">
               <div className="cfg-sub-hdr"><span className="cfg-sub-label">Subprocessos e Responsáveis</span><button className="btn-cfg-sm" onClick={()=>{const n=[...areas];n[ai].subprocessos.push({nome:'',responsavel:''});setAreas(n)}}>+ Sub</button></div>
               {a.subprocessos.map((sp,si) => (
@@ -246,9 +249,9 @@ function DetalheCliente({ cliente, onBack }) {
   async function salvarArea(area) {
     setSaving(true)
     if (area.id) {
-      await supabase.from('areas').update({ nome: area.nome, prefixo: area.prefixo.toUpperCase(), peso: parseFloat(area.peso)||0, gerente: area.gerente }).eq('id', area.id)
+      await supabase.from('areas').update({ nome: area.nome, prefixo: area.prefixo.toUpperCase(), peso: parseFloat(area.peso)||0, gerente: area.gerente, resp_processo: (area.resp_processo||'').trim() }).eq('id', area.id)
     } else {
-      await supabase.from('areas').insert({ projeto_id: projetoId, nome: area.nome, prefixo: area.prefixo.toUpperCase(), peso: parseFloat(area.peso)||0, gerente: area.gerente, ordem: areas.length+1 })
+      await supabase.from('areas').insert({ projeto_id: projetoId, nome: area.nome, prefixo: area.prefixo.toUpperCase(), peso: parseFloat(area.peso)||0, gerente: area.gerente, resp_processo: (area.resp_processo||'').trim(), ordem: areas.length+1 })
     }
     setEditandoArea(null); setNovaArea(false); await loadDados(); setSaving(false)
     // Notifica o Dashboard para recarregar as áreas
@@ -322,7 +325,7 @@ function DetalheCliente({ cliente, onBack }) {
               <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
                 <button className="btn-cfg-sm" onClick={()=>setNovaArea(true)}>+ Nova Área</button>
               </div>
-              {novaArea && <AreaForm area={{nome:'',prefixo:'',peso:'',gerente:''}} onSave={salvarArea} onCancel={()=>setNovaArea(false)} saving={saving} />}
+              {novaArea && <AreaForm area={{nome:'',prefixo:'',peso:'',gerente:'',resp_processo:''}} onSave={salvarArea} onCancel={()=>setNovaArea(false)} saving={saving} />}
               <div className="cfg-table-wrap">
                 <table className="cfg-table">
                   <thead><tr><th>Processo</th><th>Prefixo</th><th>Peso</th><th>Gerente</th><th style={{width:80}}></th></tr></thead>
@@ -438,7 +441,10 @@ function AreaForm({ area, onSave, onCancel, saving, inline }) {
           {form.peso !== '' && !(parseFloat(form.peso) > 0) && <span className="field-erro">Peso deve ser maior que 0%</span>}
         </div>
       </div>
-      <div className="cfg-field" style={{marginTop:10}}><label>Gerente</label><input className="input-light" value={form.gerente} onChange={e=>u('gerente',e.target.value)} placeholder="Nome do gerente" /></div>
+      <div className="cfg-row2" style={{marginTop:10}}>
+        <div className="cfg-field"><label>Gerente</label><input className="input-light" value={form.gerente} onChange={e=>u('gerente',e.target.value)} placeholder="Nome do gerente" /></div>
+        <div className="cfg-field"><label>Responsável do Processo</label><input className="input-light" value={form.resp_processo||''} onChange={e=>u('resp_processo',e.target.value)} placeholder="Nome do responsável" /></div>
+      </div>
       <div style={{display:'flex',gap:8,marginTop:10}}>
         <button className="btn-cfg-cancel" onClick={onCancel}>Cancelar</button>
         <button className="btn-cfg-save" onClick={()=>onSave(form)} disabled={saving||!form.nome.trim()||!form.prefixo.trim()||!(parseFloat(form.peso)>0)}>{saving?'Salvando...':'✓ Salvar'}</button>
