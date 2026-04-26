@@ -328,22 +328,23 @@ function DetalheCliente({ cliente, onBack }) {
               {novaArea && <AreaForm area={{nome:'',prefixo:'',peso:'',gerente:'',resp_processo:''}} onSave={salvarArea} onCancel={()=>setNovaArea(false)} saving={saving} />}
               <div className="cfg-table-wrap">
                 <table className="cfg-table">
-                  <thead><tr><th>Processo</th><th>Prefixo</th><th>Peso</th><th>Gerente</th><th style={{width:80}}></th></tr></thead>
+                  <thead><tr><th>Processo</th><th>Prefixo</th><th>Peso</th><th>Gerente</th><th>Resp. Processo</th><th style={{width:80}}></th></tr></thead>
                   <tbody>
                     {areas.map(a => (
                       editandoArea?.id===a.id ? (
-                        <tr key={a.id}><td colSpan={5}><AreaForm area={editandoArea} onSave={salvarArea} onCancel={()=>setEditandoArea(null)} saving={saving} inline /></td></tr>
+                        <tr key={a.id}><td colSpan={6}><AreaForm area={editandoArea} onSave={salvarArea} onCancel={()=>setEditandoArea(null)} saving={saving} inline /></td></tr>
                       ) : (
                         <tr key={a.id}>
                           <td>{a.nome}</td>
                           <td><span className="tag-prefixo">{a.prefixo}</span></td>
                           <td>{(a.peso*100).toFixed(1)}%</td>
                           <td style={{color:'var(--txt2)'}}>{a.gerente||'—'}</td>
+                          <td style={{color:'var(--txt2)'}}>{a.resp_processo||'—'}</td>
                           <td><div style={{display:'flex',gap:6}}><button className="btn-tbl-edit" onClick={()=>setEditandoArea({...a})}>✏</button><button className="btn-tbl-del" onClick={()=>removerArea(a.id)}>✕</button></div></td>
                         </tr>
                       )
                     ))}
-                    {!areas.length && <tr><td colSpan={5} style={{textAlign:'center',color:'var(--txt3)',padding:24}}>Nenhuma área cadastrada.</td></tr>}
+                    {!areas.length && <tr><td colSpan={6} style={{textAlign:'center',color:'var(--txt3)',padding:24}}>Nenhuma área cadastrada.</td></tr>}
                   </tbody>
                 </table>
               </div>
