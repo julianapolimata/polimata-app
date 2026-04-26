@@ -519,6 +519,8 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
   const limparFiltros = () => { setBusca(''); setFiltroArea(''); setFiltroCrit(''); setFiltroImp(''); setFiltroProb(''); setFiltroR1(''); setFiltroNivel(''); setFiltroFase(''); setFiltroStatus('') }
   const temFiltro = busca || filtroArea || filtroCrit || filtroImp || filtroProb || filtroR1 || filtroNivel || filtroFase || filtroStatus
 
+  const FS = { background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit', fontSize: 10, color: 'var(--lt-text2)', cursor: 'pointer', outline: 'none' }
+
   if (loading) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:300,color:'var(--txt3)' }}><div className="spinner" style={{marginRight:10}}/><span>Carregando MRC…</span></div>
   if (erro) return <div style={{ padding:32,color:'var(--in)' }}>Erro ao carregar MRC: {erro}</div>
 
@@ -539,71 +541,137 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
       </div>
 
       {(() => {
-        const ef = mrc.filter(r => r.r1 === 'Efetivo').length
-        const inf = mrc.filter(r => r.r1 === 'Inefetivo').length
-        const gp = mrc.filter(r => r.r1 === 'GAP').length
+        const ef = mrc.filter(r => (r.r1||'').toLowerCase() === 'efetivo').length
+        const inf = mrc.filter(r => (r.r1||'').toLowerCase() === 'inefetivo').length
+        const gp = mrc.filter(r => { const v = (r.r1||'').toLowerCase(); return v === 'gap' || v === 'gap de processo' }).length
         const cr4 = mrc.filter(r => r.crit === 4).length
         const cr3 = mrc.filter(r => r.crit === 3).length
         const cr2 = mrc.filter(r => r.crit === 2).length
         const cr1 = mrc.filter(r => r.crit === 1).length
-        const KS = { grid: { flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: '1fr 1fr', gap: 8 }, card: { background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }, lbl: { fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--lt-text3)', marginBottom: 4 }, val: { fontSize: 28, fontWeight: 300, lineHeight: 1 }, sub: { fontSize: 10, color: 'var(--lt-text3)', marginTop: 4 } }
+        // Heatmap 4×4 inline (mesmo estilo PorArea)
+        const IMP_L = ['Crítico', 'Alto', 'Moderado', 'Baixo']
+        const PRB_L = ['Baixa', 'Média', 'Alta', 'Extrema']
+        const CRIT_L = ['Crítico', 'Significativo', 'Moderado', 'Baixo']
+        const CRIT_C = ['#EF4444', '#F97316', '#EAB308', '#22C55E']
+        const HC = [
+          ['#FFC000','#FF0000','#FF0000','#FF0000'],
+          ['#00B050','#FFC000','#FF0000','#FF0000'],
+          ['#00B050','#00B050','#FFC000','#FF0000'],
+          ['#00B050','#00B050','#00B050','#FFC000'],
+        ]
+        const impIdx = v => ({ 'Crítico':0,'Alto':1,'Moderado':2,'Baixo':3 }[v] ?? -1)
+        const prbIdx = v => ({ 'Baixa':0,'Média':1,'Alta':2,'Extrema':3 }[v] ?? -1)
+        const hmGrid = Array.from({ length: 4 }, () => Array(4).fill(0))
+        mrc.forEach(r => { const ri = impIdx(r.imp), ci = prbIdx(r.prob); if (ri >= 0 && ci >= 0) hmGrid[ri][ci]++ })
+
+        const ZS = {
+          zona: { display: 'flex', gap: 10, flexShrink: 0, margin: '6px 0 8px' },
+          heatCard: { background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' },
+          title: { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--copper)', marginBottom: 8 },
+          yLabels: { display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingRight: 6, width: 55, flexShrink: 0 },
+          yLabel: { fontSize: 8, fontWeight: 600, color: 'var(--lt-text3)', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flex: 1 },
+          gridWrap: { flex: 1, display: 'flex', flexDirection: 'column', gap: 2 },
+          row: { display: 'flex', gap: 2, flex: 1 },
+          cell: { flex: 1, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', minHeight: 36, cursor: 'pointer' },
+          xLabels: { display: 'flex', paddingLeft: 61, paddingTop: 4, gap: 2 },
+          xLabel: { flex: 1, textAlign: 'center', fontSize: 8, fontWeight: 600, color: 'var(--lt-text3)' },
+          legend: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--lt-border)' },
+          legItem: { display: 'flex', alignItems: 'center', gap: 4, fontSize: 8, color: 'var(--lt-text3)' },
+          kpiGrid: { flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: '1fr 1fr', gap: 8 },
+          kpiCard: { background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)', cursor: 'pointer' },
+          kpiLbl: { fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--lt-text3)', marginBottom: 4 },
+          kpiVal: { fontSize: 28, fontWeight: 300, lineHeight: 1 },
+          kpiSub: { fontSize: 10, color: 'var(--lt-text3)', marginTop: 4 },
+        }
+
         return (
-          <div className="mrc-hm-compact" style={{ display: 'flex', gap: 12, alignItems: 'stretch', marginBottom: 14 }}>
-            <div style={{ flex: 'none', width: '45%' }}>
-              <Heatmap data={filtered} filtroImp={filtroImp} filtroProb={filtroProb} onFilterCell={handleHeatmapCell} />
+          <div style={ZS.zona}>
+            {/* HEATMAP compacto */}
+            <div style={ZS.heatCard}>
+              <div style={ZS.title}>Mapa de Calor — Impacto × Probabilidade</div>
+              <div style={{ display: 'flex', flex: 1 }}>
+                <div style={ZS.yLabels}>
+                  {IMP_L.map(l => <div key={l} style={ZS.yLabel}>{l}</div>)}
+                </div>
+                <div style={ZS.gridWrap}>
+                  {hmGrid.map((row, ri) => (
+                    <div key={ri} style={ZS.row}>
+                      {row.map((val, ci) => {
+                        const imp = IMP_L[ri], prob = PRB_L[ci]
+                        const sel = filtroImp === imp && filtroProb === prob
+                        return (
+                          <div key={ci}
+                            style={{ ...ZS.cell, background: val === 0 ? 'rgba(10,37,64,0.04)' : HC[ri][ci], opacity: val === 0 ? 0.35 : 1, outline: sel ? '2px solid var(--copper)' : 'none', outlineOffset: -2 }}
+                            onClick={() => handleHeatmapCell(imp, prob, sel)}>
+                            {val}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={ZS.xLabels}>
+                {PRB_L.map(l => <div key={l} style={ZS.xLabel}>{l}</div>)}
+              </div>
+              <div style={{ textAlign: 'center', marginTop: 1, fontSize: 7, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--lt-text3)' }}>Probabilidade →</div>
+              <div style={ZS.legend}>
+                {CRIT_L.map((l, i) => (
+                  <div key={l} style={ZS.legItem}>
+                    <div style={{ width: 8, height: 8, borderRadius: 2, background: CRIT_C[i] }} />
+                    {l}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={KS.grid}>
-              <div style={{ ...KS.card, borderTopColor: '#22C55E', cursor: 'pointer' }} onClick={() => setFiltroNivel(filtroNivel === 'N5' ? '' : 'N5')}>
-                <div style={KS.lbl}>Efetivos</div>
-                <div style={{ ...KS.val, color: '#22C55E' }}>{ef}</div>
-                <div style={KS.sub}>{mrc.length > 0 ? Math.round(ef / mrc.length * 100) : 0}% do total</div>
+
+            {/* KPI GRID 3×2 */}
+            <div style={ZS.kpiGrid}>
+              <div style={{ ...ZS.kpiCard, borderTopColor: '#22C55E' }} onClick={() => setFiltroNivel(filtroNivel === 'N5' ? '' : 'N5')}>
+                <div style={ZS.kpiLbl}>Efetivos</div>
+                <div style={{ ...ZS.kpiVal, color: '#22C55E' }}>{ef}</div>
+                <div style={ZS.kpiSub}>{mrc.length > 0 ? Math.round(ef / mrc.length * 100) : 0}% do total</div>
               </div>
-              <div style={{ ...KS.card, borderTopColor: '#FACC15', cursor: 'pointer' }} onClick={() => setFiltroNivel(filtroNivel === 'N1' ? '' : 'N1')}>
-                <div style={KS.lbl}>Inefetivos</div>
-                <div style={{ ...KS.val, color: '#B8860B' }}>{inf}</div>
-                <div style={KS.sub}>Aguardam ação corretiva</div>
+              <div style={{ ...ZS.kpiCard, borderTopColor: '#FACC15' }} onClick={() => setFiltroNivel(filtroNivel === 'N1' ? '' : 'N1')}>
+                <div style={ZS.kpiLbl}>Inefetivos</div>
+                <div style={{ ...ZS.kpiVal, color: '#B8860B' }}>{inf}</div>
+                <div style={ZS.kpiSub}>Aguardam ação corretiva</div>
               </div>
-              <div style={{ ...KS.card, borderTopColor: '#EF4444', cursor: 'pointer' }} onClick={() => setFiltroNivel(filtroNivel === 'N2' ? '' : 'N2')}>
-                <div style={KS.lbl}>GAP</div>
-                <div style={{ ...KS.val, color: '#DC2626' }}>{gp}</div>
-                <div style={KS.sub}>Riscos sem controle</div>
+              <div style={{ ...ZS.kpiCard, borderTopColor: '#EF4444' }} onClick={() => setFiltroNivel(filtroNivel === 'N2' ? '' : 'N2')}>
+                <div style={ZS.kpiLbl}>GAP</div>
+                <div style={{ ...ZS.kpiVal, color: '#DC2626' }}>{gp}</div>
+                <div style={ZS.kpiSub}>Riscos sem controle</div>
               </div>
-              <div style={{ ...KS.card, borderTopColor: '#EF4444' }}>
-                <div style={KS.lbl}>Risco Crítico</div>
-                <div style={{ ...KS.val, color: '#DC2626' }}>{cr4}</div>
+              <div style={{ ...ZS.kpiCard, borderTopColor: '#EF4444', cursor: 'default' }}>
+                <div style={ZS.kpiLbl}>Risco Crítico</div>
+                <div style={{ ...ZS.kpiVal, color: '#DC2626' }}>{cr4}</div>
               </div>
-              <div style={{ ...KS.card, borderTopColor: '#F97316' }}>
-                <div style={KS.lbl}>Risco Significativo</div>
-                <div style={{ ...KS.val, color: '#EA580C' }}>{cr3}</div>
+              <div style={{ ...ZS.kpiCard, borderTopColor: '#F97316', cursor: 'default' }}>
+                <div style={ZS.kpiLbl}>Risco Significativo</div>
+                <div style={{ ...ZS.kpiVal, color: '#EA580C' }}>{cr3}</div>
               </div>
-              <div style={{ ...KS.card, borderTopColor: '#EAB308' }}>
-                <div style={KS.lbl}>Moderado + Baixo</div>
-                <div style={{ ...KS.val, color: '#B8860B' }}>{cr2 + cr1}</div>
-                <div style={KS.sub}>{cr2} moderado · {cr1} baixo</div>
+              <div style={{ ...ZS.kpiCard, borderTopColor: '#EAB308', cursor: 'default' }}>
+                <div style={ZS.kpiLbl}>Moderado + Baixo</div>
+                <div style={{ ...ZS.kpiVal, color: '#B8860B' }}>{cr2 + cr1}</div>
+                <div style={ZS.kpiSub}>{cr2} moderado · {cr1} baixo</div>
               </div>
             </div>
           </div>
         )
       })()}
 
-      <div className="card">
-        <div className="filters">
-          <input type="text" placeholder="Buscar ref., área, risco, controle, inconsistência, passos…" value={busca} onChange={e => setBusca(e.target.value)} />
-          <select value={filtroCrit} onChange={e => setFiltroCrit(e.target.value)}><option value="">Todas criticidades</option><option value="4">Crítico</option><option value="3">Significativo</option><option value="2">Moderado</option><option value="1">Baixo</option></select>
-          <select value={filtroFase} onChange={e => setFiltroFase(e.target.value)}><option value="">Todas as fases</option>{fasesDisponiveis.map(f => <option key={f} value={f}>{f}</option>)}</select>
-          <select value={filtroR1} onChange={e => setFiltroR1(e.target.value)}><option value="">Todos resultados</option><option>Efetivo</option><option>Inefetivo</option><option>GAP</option><option>Teste Não Realizado</option></select>
-          <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)}><option value="">Todos status</option>{statusDisponiveis.map(s => <option key={s} value={s}>{s}</option>)}</select>
-          <span className="chip">{filtered.length} controles</span>
-        </div>
-
-        <div className="mrc-actions" style={{ padding:'8px 14px',borderBottom:'1px solid var(--brd)' }}>
-          <button className="btn btn-xs" onClick={() => setExpandAll(o => !o)}>⊞ {expandAll ? 'Recolher Tudo' : 'Expandir Tudo'}</button>
-          {temFiltro && <button className="btn btn-ghost btn-sm" onClick={limparFiltros}>✕ Limpar filtros</button>}
-          <div className="mrc-actions-right">
-            <button className="btn-export btn-export-xl" title="Exportar para Excel" onClick={() => exportarMRCExcel(filtered, 'MRC_Completa_' + new Date().toISOString().slice(0,10), 'MRC Completa', clienteNome, projetoNome)}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>Excel</button>
-
-            <div className="col-panel-wrap"><button className="btn btn-xs" onClick={() => setColPanelOpen(o => !o)}>⊞ Colunas</button><ColunasPanel visCols={visCols} setVisCols={setVisCols} open={colPanelOpen} onClose={() => setColPanelOpen(false)} /></div>
-          </div>
+      <div style={{ flex: 1, minHeight: 0, background: 'var(--lt-card)', borderRadius: 12, border: '1px solid var(--lt-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', padding: '8px 14px', borderBottom: '1px solid var(--lt-border)' }}>
+          <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar ref., área, risco, controle, inconsistência, passos…" style={{ flex: 1, minWidth: 200, background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '6px 10px', fontFamily: 'inherit', fontSize: 11, outline: 'none', color: 'var(--lt-text)' }} />
+          <select value={filtroCrit} onChange={e => setFiltroCrit(e.target.value)} style={FS}><option value="">Todas criticidades</option><option value="4">Crítico</option><option value="3">Significativo</option><option value="2">Moderado</option><option value="1">Baixo</option></select>
+          <select value={filtroFase} onChange={e => setFiltroFase(e.target.value)} style={FS}><option value="">Todas as fases</option>{fasesDisponiveis.map(f => <option key={f} value={f}>{f}</option>)}</select>
+          <select value={filtroR1} onChange={e => setFiltroR1(e.target.value)} style={FS}><option value="">Todos resultados</option><option>Efetivo</option><option>Inefetivo</option><option>GAP</option><option>Teste Não Realizado</option></select>
+          <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={FS}><option value="">Todos status</option>{statusDisponiveis.map(s => <option key={s} value={s}>{s}</option>)}</select>
+          <div style={{ fontSize: 10, color: 'var(--lt-text3)', background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 10px' }}>{filtered.length} controles</div>
+          {temFiltro && <button onClick={limparFiltros} style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 999, padding: '4px 10px', fontSize: 10, fontWeight: 600, color: '#DC2626', cursor: 'pointer', fontFamily: 'inherit' }}>✕ Limpar filtros</button>}
+          <button onClick={() => setExpandAll(o => !o)} style={{ background: 'rgba(0,32,62,0.06)', border: '1px solid rgba(0,32,62,0.15)', borderRadius: 999, padding: '4px 10px', fontSize: 10, fontWeight: 600, color: 'var(--lt-text2)', cursor: 'pointer', fontFamily: 'inherit' }}>⊞ {expandAll ? 'Recolher' : 'Expandir'}</button>
+          <button onClick={() => exportarMRCExcel(filtered, 'MRC_Completa_' + new Date().toISOString().slice(0,10), 'MRC Completa', clienteNome, projetoNome)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(204,145,94,0.1)', border: '1px solid rgba(204,145,94,0.25)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' }} title="Exportar Excel"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>Excel</button>
+          <div className="col-panel-wrap"><button style={{ background: 'rgba(0,32,62,0.06)', border: '1px solid rgba(0,32,62,0.15)', borderRadius: 999, padding: '4px 10px', fontSize: 10, fontWeight: 600, color: 'var(--lt-text2)', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => setColPanelOpen(o => !o)}>⊞ Colunas</button><ColunasPanel visCols={visCols} setVisCols={setVisCols} open={colPanelOpen} onClose={() => setColPanelOpen(false)} /></div>
         </div>
 
         {isLimited && <div className="warn-strip">Exibindo {MAX_ROWS} de {filtered.length} — refine os filtros</div>}

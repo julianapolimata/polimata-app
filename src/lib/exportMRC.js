@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs'
-import { getFaseLabel as getFaseLabelUtil } from './fases'
+import { getFaseLabel as getFaseLabelUtil, getFaseInfo } from './fases'
+import { getStatusConfig } from './statusWorkflow'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPORT MRC PARA EXCEL (.xlsx) — Polímata brand
@@ -51,7 +52,15 @@ const MRC_COLUMNS = [
   { key: 'imp', header: 'Impacto', width: 12 },
   { key: 'prob', header: 'Probabilidade', width: 14 },
   { key: 'crit_label', header: 'Criticidade', width: 16 },
+  { key: 'hist_f1', header: 'F1 Diagnóstico', width: 14 },
+  { key: 'hist_f2d', header: 'F2 Desenho', width: 14 },
+  { key: 'hist_f2a', header: 'F2 Aderência', width: 14 },
+  { key: 'hist_f3', header: 'F3 Revisão', width: 14 },
+  { key: 'hist_f4c1', header: 'F4 Ciclo 1', width: 14 },
+  { key: 'hist_f4c2', header: 'F4 Ciclo 2', width: 14 },
+  { key: 'hist_f5', header: 'F5 Auditoria', width: 14 },
   { key: 'fase', header: 'Fase Atual', width: 24 },
+  { key: 'status_atual', header: 'Status Atual', width: 18 },
 ]
 
 const CRIT_LABEL_MAP = { 4: '4. Crítico', 3: '3. Significativo', 2: '2. Moderado', 1: '1. Baixo' }
@@ -417,6 +426,25 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
 
       if (col.key === 'fase') {
         value = getFaseLabel(row)
+      } else if (col.key === 'status_atual') {
+        const cfg = getStatusConfig(row.status_workflow, 'admin_polimata')
+        value = cfg.label || '—'
+      } else if (col.key === 'hist_f1') {
+        value = row.r1 || '—'
+      } else if (col.key === 'hist_f2d') {
+        const f1Ef = (row.r1 || '').toLowerCase() === 'efetivo'
+        value = f1Ef ? 'N/A' : (row.st_pa || '—')
+      } else if (col.key === 'hist_f2a') {
+        const f1Ef = (row.r1 || '').toLowerCase() === 'efetivo'
+        value = f1Ef ? 'N/A' : (row.r_ader || '—')
+      } else if (col.key === 'hist_f3') {
+        value = row.r3 || '—'
+      } else if (col.key === 'hist_f4c1') {
+        value = row.r_f4c1 || '—'
+      } else if (col.key === 'hist_f4c2') {
+        value = row.r_f4c2 || '—'
+      } else if (col.key === 'hist_f5') {
+        value = row.r_f5 || '—'
       } else if (col.key === 'crit_label') {
         value = row.crit_label || CRIT_LABEL_MAP[row.crit] || '—'
       } else if (col.key === 'dt_ult') {
@@ -438,7 +466,7 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
       if (col.key === 'rr' || col.key === 'rc') {
         cell.font = { ...GOLD_FONT }
       }
-      if (col.key === 'r1') {
+      if (col.key === 'r1' || col.key.startsWith('hist_f')) {
         const cor = getResultadoColor(value)
         if (cor) cell.font = { ...BODY_FONT, bold: true, color: cor }
       }

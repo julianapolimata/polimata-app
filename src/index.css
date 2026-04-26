@@ -517,7 +517,7 @@ th.th-sort.sorted .sort-arrow { opacity: 1; color: var(--copper); }
 /* ══════════════════════════════════════════════
    MRC COMPLETA (LIGHT)
 ══════════════════════════════════════════════ */
-.mrc-wrap { padding: 0 32px 24px; }
+.mrc-wrap { padding: 0 20px 12px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-family: 'Montserrat', sans-serif; }
 
 /* Header bar — título + stats na mesma linha */
 .mrc-header-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 14px; position: sticky; top: 0; z-index: 40; background: var(--lt-bg); }
