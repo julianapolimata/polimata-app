@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { exportarMRCExcel } from '../lib/exportMRC'
 import { getFaseInfo as getFaseInfoUtil } from '../lib/fases'
 import { useSort, useColumnResize } from '../lib/useTableFeatures'
+import { getStatusConfig } from '../lib/statusWorkflow'
 
 // ─── CONSTANTES ──────────────────────────────────────────────────────────────
 
@@ -75,6 +76,9 @@ const COL_GROUPS = [
     { id: 'hist_f4c1', label: 'Fase 4 AI - Ciclo 1', default: true },
     { id: 'hist_f4c2', label: 'Fase 4 AI - Ciclo 2', default: true },
     { id: 'hist_f5', label: 'Fase 5 Auditoria Interna', default: true },
+  ]},
+  { label: 'Status', cols: [
+    { id: 'status_atual', label: 'Status Atual', default: true },
   ]},
 ]
 
@@ -366,6 +370,7 @@ const MRC_COLS = [
   { id:'hist_f4c1', label:'Fase 4\nAI - Ciclo 1', k:'r_f4c1', fase: true },
   { id:'hist_f4c2', label:'Fase 4\nAI - Ciclo 2', k:'r_f4c2', fase: true },
   { id:'hist_f5', label:'Fase 5\nAuditoria Interna', k:'r_f5', fase: true },
+  { id:'status_atual', label:'Status Atual', k:'status_workflow' },
 ]
 
 function faseBadge(val) {
@@ -453,6 +458,18 @@ function TabelaMRC({ rows, visCols, onOpenModal, expandAll }) {
               {faseBadge(getFaseVal(row, fid))}
             </td>
           ))}
+          {v('status_atual') && (() => {
+            const fi = getFaseInfo(row)
+            const cfg = getStatusConfig(row.status_workflow, 'admin_polimata')
+            return (
+              <td key="status_atual" style={{ minWidth: getWidth('status_atual', 140), textAlign: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <span style={{ fontSize: 8, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{fi.nome}</span>
+                  <span style={{ fontSize: 8, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>{cfg.label}</span>
+                </div>
+              </td>
+            )
+          })()}
         </tr>
       ))}
     </tbody></table></div>
@@ -466,6 +483,7 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
   const [busca, setBusca] = useState(''); const [filtroArea, setFiltroArea] = useState(''); const [filtroCrit, setFiltroCrit] = useState('')
   const [filtroImp, setFiltroImp] = useState(''); const [filtroProb, setFiltroProb] = useState(''); const [filtroR1, setFiltroR1] = useState(''); const [filtroNivel, setFiltroNivel] = useState('')
   const [filtroFase, setFiltroFase] = useState('')
+  const [filtroStatus, setFiltroStatus] = useState('')
   const [visCols, setVisCols] = useState(new Set(DEFAULT_COLS)); const [colPanelOpen, setColPanelOpen] = useState(false)
   const [expandAll, setExpandAll] = useState(false); const [modalRow, setModalRow] = useState(null)
 
@@ -488,16 +506,18 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
     if (filtroR1 && r.r1 !== filtroR1) return false
     if (filtroNivel) { const nivel = NIVEIS.find(n => n.id === filtroNivel); if (nivel && r.r1 !== nivel.resultado) return false }
     if (filtroFase) { const fi = getFaseInfo(r); if (fi.label !== filtroFase) return false }
+    if (filtroStatus) { const cfg = getStatusConfig(r.status_workflow, 'admin_polimata'); if (cfg.label !== filtroStatus) return false }
     if (busca) { const q = busca.toLowerCase(); return (r.rr||'').toLowerCase().includes(q)||(r.rc||'').toLowerCase().includes(q)||(r.area||'').toLowerCase().includes(q)||(r.sub||'').toLowerCase().includes(q)||(r.dr||'').toLowerCase().includes(q)||(r.dc||'').toLowerCase().includes(q)||(r.incons||'').toLowerCase().includes(q)||(r.passos_f1||'').toLowerCase().includes(q) }
     return true
   })
 
   const fasesDisponiveis = [...new Set(mrc.map(r => getFaseInfo(r).label))].sort()
+  const statusDisponiveis = [...new Set(mrc.map(r => getStatusConfig(r.status_workflow, 'admin_polimata').label).filter(v => v && v !== '—'))].sort()
 
   const visibleRows = filtered.slice(0, MAX_ROWS); const isLimited = filtered.length > MAX_ROWS
   const handleHeatmapCell = (imp, prob, sel) => { if (sel) { setFiltroImp(''); setFiltroProb('') } else { setFiltroImp(imp); setFiltroProb(prob) } }
-  const limparFiltros = () => { setBusca(''); setFiltroArea(''); setFiltroCrit(''); setFiltroImp(''); setFiltroProb(''); setFiltroR1(''); setFiltroNivel(''); setFiltroFase('') }
-  const temFiltro = busca || filtroArea || filtroCrit || filtroImp || filtroProb || filtroR1 || filtroNivel || filtroFase
+  const limparFiltros = () => { setBusca(''); setFiltroArea(''); setFiltroCrit(''); setFiltroImp(''); setFiltroProb(''); setFiltroR1(''); setFiltroNivel(''); setFiltroFase(''); setFiltroStatus('') }
+  const temFiltro = busca || filtroArea || filtroCrit || filtroImp || filtroProb || filtroR1 || filtroNivel || filtroFase || filtroStatus
 
   if (loading) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:300,color:'var(--txt3)' }}><div className="spinner" style={{marginRight:10}}/><span>Carregando MRC…</span></div>
   if (erro) return <div style={{ padding:32,color:'var(--in)' }}>Erro ao carregar MRC: {erro}</div>
@@ -572,6 +592,7 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
           <select value={filtroCrit} onChange={e => setFiltroCrit(e.target.value)}><option value="">Todas criticidades</option><option value="4">Crítico</option><option value="3">Significativo</option><option value="2">Moderado</option><option value="1">Baixo</option></select>
           <select value={filtroFase} onChange={e => setFiltroFase(e.target.value)}><option value="">Todas as fases</option>{fasesDisponiveis.map(f => <option key={f} value={f}>{f}</option>)}</select>
           <select value={filtroR1} onChange={e => setFiltroR1(e.target.value)}><option value="">Todos resultados</option><option>Efetivo</option><option>Inefetivo</option><option>GAP</option><option>Teste Não Realizado</option></select>
+          <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)}><option value="">Todos status</option>{statusDisponiveis.map(s => <option key={s} value={s}>{s}</option>)}</select>
           <span className="chip">{filtered.length} controles</span>
         </div>
 

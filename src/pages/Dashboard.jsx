@@ -543,6 +543,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   const [filtImp, setFiltImp] = useState('')
   const [filtRes, setFiltRes] = useState('')
   const [filtFase, setFiltFase] = useState('')
+  const [filtStatus, setFiltStatus] = useState('')
   const [simularPerfil, setSimularPerfil] = useState(null)
   const [modalRow, setModalRow] = useState(null)
   const [atualizarRow, setAtualizarRow] = useState(null)
@@ -613,6 +614,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
     if (filtImp && String(c.imp||'') !== filtImp) return false
     if (filtRes) { const rg = getResultadoGeral(c); if (!rg || rg !== filtRes) return false }
     if (filtFase) { const fc = getFaseCodigo(c); if (fc !== filtFase) return false }
+    if (filtStatus) { const cfg = getStatusBadge(c.status_workflow); if (cfg.label !== filtStatus) return false }
     return true
   })
 
@@ -620,6 +622,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   const imps = [...new Set(area.controles.map(c => String(c.imp||'')).filter(v => v))].sort()
   const ress = [...new Set(area.controles.map(c => { const r = getResultadoGeral(c); return r ? String(r) : '' }).filter(v => v))].sort()
   const fasesDisponiveis = [...new Set(area.controles.map(c => getFaseCodigo(c)).filter(v => v))].sort()
+  const statusDisponiveis = [...new Set(area.controles.map(c => getStatusBadge(c.status_workflow).label).filter(v => v && v !== '—'))].sort()
 
   function faseLabel(c) {
     if (c.r_f5 && c.r_f5 !== 'Teste Não Realizado') return { f: 'Auditoria Independente', s: c.r_f5 }
@@ -748,6 +751,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
         <select value={filtCrit} onChange={e => setFiltCrit(e.target.value)} style={PA.filtroSel}><option value="">Todas criticidades</option>{crits.map(c => <option key={c} value={c}>{c}</option>)}</select>
         <select value={filtFase} onChange={e => setFiltFase(e.target.value)} style={PA.filtroSel}><option value="">Todas as fases</option>{fasesDisponiveis.map(f => <option key={f} value={f}>{f}</option>)}</select>
         <select value={filtRes} onChange={e => setFiltRes(e.target.value)} style={PA.filtroSel}><option value="">Todos resultados</option>{ress.map(c => <option key={c} value={c}>{c}</option>)}</select>
+        <select value={filtStatus} onChange={e => setFiltStatus(e.target.value)} style={PA.filtroSel}><option value="">Todos status</option>{statusDisponiveis.map(s => <option key={s} value={s}>{s}</option>)}</select>
         <div style={{ fontSize: 10, color: 'var(--lt-text3)', background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 10px' }}>{cf.length} controles</div>
         {canEdit && <button onClick={() => setModalNovoRisco(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(0,32,62,0.08)', border: '1px solid rgba(0,32,62,0.2)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: '#00203E', cursor: 'pointer', fontFamily: 'inherit' }} title="Criar novo risco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Risco</button>}
         <button onClick={() => exportarMRCExcel(cf, `MRC_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`, nome, projeto?.clientes?.nome || '', projeto?.nome || '')} style={PA.btnExport} title="Exportar Excel da área">
@@ -804,7 +808,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
                   <span className="resize-handle" onClick={e => e.stopPropagation()} onMouseDown={e => paResize.onResizeStart(e, col.k)} />
                 </th>
               })}
-              <th style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--lt-text3)', background: 'var(--lt-card)', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 2, width: 90, minWidth: 90, borderBottom: '1px solid var(--lt-border)', textAlign: 'center' }}>Ações</th>
+              <th style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--lt-text3)', background: 'var(--lt-card)', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 2, width: 140, minWidth: 140, borderBottom: '1px solid var(--lt-border)', textAlign: 'center' }}>Status Atual</th>
             </tr></thead>
             <tbody>{paSort.sortData(cf).map((c, i) => {
               const faseBdg = (val) => {
@@ -832,26 +836,25 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
                     </td>
                   ))
                 })()}
-                <td style={{ ...tdS, textAlign: 'center', width: 90, minWidth: 90 }}>
-                  {isCliente ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
-                      {(() => {
-                        const cfg = getStatusBadge(c.status_workflow)
-                        return <span style={{ fontSize: 8, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>{cfg.label}</span>
-                      })()}
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
-                      {canEdit && canEditControl(c.status_workflow) && <button onClick={e => { e.stopPropagation(); setAtualizarRow(c) }} style={{ background: 'rgba(204,145,94,0.08)', border: '1px solid rgba(204,145,94,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Atualizar</button>}
-                      {canEdit && canRegisterResult(c.status_workflow) && <button onClick={e => { e.stopPropagation(); setRowRegistrarResultado(c) }} style={{ background: 'rgba(204,145,94,0.08)', border: '1px solid rgba(204,145,94,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Resultado</button>}
-                      {canEdit && isDevolvido(c.status_workflow) && <button onClick={e => { e.stopPropagation(); setRowRegistrarResultado(c) }} style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 600, color: '#DC2626', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>↩ Editar</button>}
-                      {isAdmin && isAguardandoRevisao(c.status_workflow) && <button onClick={e => { e.stopPropagation(); setRowRevisar(c) }} style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 700, color: '#2563EB', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>🔍 Revisar</button>}
-                      {(() => {
-                        const cfg = getStatusBadge(c.status_workflow)
-                        return <span style={{ fontSize: 8, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>{cfg.label}</span>
-                      })()}
-                    </div>
-                  )}
+                <td style={{ ...tdS, textAlign: 'center', width: 140, minWidth: 140 }}>
+                  {(() => {
+                    const fl = faseLabel(c)
+                    const cfg = getStatusBadge(c.status_workflow)
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
+                        <span style={{ fontSize: 8, fontWeight: 600, color: 'var(--lt-text3)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{fl.f}</span>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>{cfg.label}</span>
+                        {!isCliente && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', marginTop: 2 }}>
+                            {canEdit && canEditControl(c.status_workflow) && <button onClick={e => { e.stopPropagation(); setAtualizarRow(c) }} style={{ background: 'rgba(204,145,94,0.08)', border: '1px solid rgba(204,145,94,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Atualizar</button>}
+                            {canEdit && canRegisterResult(c.status_workflow) && <button onClick={e => { e.stopPropagation(); setRowRegistrarResultado(c) }} style={{ background: 'rgba(204,145,94,0.08)', border: '1px solid rgba(204,145,94,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Resultado</button>}
+                            {canEdit && isDevolvido(c.status_workflow) && <button onClick={e => { e.stopPropagation(); setRowRegistrarResultado(c) }} style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 600, color: '#DC2626', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>↩ Editar</button>}
+                            {isAdmin && isAguardandoRevisao(c.status_workflow) && <button onClick={e => { e.stopPropagation(); setRowRevisar(c) }} style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 700, color: '#2563EB', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>🔍 Revisar</button>}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </td>
               </tr>)})}{cf.length === 0 && <tr><td colSpan={16} style={{ padding: 32, textAlign: 'center', color: 'var(--lt-text3)' }}>Nenhum controle encontrado.</td></tr>}</tbody>
           </table>
