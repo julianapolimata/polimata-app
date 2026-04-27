@@ -820,8 +820,8 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
 
       {/* TABELA MRC */}
       <div style={PA.tabelaWrap}>
-        <div style={{ flex: 1, overflowX: 'scroll', overflowY: 'auto', minHeight: 0 }}>
-          <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ flex: 1, overflowX: 'scroll', overflowY: 'auto', minHeight: 0, transform: 'scaleY(-1)' }}>
+          <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', transform: 'scaleY(-1)' }}>
             <thead><tr>
               {PA_DATA_COLS.map((col, i) =>
                 <th key={i} style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--lt-text3)', background: 'var(--lt-card)', padding: '12px 12px', textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 2, width: col.w, minWidth: col.w, borderBottom: '1px solid var(--lt-border)', cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort(col.k)}>{col.h}{sortArrow(col.k)}</th>)}

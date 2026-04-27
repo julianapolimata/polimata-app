@@ -504,10 +504,10 @@ tr:hover td { background: rgba(204,145,94,0.03); }
 /* ══════════════════════════════════════════════
    MRC COMPLETA (LIGHT)
 ══════════════════════════════════════════════ */
-.mrc-wrap { padding: 0 32px 24px; }
+.mrc-wrap { padding: 0 20px 12px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-family: 'Montserrat', sans-serif; }
 
 /* Header bar — título + stats na mesma linha */
-.mrc-header-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 14px; position: sticky; top: 0; z-index: 40; background: var(--lt-bg); }
+.mrc-header-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 14px; flex-shrink: 0; z-index: 40; background: var(--lt-bg); }
 .mrc-header-bar .dash-eye { margin-bottom: 2px; }
 .mrc-header-bar .dash-ttl { font-size: 18px; }
 .mrc-header-stats { display: flex; gap: 20px; }

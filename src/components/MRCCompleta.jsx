@@ -386,8 +386,8 @@ function TabelaMRC({ rows, onOpenModal }) {
 
   const thClick = { cursor: 'pointer', userSelect: 'none' }
   return (
-    <div style={{ flex: 1, overflowX: 'scroll', overflowY: 'auto', minHeight: 0 }}>
-      <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
+    <div style={{ flex: 1, overflowX: 'scroll', overflowY: 'auto', minHeight: 0, transform: 'scaleY(-1)' }}>
+      <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', transform: 'scaleY(-1)' }}>
         <thead><tr>
           {MRC_DATA_COLS.map((col, i) => <th key={i} style={{ ...mrcThS, width: col.w, minWidth: col.w, ...thClick }} onClick={() => toggle(col.k)}>{col.h}{arrow(col.k)}</th>)}
           {MRC_FASE_HDR.map((f, i) => <th key={`f${i}`} style={{ ...mrcFaseThS, background: f.bg, ...thClick }} onClick={() => toggle(MRC_FASE_KEYS[i])}>{f.h}{arrow(MRC_FASE_KEYS[i])}</th>)}
