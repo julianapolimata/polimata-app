@@ -519,8 +519,8 @@ tr:hover td { background: rgba(204,145,94,0.03); }
 .mrc-hm-compact .hm-wrap { margin-bottom: 12px; }
 .mrc-hm-compact .hm-cell { min-height: 44px; padding: 4px 4px; }
 .mrc-hm-compact .hm-n { font-size: 15px; }
-.mrc-hm-compact .hm-eig { font-size: 8px; gap: 3px; }
-.mrc-hm-compact .hm-ylabel { min-height: 44px; font-size: 9px; }
+.mrc-hm-compact .hm-eig { font-size: 9px; gap: 3px; }
+.mrc-hm-compact .hm-ylabel { min-height: 44px; font-size: 10px; }
 .mrc-hm-compact .hm-legend { gap: 4px; min-width: 130px; }
 .mrc-hm-compact .hm-leg { padding: 6px 10px; }
 .mrc-hm-compact .hm-lnum { font-size: 14px; }
