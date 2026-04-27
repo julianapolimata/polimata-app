@@ -1,6 +1,6 @@
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { getFaseNumero } from '../lib/fases'
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom'
 import Configuracoes from './Configuracoes'
@@ -558,6 +558,10 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   const [rowRegistrarResultado, setRowRegistrarResultado] = useState(null)
   const [rowRevisar, setRowRevisar] = useState(null)
   const [dashCollapsed, setDashCollapsed] = useState(false)
+  const topBarRef = useRef(null)
+  const tableScrollRef = useRef(null)
+  const syncing = useRef(false)
+  const syncScroll = (src, dst) => { if (syncing.current) return; syncing.current = true; if (dst.current) dst.current.scrollLeft = src.current.scrollLeft; syncing.current = false }
   const papelAtivo = simularPerfil || perfil?.papel
   const canEdit = papelAtivo === 'admin_polimata' || papelAtivo === 'consultor_polimata'
   const isAdmin = papelAtivo === 'admin_polimata'
@@ -820,8 +824,9 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
 
       {/* TABELA MRC */}
       <div style={PA.tabelaWrap}>
-        <div style={{ flex: 1, overflowX: 'scroll', overflowY: 'auto', minHeight: 0, transform: 'scaleY(-1)' }}>
-          <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', transform: 'scaleY(-1)' }}>
+        <div ref={topBarRef} onScroll={() => syncScroll(topBarRef, tableScrollRef)} style={{ overflowX: 'auto', overflowY: 'hidden', flexShrink: 0 }}><div style={{ height: 1, width: PA_DATA_COLS.reduce((s, c) => s + c.w, 0) + FASE_HDR.length * FASE_W + 130 }} /></div>
+        <div ref={tableScrollRef} onScroll={() => syncScroll(tableScrollRef, topBarRef)} style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', minHeight: 0 }}>
+          <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>
               {PA_DATA_COLS.map((col, i) =>
                 <th key={i} style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--lt-text3)', background: 'var(--lt-card)', padding: '12px 12px', textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 2, width: col.w, minWidth: col.w, borderBottom: '1px solid var(--lt-border)', cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort(col.k)}>{col.h}{sortArrow(col.k)}</th>)}

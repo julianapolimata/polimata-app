@@ -372,6 +372,10 @@ function TabelaMRC({ rows, onOpenModal }) {
   const [sortDir, setSortDir] = useState('asc')
   const toggle = (k) => { if (sortCol === k) { setSortDir(d => d === 'asc' ? 'desc' : 'asc') } else { setSortCol(k); setSortDir('asc') } }
   const arrow = (k) => sortCol === k ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
+  const topBarRef = useRef(null)
+  const tableRef = useRef(null)
+  const syncing = useRef(false)
+  const syncScroll = (src, dst) => { if (syncing.current) return; syncing.current = true; if (dst.current) dst.current.scrollLeft = src.current.scrollLeft; syncing.current = false }
 
   const sorted = useMemo(() => {
     if (!sortCol) return rows
@@ -385,9 +389,11 @@ function TabelaMRC({ rows, onOpenModal }) {
   }, [rows, sortCol, sortDir])
 
   const thClick = { cursor: 'pointer', userSelect: 'none' }
-  return (
-    <div style={{ flex: 1, overflowX: 'scroll', overflowY: 'auto', minHeight: 0, transform: 'scaleY(-1)' }}>
-      <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', transform: 'scaleY(-1)' }}>
+  const tW = MRC_DATA_COLS.reduce((s, c) => s + c.w, 0) + MRC_FASE_HDR.length * FASE_W + 40
+  return (<>
+    <div ref={topBarRef} onScroll={() => syncScroll(topBarRef, tableRef)} style={{ overflowX: 'auto', overflowY: 'hidden', flexShrink: 0 }}><div style={{ height: 1, width: tW }} /></div>
+    <div ref={tableRef} onScroll={() => syncScroll(tableRef, topBarRef)} style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', minHeight: 0 }}>
+      <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
         <thead><tr>
           {MRC_DATA_COLS.map((col, i) => <th key={i} style={{ ...mrcThS, width: col.w, minWidth: col.w, ...thClick }} onClick={() => toggle(col.k)}>{col.h}{arrow(col.k)}</th>)}
           {MRC_FASE_HDR.map((f, i) => <th key={`f${i}`} style={{ ...mrcFaseThS, background: f.bg, ...thClick }} onClick={() => toggle(MRC_FASE_KEYS[i])}>{f.h}{arrow(MRC_FASE_KEYS[i])}</th>)}
@@ -417,7 +423,7 @@ function TabelaMRC({ rows, onOpenModal }) {
         </tbody>
       </table>
     </div>
-  )
+  </>)
 }
 
 // ─── COMPONENTE PRINCIPAL ────────────────────────────────────────────────────
