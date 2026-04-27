@@ -506,8 +506,6 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
         </div>
       </div>
 
-      <Regua data={mrc} filtroNivel={filtroNivel} onToggleNivel={setFiltroNivel} />
-
       <div className="card">
         <div className="filters">
           <input type="text" placeholder="Buscar ref., área, risco, controle, inconsistência, passos…" value={busca} onChange={e => setBusca(e.target.value)} />
