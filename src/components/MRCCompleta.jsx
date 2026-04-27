@@ -360,6 +360,7 @@ function TabelaMRC({ rows, onOpenModal }) {
       <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
         <thead><tr>
           {[
+            { h: 'Última Alteração', w: 95 },
             { h: 'Processo', w: 120 }, { h: 'Subprocesso', w: 120 }, { h: 'Ref. Risco', w: 80 },
             { h: 'Desc. Risco', w: 200 }, { h: 'Ref. Controle', w: 90 }, { h: 'Desc. Controle', w: 200 },
             { h: 'Resultado', w: 90 }, { h: 'Criticidade', w: 110 },
@@ -367,9 +368,10 @@ function TabelaMRC({ rows, onOpenModal }) {
           {MRC_FASE_HDR.map((f, i) => <th key={`f${i}`} style={{ ...mrcFaseThS, background: f.bg }}>{f.h}</th>)}
         </tr></thead>
         <tbody>
-          {rows.length === 0 && <tr><td colSpan={15} style={{ textAlign: 'center', padding: 24, color: 'var(--lt-text3)', fontSize: 12 }}>Nenhum controle encontrado com os filtros aplicados.</td></tr>}
+          {rows.length === 0 && <tr><td colSpan={16} style={{ textAlign: 'center', padding: 24, color: 'var(--lt-text3)', fontSize: 12 }}>Nenhum controle encontrado com os filtros aplicados.</td></tr>}
           {rows.map(row => (
             <tr key={row.id} style={{ cursor: 'pointer' }} onClick={() => onOpenModal(row)} onMouseEnter={e => e.currentTarget.style.background='rgba(204,145,94,0.04)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+              <td style={{ ...mrcTdS, width: 95, minWidth: 95, fontSize: 10, color: 'var(--lt-text3)' }}>{fmtData(row.dt_ult || row.atualizado_em || row.criado_em)}</td>
               <TdMRC w={120}>{row.area}</TdMRC>
               <TdMRC w={120}>{row.sub}</TdMRC>
               <td style={{ ...mrcTdS, color: 'var(--copper)', fontWeight: 600, width: 80, minWidth: 80 }}>{row.rr}</td>

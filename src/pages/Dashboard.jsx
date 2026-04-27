@@ -795,6 +795,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
           <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>
               {[
+                { h: 'Última Alteração', w: 95 },
                 { h: 'Subprocesso', w: 120 }, { h: 'Ref. Risco', w: 80 },
                 { h: 'Desc. Risco', w: 200 }, { h: 'Ref. Controle', w: 90 }, { h: 'Desc. Controle', w: 200 },
                 { h: 'Resultado', w: 90 }, { h: 'Criticidade', w: 110 },
@@ -805,6 +806,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
             </tr></thead>
             <tbody>{cf.map((c, i) => (
               <tr key={c.id||i} onClick={() => setModalRow(c)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='rgba(204,145,94,0.04)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                <td style={{ ...tdS, width: 95, minWidth: 95, fontSize: 10, color: 'var(--lt-text3)' }}>{fmtDate(c.dt_ult || c.atualizado_em || c.criado_em)}</td>
                 <Td w={120}>{c.sub}</Td>
                 <td style={{ ...tdS, color: 'var(--copper)', fontWeight: 600, width: 80, minWidth: 80 }}>{c.rr}</td><Td w={200} wrap>{c.dr}</Td>
                 <td style={{ ...tdS, color: 'var(--copper)', fontWeight: 600, width: 90, minWidth: 90 }}>{c.rc}</td><Td w={200} wrap>{c.dc}</Td>
