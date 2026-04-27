@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { exportarMRCExcel } from '../lib/exportMRC'
 import { getFaseInfo as getFaseInfoUtil } from '../lib/fases'
@@ -411,6 +411,23 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
     load()
   }, [projetoId])
 
+  // KPIs — iguala padrão PorArea
+  const kpis = useMemo(() => {
+    let ef = 0, inf = 0, gap = 0, pa = 0
+    mrc.forEach(c => {
+      const r = (c.r1 || '').toLowerCase()
+      if (r === 'efetivo') ef++
+      else if (r === 'inefetivo') inf++
+      else if (r === 'gap' || r === 'gap de processo') gap++
+      const needsPA = ['inefetivo','gap','gap de processo'].some(v =>
+        (c.r1||'').toLowerCase() === v || (c.r_ader||'').toLowerCase() === v || (c.r3||'').toLowerCase() === v
+      )
+      const paDone = ['efetivo','concluído','concluido','ok'].includes((c.st_pa||'').toLowerCase())
+      if (needsPA && !paDone) pa++
+    })
+    return { ef, inf, gap, pa }
+  }, [mrc])
+
   const filtered = mrc.filter(r => {
     if (filtroArea && r.area !== filtroArea) return false
     if (filtroCrit && r.crit !== parseInt(filtroCrit)) return false
@@ -449,9 +466,46 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
         </div>
       </div>
 
-      <div className="mrc-hm-compact">
-        <Heatmap data={filtered} filtroImp={filtroImp} filtroProb={filtroProb} onFilterCell={handleHeatmapCell} />
+      {/* ZONA SUPERIOR — HEATMAP + KPIs (padrão PorArea) */}
+      <div style={{ display: 'flex', gap: 10, flexShrink: 0, margin: '6px 0 8px' }}>
+        <div className="mrc-hm-compact" style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', width: 420, flexShrink: 0, boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
+          <Heatmap data={filtered} filtroImp={filtroImp} filtroProb={filtroProb} onFilterCell={handleHeatmapCell} />
+        </div>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: '1fr 1fr', gap: 8 }}>
+          <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid var(--navy)', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
+            <div style={kpiLabelS}>Total de Controles</div>
+            <div style={{ ...kpiValorS, color: 'var(--navy)' }}>{mrc.length}</div>
+            <div style={kpiSubS}>{areas.length} áreas · Metodologia Polímata</div>
+          </div>
+          <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid var(--copper)', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
+            <div style={kpiLabelS}>Áreas</div>
+            <div style={{ ...kpiValorS, color: 'var(--copper)' }}>{areas.length}</div>
+            <div style={kpiSubS}>{clienteNome} · {projetoNome}</div>
+          </div>
+          <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid #22C55E', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
+            <div style={kpiLabelS}>Efetivos</div>
+            <div style={{ ...kpiValorS, color: '#22C55E' }}>{kpis.ef}</div>
+            <div style={kpiSubS}>{mrc.length > 0 ? Math.round(kpis.ef / mrc.length * 100) : 0}% do total</div>
+          </div>
+          <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid #FACC15', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
+            <div style={kpiLabelS}>Inefetivos</div>
+            <div style={{ ...kpiValorS, color: '#FACC15' }}>{kpis.inf}</div>
+            <div style={kpiSubS}>Aguardam ação corretiva</div>
+          </div>
+          <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid #EF4444', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
+            <div style={kpiLabelS}>GAP</div>
+            <div style={{ ...kpiValorS, color: '#EF4444' }}>{kpis.gap}</div>
+            <div style={kpiSubS}>Riscos sem controle</div>
+          </div>
+          <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: 'none', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #CC915E, #A6512F)' }} />
+            <div style={kpiLabelS}>Planos de Ação</div>
+            <div style={{ ...kpiValorS, color: 'var(--copper)' }}>{kpis.pa}</div>
+            <div style={kpiSubS}>Em desenvolvimento</div>
+          </div>
+        </div>
       </div>
+
       <Regua data={mrc} filtroNivel={filtroNivel} onToggleNivel={setFiltroNivel} />
 
       <div className="card">
@@ -481,3 +535,8 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
     </div>
   )
 }
+
+// Estilos KPI (padrão PorArea)
+const kpiLabelS = { fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--lt-text3)', marginBottom: 4 }
+const kpiValorS = { fontSize: 28, fontWeight: 300, lineHeight: 1 }
+const kpiSubS = { fontSize: 10, color: 'var(--lt-text3)', marginTop: 4 }
