@@ -296,9 +296,10 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
   const kpis = useMemo(() => {
     let ef = 0, inf = 0, gap = 0, pa = 0
     todosControles.forEach(c => {
-      if (isEfetivo(c.r1)) ef++
-      else if (isInefetivo(c.r1)) inf++
-      else if (isGap(c.r1)) gap++
+      const rv = getResultadoVitrine(c)
+      if (isEfetivo(rv)) ef++
+      else if (isInefetivo(rv)) inf++
+      else if (isGap(rv)) gap++
       if (precisaPlanoAcao(c) && !planoAcaoConcluido(c)) pa++
     })
     return { ef, inf, gap, pa }
@@ -594,9 +595,10 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   const p = area.calc?.percentual||0, nv = getNivelMaturidade(p)
   let efetivos=0, inefetivos=0, gaps=0, planosAcao=0
   area.controles.forEach(c => {
-    if (isEfetivo(c.r1)) efetivos++
-    else if (isInefetivo(c.r1)) inefetivos++
-    else if (isGap(c.r1)) gaps++
+    const rv = getResultadoVitrine(c)
+    if (isEfetivo(rv)) efetivos++
+    else if (isInefetivo(rv)) inefetivos++
+    else if (isGap(rv)) gaps++
     if (precisaPlanoAcao(c) && !planoAcaoConcluido(c)) planosAcao++
   })
 

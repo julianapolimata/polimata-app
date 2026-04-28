@@ -144,7 +144,7 @@ function Heatmap({ data, filtroImp, filtroProb, onFilterCell }) {
     const key = `${r.imp}|${r.prob}`
     if (!cells[key]) return
     cells[key].n++
-    const res = (r.r1 || '').toLowerCase()
+    const res = (getResultadoVitrine(r) || '').toLowerCase()
     if (res === 'efetivo') cells[key].e++
     else if (res === 'inefetivo') cells[key].i++
     else if (res === 'gap') cells[key].g++
@@ -155,7 +155,7 @@ function Heatmap({ data, filtroImp, filtroProb, onFilterCell }) {
     if (!r.crit) return
     const k = `C${r.crit}`; if (!totais[k]) return
     totais[k].n++
-    const res = (r.r1 || '').toLowerCase()
+    const res = (getResultadoVitrine(r) || '').toLowerCase()
     if (res === 'efetivo') totais[k].e++; else if (res === 'inefetivo') totais[k].i++; else if (res === 'gap') totais[k].g++
   })
 
@@ -211,7 +211,7 @@ function Heatmap({ data, filtroImp, filtroProb, onFilterCell }) {
 
 function Regua({ data, filtroNivel, onToggleNivel }) {
   const c = {}; NIVEIS.forEach(n => { c[n.id] = 0 })
-  data.forEach(r => { const res = r.r1; if (res === 'Inefetivo') c.N1++; else if (res === 'GAP') c.N2++; else if (res === 'Efetivo') c.N5++ })
+  data.forEach(r => { const res = getResultadoVitrine(r); if (res === 'Inefetivo') c.N1++; else if (res === 'GAP') c.N2++; else if (res === 'Efetivo' || res === 'efetivo') c.N5++ })
   return (
     <div className="regua">
       {NIVEIS.map(n => (<div key={n.id} className={`rn ${n.cls} ${filtroNivel === n.id ? 'ativo' : ''}`} onClick={() => onToggleNivel(filtroNivel === n.id ? '' : n.id)}><div className="rn-c">{c[n.id]}</div><div className="rn-n">{n.nome}</div></div>))}
@@ -464,12 +464,12 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
   const kpis = useMemo(() => {
     let ef = 0, inf = 0, gap = 0, pa = 0
     mrc.forEach(c => {
-      const r = (c.r1 || '').toLowerCase()
+      const r = (getResultadoVitrine(c) || '').toLowerCase()
       if (r === 'efetivo') ef++
       else if (r === 'inefetivo') inf++
       else if (r === 'gap' || r === 'gap de processo') gap++
       const needsPA = ['inefetivo','gap','gap de processo'].some(v =>
-        (c.r1||'').toLowerCase() === v || (c.r_ader||'').toLowerCase() === v || (c.r3||'').toLowerCase() === v
+        (getResultadoVitrine(c)||'').toLowerCase() === v
       )
       const paDone = ['efetivo','concluído','concluido','ok'].includes((c.st_pa||'').toLowerCase())
       if (needsPA && !paDone) pa++
@@ -491,8 +491,8 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
     if (filtroCrit && r.crit !== parseInt(filtroCrit)) return false
     if (filtroImp && r.imp !== filtroImp) return false
     if (filtroProb && r.prob !== filtroProb) return false
-    if (filtroR1 && r.r1 !== filtroR1) return false
-    if (filtroNivel) { const nivel = NIVEIS.find(n => n.id === filtroNivel); if (nivel && r.r1 !== nivel.resultado) return false }
+    if (filtroR1 && getResultadoVitrine(r) !== filtroR1) return false
+    if (filtroNivel) { const nivel = NIVEIS.find(n => n.id === filtroNivel); if (nivel && getResultadoVitrine(r) !== nivel.resultado) return false }
     if (filtroFase) { const fi = getFaseInfo(r); if (fi.label !== filtroFase) return false }
     if (busca) { const q = busca.toLowerCase(); return (r.rr||'').toLowerCase().includes(q)||(r.rc||'').toLowerCase().includes(q)||(r.area||'').toLowerCase().includes(q)||(r.sub||'').toLowerCase().includes(q)||(r.dr||'').toLowerCase().includes(q)||(r.dc||'').toLowerCase().includes(q)||(r.incons||'').toLowerCase().includes(q)||(r.passos_f1||'').toLowerCase().includes(q) }
     return true
