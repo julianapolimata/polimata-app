@@ -360,13 +360,14 @@ const MRC_DATA_COLS = [
   { h: 'Última Alteração', w: 95, k: '_dt' },
   { h: 'Processo', w: 120, k: 'area' }, { h: 'Subprocesso', w: 120, k: 'sub' }, { h: 'Ref. Risco', w: 80, k: 'rr' },
   { h: 'Desc. Risco', w: 200, k: 'dr' }, { h: 'Ref. Controle', w: 90, k: 'rc' }, { h: 'Desc. Controle', w: 200, k: 'dc' },
-  { h: 'Resultado', w: 90, k: 'r1' }, { h: 'Criticidade', w: 110, k: 'crit' },
+  { h: 'Resultado', w: 90, k: '_resultado' }, { h: 'Criticidade', w: 110, k: 'crit' },
   { h: 'Fase Atual', w: 130, k: '_fase_atual' }, { h: 'Status Atual', w: 110, k: '_status_atual' },
 ]
 const MRC_FASE_KEYS = ['r1', 'st_pa', 'r_ader', 'r3', 'r_f4c1', 'r_f4c2', 'r_f5']
 
 function sortVal(row, k) {
   if (k === '_dt') return row.dt_ult || row.atualizado_em || row.criado_em || ''
+  if (k === '_resultado') return getResultadoVitrine(row)
   if (k === '_fase_atual') return getFaseLabel(row)
   if (k === '_status_atual') return getStatusComputado(row)
   return row[k] ?? ''
@@ -414,7 +415,7 @@ function TabelaMRC({ rows, onOpenModal }) {
               <TdMRC w={200}>{row.dr}</TdMRC>
               <td style={{ ...mrcTdS, color: 'var(--copper)', fontWeight: 600, width: 90, minWidth: 90 }}>{row.rc}</td>
               <TdMRC w={200}>{row.dc}</TdMRC>
-              <td style={{ ...mrcTdS, width: 90, minWidth: 90 }}>{badgeResultado(row.r1)}</td>
+              <td style={{ ...mrcTdS, width: 90, minWidth: 90 }}>{badgeResultado(getResultadoVitrine(row))}</td>
               <td style={{ ...mrcTdS, width: 110, minWidth: 110 }}>{critBadge(row.crit)}</td>
               <td style={{ ...mrcTdS, width: 130, minWidth: 130, fontSize: 10 }}>{getFaseLabel(row)}</td>
               <td style={{ ...mrcTdS, width: 110, minWidth: 110, textAlign: 'center' }}>{(() => { const st = getStatusComputado(row); const cfg = getStatusConfig(st); return <span style={{ fontSize: 8, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.5 }}>{cfg.label}</span> })()}</td>
