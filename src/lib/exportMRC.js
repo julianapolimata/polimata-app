@@ -29,27 +29,20 @@ const CREME_BORDER = {
   right: { style: 'thin', color: { argb: CREME } },
 }
 
-// Todas as colunas do banco na ordem do schema (ordinal_position),
-// mais 2 campos computados no final (fase, status_atual).
+// ── COLUNAS DO EXCEL ──
+// B-W: Vitrine (última atualização)
+// X-AD: Histórico de resultado por fase
+// AE-AF: Campos computados
 const MRC_COLUMNS = [
-  // Identificação (pos 1-3)
-  { key: 'id', header: 'ID', width: 14 },
-  { key: 'projeto_id', header: 'ID Projeto', width: 14 },
-  { key: 'area_id', header: 'ID Área', width: 14 },
-  // Estrutura (pos 4-9)
-  { key: 'rr', header: 'Ref. Risco', width: 12 },
-  { key: 'rc', header: 'Ref. Controle', width: 14 },
-  { key: 'sub', header: 'Subprocesso', width: 20 },
-  { key: 'ger', header: 'Gerência', width: 18 },
-  { key: 'resp_sub', header: 'Responsável Processo', width: 20 },
+  // ── VITRINE (B-W) — sempre a última atualização ──
   { key: 'dt_ult', header: 'Data Última Atualização', width: 18, fmt: 'date' },
-  // Risco (pos 10-14)
+  { key: 'ger', header: 'Gerência', width: 18 },
+  { key: 'resp_sub', header: 'Responsável Área', width: 20 },
+  { key: 'area', header: 'Área', width: 22 },
+  { key: 'sub', header: 'Subprocesso', width: 20 },
+  { key: 'rr', header: 'Ref. Risco', width: 12 },
   { key: 'dr', header: 'Descrição do Risco', width: 40 },
-  { key: 'imp', header: 'Impacto', width: 12 },
-  { key: 'prob', header: 'Probabilidade', width: 14 },
-  { key: 'crit', header: 'Criticidade (Nível)', width: 14 },
-  { key: 'crit_label', header: 'Criticidade', width: 16 },
-  // Controle (pos 15-21)
+  { key: 'rc', header: 'Ref. Controle', width: 14 },
   { key: 'dc', header: 'Descrição do Controle', width: 40 },
   { key: 'cat', header: 'Categoria de Controle', width: 18 },
   { key: 'freq', header: 'Frequência', width: 14 },
@@ -57,75 +50,22 @@ const MRC_COLUMNS = [
   { key: 'car', header: 'Característica', width: 14 },
   { key: 'sis', header: 'Sistema', width: 14 },
   { key: 'chave', header: 'Controle Chave?', width: 14 },
-  // F1 Diagnóstico (pos 22-25)
-  { key: 'passos_f1', header: 'Passos de Teste (F1)', width: 40 },
-  { key: 'r1', header: 'Resultado F1', width: 14 },
-  { key: 'incons', header: 'Inconsistência (F1)', width: 40 },
-  { key: 'rec', header: 'Recomendação (F1)', width: 40 },
-  // F2 Teste de Desenho / Plano de Ação (pos 26-30)
-  { key: 'dem_pa', header: 'Demanda Plano de Ação', width: 40 },
-  { key: 'resp_pa', header: 'Responsável Plano de Ação', width: 20 },
-  { key: 'dt_pa', header: 'Data Plano de Ação', width: 18, fmt: 'date' },
-  { key: 'st_pa', header: 'Resultado Teste de Desenho', width: 18 },
-  { key: 'coment_pa', header: 'Comentário Plano de Ação', width: 40 },
-  // F2 Aderência (pos 31-36)
-  { key: 'dt_teste', header: 'Data Teste Aderência', width: 18, fmt: 'date' },
-  { key: 'dc_novo', header: 'Descrição Controle Novo', width: 40 },
-  { key: 'r_ader', header: 'Resultado Aderência', width: 18 },
-  { key: 'melhoria', header: 'Melhoria', width: 40 },
-  { key: 'incons_ader', header: 'Inconsistência Aderência', width: 40 },
-  { key: 'coment_ader', header: 'Comentário Aderência', width: 40 },
-  // F3 Revisão (pos 37-40)
-  { key: 'st_f3', header: 'Status F3', width: 14 },
-  { key: 'r3', header: 'Resultado F3', width: 14 },
-  { key: 'incons_f3', header: 'Inconsistência F3', width: 40 },
-  { key: 'rec_f3', header: 'Recomendação F3', width: 40 },
-  // Metadados (pos 41-44)
-  { key: 'criado_por', header: 'Criado Por (ID)', width: 14 },
-  { key: 'atualizado_por', header: 'Atualizado Por (ID)', width: 14 },
-  { key: 'criado_em', header: 'Criado Em', width: 18, fmt: 'datetime' },
-  { key: 'atualizado_em', header: 'Atualizado Em', width: 18, fmt: 'datetime' },
-  // Workflow (pos 45-50)
-  { key: 'status_workflow', header: 'Status Workflow', width: 18 },
-  { key: 'arquivo_ficha_url', header: 'URL Arquivo Ficha', width: 30 },
-  { key: 'submetido_por', header: 'Submetido Por (ID)', width: 14 },
-  { key: 'submetido_em', header: 'Submetido Em', width: 18, fmt: 'datetime' },
-  { key: 'aprovado_por', header: 'Aprovado Por (ID)', width: 14 },
-  { key: 'aprovado_em', header: 'Aprovado Em', width: 18, fmt: 'datetime' },
-  // Status do Risco (pos 51-55)
-  { key: 'status_risco', header: 'Status do Risco', width: 18 },
-  { key: 'motivo_inativacao', header: 'Motivo Inativação', width: 30 },
-  { key: 'ativo', header: 'Ativo', width: 8, fmt: 'bool' },
-  { key: 'transferido_de', header: 'Transferido De (ID)', width: 14 },
-  { key: 'ref_anterior', header: 'Referência Anterior', width: 14 },
-  // Premissas 5W2H (pos 56-61)
-  { key: 'premissa_porque', header: 'Premissa: Por quê?', width: 30 },
-  { key: 'premissa_quando', header: 'Premissa: Quando?', width: 30 },
-  { key: 'premissa_onde', header: 'Premissa: Onde?', width: 30 },
-  { key: 'premissa_quem', header: 'Premissa: Quem?', width: 30 },
-  { key: 'premissa_como', header: 'Premissa: Como?', width: 30 },
-  { key: 'premissa_resultado', header: 'Premissa: Resultado', width: 30 },
-  // Consultor (pos 62)
-  { key: 'consultor_id', header: 'ID Consultor', width: 14 },
-  // F4 Ciclo 1 (pos 63-67)
-  { key: 'r_f4c1', header: 'Resultado F4 Ciclo 1', width: 18 },
-  { key: 'incons_f4c1', header: 'Inconsistência F4 Ciclo 1', width: 40 },
-  { key: 'rec_f4c1', header: 'Recomendação F4 Ciclo 1', width: 40 },
-  { key: 'coment_f4c1', header: 'Comentário F4 Ciclo 1', width: 40 },
-  { key: 'dt_f4c1', header: 'Data F4 Ciclo 1', width: 18, fmt: 'date' },
-  // F4 Ciclo 2 (pos 68-72)
-  { key: 'r_f4c2', header: 'Resultado F4 Ciclo 2', width: 18 },
-  { key: 'incons_f4c2', header: 'Inconsistência F4 Ciclo 2', width: 40 },
-  { key: 'rec_f4c2', header: 'Recomendação F4 Ciclo 2', width: 40 },
-  { key: 'coment_f4c2', header: 'Comentário F4 Ciclo 2', width: 40 },
-  { key: 'dt_f4c2', header: 'Data F4 Ciclo 2', width: 18, fmt: 'date' },
-  // F5 Auditoria (pos 73-77)
-  { key: 'r_f5', header: 'Resultado F5', width: 18 },
-  { key: 'incons_f5', header: 'Inconsistência F5', width: 40 },
-  { key: 'rec_f5', header: 'Recomendação F5', width: 40 },
-  { key: 'coment_f5', header: 'Comentário F5', width: 40 },
-  { key: 'dt_f5', header: 'Data F5', width: 18, fmt: 'date' },
-  // Campos computados
+  { key: 'passos_f1', header: 'Passos de Teste', width: 40 },
+  { key: '_vitrine_resultado', header: 'Resultado', width: 14, computed: true },
+  { key: '_vitrine_incons', header: 'Descrição da Inconsistência', width: 40, computed: true },
+  { key: '_vitrine_rec', header: 'Recomendação / Melhoria', width: 40, computed: true },
+  { key: 'imp', header: 'Impacto', width: 12 },
+  { key: 'prob', header: 'Probabilidade', width: 14 },
+  { key: 'crit_label', header: 'Criticidade', width: 16 },
+  // ── HISTÓRICO POR FASE (X-AD) ──
+  { key: '_hist_f1', header: 'F1 Diagnóstico', width: 14, computed: true },
+  { key: '_hist_f2d', header: 'F2 Desenho', width: 14, computed: true },
+  { key: '_hist_f2e', header: 'F2 Efetividade', width: 14, computed: true },
+  { key: '_hist_f3', header: 'F3 Revisão Integral', width: 14, computed: true },
+  { key: '_hist_f4c1', header: 'F4 AI - Ciclo 1', width: 14, computed: true },
+  { key: '_hist_f4c2', header: 'F4 AI - Ciclo 2', width: 14, computed: true },
+  { key: '_hist_f5', header: 'F5 Auditoria Externa', width: 14, computed: true },
+  // ── COMPUTADOS (AE-AF) ──
   { key: 'fase', header: 'Fase Atual', width: 24, computed: true },
   { key: 'status_atual', header: 'Status Atual', width: 18, computed: true },
 ]
@@ -482,8 +422,34 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
   })
   colHeaderRow.height = 28
 
-  // Conjunto de colunas de resultado (colorir por efetividade)
-  const RESULTADO_KEYS = new Set(['r1', 'st_pa', 'r_ader', 'r3', 'r_f4c1', 'r_f4c2', 'r_f5'])
+  // ── FUNÇÕES VITRINE ──
+  // Resultado: pega o mais recente de trás pra frente (F5 → F1)
+  function vitrineResultado(row) {
+    const chain = [row.r_f5, row.r_f4c2, row.r_f4c1, row.r3, row.r_ader, row.st_pa, row.r1]
+    for (const v of chain) { if (v && v !== 'Teste Não Realizado' && v !== 'N/A') return v }
+    return row.r1 || '—'
+  }
+  // Inconsistência: pega a mais recente
+  function vitrineIncons(row) {
+    const chain = [row.incons_f5, row.incons_f4c2, row.incons_f4c1, row.incons_f3, row.incons_ader, row.incons]
+    for (const v of chain) { if (v && v.trim()) return v }
+    return '—'
+  }
+  // Recomendação: pega a mais recente
+  function vitrineRec(row) {
+    const chain = [row.rec_f5, row.rec_f4c2, row.rec_f4c1, row.rec_f3, row.melhoria, row.rec]
+    for (const v of chain) { if (v && v.trim()) return v }
+    return '—'
+  }
+  // Histórico por fase: normaliza o resultado para exibição
+  function fmtHist(v) {
+    if (!v || v === 'Teste Não Realizado') return 'Não Iniciado'
+    if (v === 'N/A') return 'N/A'
+    return v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
+  }
+
+  // Conjunto de keys que recebem cor de resultado
+  const RESULTADO_KEYS = new Set(['_vitrine_resultado', '_hist_f1', '_hist_f2d', '_hist_f2e', '_hist_f3', '_hist_f4c1', '_hist_f4c2', '_hist_f5'])
 
   // ── DADOS ──
   controles.forEach((row, rowIdx) => {
@@ -494,8 +460,30 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
       const cell = excelRow.getCell(colIdx + 2)
       let value
 
-      // Campos computados
-      if (col.key === 'fase') {
+      // Campos computados — vitrine
+      if (col.key === '_vitrine_resultado') {
+        value = vitrineResultado(row)
+      } else if (col.key === '_vitrine_incons') {
+        value = vitrineIncons(row)
+      } else if (col.key === '_vitrine_rec') {
+        value = vitrineRec(row)
+      // Campos computados — histórico por fase
+      } else if (col.key === '_hist_f1') {
+        value = fmtHist(row.r1)
+      } else if (col.key === '_hist_f2d') {
+        value = fmtHist(row.st_pa)
+      } else if (col.key === '_hist_f2e') {
+        value = fmtHist(row.r_ader)
+      } else if (col.key === '_hist_f3') {
+        value = fmtHist(row.r3)
+      } else if (col.key === '_hist_f4c1') {
+        value = fmtHist(row.r_f4c1)
+      } else if (col.key === '_hist_f4c2') {
+        value = fmtHist(row.r_f4c2)
+      } else if (col.key === '_hist_f5') {
+        value = fmtHist(row.r_f5)
+      // Campos computados — fase e status
+      } else if (col.key === 'fase') {
         value = getFaseLabel(row)
       } else if (col.key === 'status_atual') {
         const cfg = getStatusConfig(row.status_workflow, 'admin_polimata')
@@ -506,13 +494,6 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
         const d = row[col.key]
         if (d) { try { value = new Date(d).toLocaleDateString('pt-BR') } catch { value = d } }
         else { value = '—' }
-      } else if (col.fmt === 'datetime') {
-        const d = row[col.key]
-        if (d) { try { const dt = new Date(d); value = `${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` } catch { value = d } }
-        else { value = '—' }
-      } else if (col.fmt === 'bool') {
-        const v = row[col.key]
-        value = v === true ? 'Sim' : v === false ? 'Não' : '—'
       } else {
         const raw = row[col.key]
         value = raw != null && raw !== '' ? raw : '—'
