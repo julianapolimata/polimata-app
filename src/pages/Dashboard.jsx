@@ -163,7 +163,7 @@ export default function Dashboard() {
       const controles = mrcRes.data || [], areas = areasRes.data || []
       const matData = matRes.data || []
       const res = areas.map(a => {
-        const ca = controles.filter(c => c.area_id === a.id || c.area === a.nome)
+        const ca = controles.filter(c => c.area_id === a.id || c.area === a.nome).map(c => ({ ...c, area: a.nome }))
         const mat = matData.find(m => m.area_id === a.id)
         return {
           ...a,

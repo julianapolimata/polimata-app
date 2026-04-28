@@ -440,9 +440,14 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
     if (!projetoId) return
     async function load() {
       setLoading(true)
-      const { data, error } = await supabase.from('mrc').select('*').eq('projeto_id', projetoId).order('id')
-      if (error) { setErro(error.message); setLoading(false); return }
-      setMrc(data || []); setAreas([...new Set((data||[]).map(r=>r.area))].filter(Boolean).sort()); setLoading(false)
+      const [mrcRes, areasRes] = await Promise.all([
+        supabase.from('mrc').select('*').eq('projeto_id', projetoId).order('id'),
+        supabase.from('areas').select('id, nome').eq('projeto_id', projetoId),
+      ])
+      if (mrcRes.error) { setErro(mrcRes.error.message); setLoading(false); return }
+      const areasMap = Object.fromEntries((areasRes.data || []).map(a => [a.id, a.nome]))
+      const rows = (mrcRes.data || []).map(r => ({ ...r, area: areasMap[r.area_id] || r.area || '' }))
+      setMrc(rows); setAreas([...new Set(rows.map(r=>r.area))].filter(Boolean).sort()); setLoading(false)
     }
     load()
   }, [projetoId])
