@@ -35,14 +35,24 @@ function PasswordSetupPage() {
   const { updatePassword, signOut } = useAuth()
   const [pw, setPw] = useState('')
   const [pw2, setPw2] = useState('')
+  const [showPw, setShowPw] = useState(false)
   const [erro, setErro] = useState('')
   const [saving, setSaving] = useState(false)
   const [ok, setOk] = useState(false)
 
+  const rules = [
+    { ok: pw.length >= 8, txt: 'Mínimo 8 caracteres' },
+    { ok: /[A-Z]/.test(pw), txt: 'Uma letra maiúscula' },
+    { ok: /[a-z]/.test(pw), txt: 'Uma letra minúscula' },
+    { ok: /[0-9]/.test(pw), txt: 'Um número' },
+    { ok: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pw), txt: 'Um caractere especial (!@#$%...)' },
+    { ok: pw && pw === pw2, txt: 'Senhas coincidem' },
+  ]
+  const allOk = rules.every(r => r.ok)
+
   async function handleSubmit(e) {
     e.preventDefault()
-    if (pw.length < 6) { setErro('A senha deve ter pelo menos 6 caracteres'); return }
-    if (pw !== pw2) { setErro('As senhas não coincidem'); return }
+    if (!allOk) { setErro('Preencha todos os requisitos de senha'); return }
     setSaving(true); setErro('')
     const { error } = await updatePassword(pw)
     if (error) { setErro(error.message); setSaving(false) }
@@ -75,18 +85,33 @@ function PasswordSetupPage() {
         ) : (
           <>
             <h1 className="login-title">Configure sua senha</h1>
-            <p className="login-subtitle">Crie uma senha para acessar o sistema Polímata GRC</p>
+            <p className="login-subtitle">Crie uma senha segura para acessar o sistema Polímata GRC</p>
             {erro && <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C62828', padding: '8px 12px', borderRadius: 6, fontSize: 12, marginBottom: 12, textAlign: 'center' }}>{erro}</div>}
             <form onSubmit={handleSubmit} className="login-form">
               <div className="login-field">
-                <label>Nova senha</label>
-                <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="Mínimo 6 caracteres" autoFocus required />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label>Nova senha</label>
+                  <button type="button" onClick={() => setShowPw(v => !v)}
+                    style={{ background: 'none', border: 'none', color: 'var(--txt3)', fontSize: 10, cursor: 'pointer', padding: 0 }}>
+                    {showPw ? 'Ocultar' : 'Mostrar'}
+                  </button>
+                </div>
+                <input type={showPw ? 'text' : 'password'} value={pw} onChange={e => setPw(e.target.value)} placeholder="Mínimo 8 caracteres" autoFocus required />
               </div>
               <div className="login-field">
                 <label>Confirmar senha</label>
-                <input type="password" value={pw2} onChange={e => setPw2(e.target.value)} placeholder="Repita a senha" required />
+                <input type={showPw ? 'text' : 'password'} value={pw2} onChange={e => setPw2(e.target.value)} placeholder="Repita a senha" required />
               </div>
-              <button type="submit" disabled={saving} className="login-btn" style={{ width: '100%', opacity: saving ? 0.6 : 1 }}>
+              {/* Checklist de requisitos */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {rules.map((r, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: r.ok ? '#22C55E' : 'var(--txt3)' }}>
+                    <span style={{ fontSize: 10 }}>{r.ok ? '✓' : '○'}</span>
+                    {r.txt}
+                  </div>
+                ))}
+              </div>
+              <button type="submit" disabled={saving || !allOk} className="login-btn" style={{ width: '100%', opacity: (saving || !allOk) ? 0.6 : 1 }}>
                 {saving ? 'Salvando...' : 'Criar Senha e Acessar'}
               </button>
             </form>

@@ -38,11 +38,18 @@ export default function RedefinirSenha() {
     })
   }, [])
 
+  const rules = [
+    { ok: senha.length >= 8, txt: 'Mínimo 8 caracteres' },
+    { ok: /[A-Z]/.test(senha), txt: 'Uma letra maiúscula' },
+    { ok: /[a-z]/.test(senha), txt: 'Uma letra minúscula' },
+    { ok: /[0-9]/.test(senha), txt: 'Um número' },
+    { ok: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(senha), txt: 'Um caractere especial (!@#$%...)' },
+    { ok: senha && senha === confirma, txt: 'Senhas coincidem' },
+  ]
+  const allOk = rules.every(r => r.ok)
+
   function validar() {
-    if (senha.length < 8) { setErro('A senha deve ter pelo menos 8 caracteres'); return false }
-    if (!/[A-Z]/.test(senha)) { setErro('A senha deve conter pelo menos uma letra maiúscula'); return false }
-    if (!/[0-9]/.test(senha)) { setErro('A senha deve conter pelo menos um número'); return false }
-    if (senha !== confirma) { setErro('As senhas não coincidem'); return false }
+    if (!allOk) { setErro('Preencha todos os requisitos de senha'); return false }
     return true
   }
 
@@ -154,12 +161,7 @@ export default function RedefinirSenha() {
 
           {/* Requisitos visuais */}
           <div style={{display:'flex', flexDirection:'column', gap:4}}>
-            {[
-              { ok: senha.length >= 8,         txt: 'Mínimo 8 caracteres' },
-              { ok: /[A-Z]/.test(senha),        txt: 'Uma letra maiúscula' },
-              { ok: /[0-9]/.test(senha),        txt: 'Um número' },
-              { ok: senha && senha === confirma, txt: 'Senhas coincidem' },
-            ].map((r, i) => (
+            {rules.map((r, i) => (
               <div key={i} style={{display:'flex', alignItems:'center', gap:6, fontSize:10, color: r.ok ? '#22C55E' : 'var(--txt3)'}}>
                 <span style={{fontSize:10}}>{r.ok ? '✓' : '○'}</span>
                 {r.txt}
@@ -169,7 +171,7 @@ export default function RedefinirSenha() {
 
           {erro && <div className="login-erro">{erro}</div>}
 
-          <button type="submit" className="login-btn" disabled={loading}>
+          <button type="submit" className="login-btn" disabled={loading || !allOk} style={{opacity: (loading || !allOk) ? 0.6 : 1}}>
             {loading ? 'Salvando...' : 'Redefinir senha'}
           </button>
         </form>

@@ -280,7 +280,44 @@ function NivelBadge({ pct, nivel }) {
 }
 
 function Spinner({ light }) { return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: light ? 'var(--lt-bg)' : 'var(--bg0)' }}><div className="spinner" /></div> }
-function NoProjeto() { return <div style={{ background: 'var(--bg0)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}><div style={{ fontSize: 48, opacity: 0.3 }}>📊</div><div style={{ fontSize: 15, fontWeight: 600, color: 'var(--cream)' }}>Nenhum projeto ativo</div></div> }
+function NoProjeto() {
+  return (
+    <div style={{ background: 'var(--bg0)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center', maxWidth: 480, padding: 40 }}>
+        <div style={{ width: 80, height: 80, margin: '0 auto 24px', borderRadius: '50%', background: 'linear-gradient(135deg, rgba(204,145,94,0.15), rgba(204,145,94,0.05))', border: '1px solid rgba(204,145,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>📊</div>
+        <h2 style={{ fontSize: 20, fontWeight: 300, color: 'var(--cream)', marginBottom: 8, fontFamily: "'Raleway', sans-serif", letterSpacing: '.3px' }}>Bem-vindo ao Polímata GRC</h2>
+        <p style={{ fontSize: 13, color: 'rgba(247,243,238,0.5)', lineHeight: 1.7, marginBottom: 24 }}>
+          Nenhum projeto ativo foi encontrado para o seu perfil. Para começar, peça ao administrador que vincule você a um projeto.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function EmptyProjectState({ navigate, isAdmin }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 400 }}>
+      <div style={{ textAlign: 'center', maxWidth: 520, padding: 40, background: 'var(--lt-bg)', borderRadius: 16, border: '1px dashed rgba(204,145,94,0.3)' }}>
+        <div style={{ width: 72, height: 72, margin: '0 auto 20px', borderRadius: '50%', background: 'linear-gradient(135deg, rgba(204,145,94,0.12), rgba(204,145,94,0.04))', border: '1px solid rgba(204,145,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🚀</div>
+        <h3 style={{ fontSize: 17, fontWeight: 300, color: 'var(--lt-text1)', marginBottom: 8, fontFamily: "'Raleway', sans-serif" }}>Vamos começar?</h3>
+        <p style={{ fontSize: 12, color: 'var(--lt-text2)', lineHeight: 1.8, marginBottom: 20 }}>
+          Este projeto ainda não possui riscos e controles cadastrados. Você pode importar em massa usando o template da MRC ou cadastrar um a um na visão por área.
+        </p>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {isAdmin && (
+            <button onClick={() => navigate('/importar-mrc')}
+              style={{ padding: '10px 20px', borderRadius: 8, background: 'linear-gradient(135deg, var(--gold-md), var(--gold))', color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+              📥 Importar Template MRC
+            </button>
+          )}
+        </div>
+        <p style={{ fontSize: 10, color: 'var(--lt-text3)', marginTop: 16 }}>
+          Na visão por área (sidebar), use o botão "Novo Risco" para cadastrar controles individualmente.
+        </p>
+      </div>
+    </div>
+  )
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TELA 1 — DASHBOARD (REDESIGN v7)
@@ -288,6 +325,7 @@ function NoProjeto() { return <div style={{ background: 'var(--bg0)', minHeight:
 
 function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizacao }) {
   const navigate = useNavigate()
+  const { perfil } = useAuth()
   const [areaFiltro, setAreaFiltro] = useState(null)
 
   const empresa = useMemo(() => calcularIndiceEmpresa(areasCalc.map(a => ({ nome: a.nome, peso: a.peso || 0, percentual: a.calc?.percentual || 0 }))), [areasCalc])
@@ -343,6 +381,7 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
 
   if (loading) return <Spinner />
   if (!projeto) return <NoProjeto />
+  if (todosControles.length === 0) return <EmptyProjectState navigate={navigate} isAdmin={perfil?.papel === 'admin_polimata'} />
 
   const D = dashStyles
 

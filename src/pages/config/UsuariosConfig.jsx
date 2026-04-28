@@ -320,9 +320,14 @@ function NovoUsuarioForm({ clientes, areas, projetos, onSave, onCancel }) {
     if (precisaCliente && !projetoId) { setErro('Selecione o projeto'); return }
     setSaving(true); setErro('')
     try {
-      const pNome = isConsultor
-        ? (projetos.find(p => projetosSel.includes(p.id))?.nome || 'Polímata GRC')
-        : (projetos.find(p => p.id === projetoId)?.nome || 'Polímata GRC')
+      const projetoRef = isConsultor
+        ? projetos.find(p => projetosSel.includes(p.id))
+        : projetos.find(p => p.id === projetoId)
+      const pNome = projetoRef?.nome || 'Polímata GRC'
+      const clienteRef = isConsultor
+        ? clientes.find(c => clientesSel.includes(c.id))
+        : clientes.find(c => c.id === clienteId)
+      const cNome = clienteRef?.nome || ''
 
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
@@ -335,6 +340,7 @@ function NovoUsuarioForm({ clientes, areas, projetos, onSave, onCancel }) {
           projetos_ids: isConsultor ? projetosSel : [],
           areas_ids: (form.papel === 'usuario_cliente' && !form.acesso_todas_areas) ? areasSel : [],
           projeto_nome: pNome,
+          cliente_nome: cNome,
         }
       })
       if (error) throw new Error(error.message || 'Erro ao criar usuário')
