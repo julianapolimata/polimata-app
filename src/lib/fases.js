@@ -146,6 +146,57 @@ export function getFaseNumero(c) {
   return getFaseInfo(c).numero
 }
 
+/**
+ * Campos de trabalho por fase — se algum está preenchido, a fase está "em andamento".
+ * Mapeado pelo código retornado por getFaseInfo().
+ */
+const CAMPOS_FASE = {
+  F1:   ['passos_f1', 'r1'],
+  F2E1: ['dem_pa', 'resp_pa', 'dt_pa', 'st_pa', 'coment_pa'],
+  F2E2: ['dt_teste', 'dc_novo', 'r_ader', 'melhoria', 'incons_ader', 'coment_ader'],
+  F3:   ['st_f3', 'r3', 'incons_f3', 'rec_f3'],
+  F4C1: ['r_f4c1', 'incons_f4c1', 'rec_f4c1', 'coment_f4c1', 'dt_f4c1'],
+  F4C2: ['r_f4c2', 'incons_f4c2', 'rec_f4c2', 'coment_f4c2', 'dt_f4c2'],
+  F5:   ['r_f5', 'incons_f5', 'rec_f5', 'coment_f5', 'dt_f5'],
+}
+
+function temDadosNaFase(c, codigoFase) {
+  const campos = CAMPOS_FASE[codigoFase]
+  if (!campos) return false
+  return campos.some(k => {
+    const v = c[k]
+    return v && v !== '' && v !== 'Teste Não Realizado' && v !== 'N/A'
+  })
+}
+
+/**
+ * Computa o status atual com base na fase atual e nos dados preenchidos.
+ * - status_workflow em_revisao / aprovado / reprovado → prevalece (estados do workflow)
+ * - Fase concluída (F5 com resultado) → 'aprovado' (ciclo completo)
+ * - Fase atual com dados salvos → 'em_analise'
+ * - Fase atual sem dados → 'nao_iniciado'
+ *
+ * @param {Object} c - registro da MRC
+ * @returns {string} status computado (mesmo vocabulário de status_workflow)
+ */
+export function getStatusComputado(c) {
+  if (!c) return 'nao_iniciado'
+
+  // Estados explícitos do workflow têm prioridade
+  const sw = c.status_workflow
+  if (sw === 'em_revisao' || sw === 'aprovado' || sw === 'reprovado') return sw
+
+  const info = getFaseInfo(c)
+
+  // Ciclo completo (F5 concluída)
+  if (info.concluida) return 'aprovado'
+
+  // Verifica se a fase atual (próxima a executar) tem dados
+  if (temDadosNaFase(c, info.codigo)) return 'em_analise'
+
+  return 'nao_iniciado'
+}
+
 // Constantes de referência
 const FASES = {
   F1: {

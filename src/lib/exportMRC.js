@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs'
-import { getFaseLabel as getFaseLabelUtil, getFaseInfo } from './fases'
+import { getFaseLabel as getFaseLabelUtil, getFaseInfo, getStatusComputado } from './fases'
 import { getStatusConfig } from './statusWorkflow'
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -506,7 +506,7 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
       } else if (col.key === 'fase') {
         value = getFaseLabel(row)
       } else if (col.key === 'status_atual') {
-        const cfg = getStatusConfig(row.status_workflow, 'admin_polimata')
+        const cfg = getStatusConfig(getStatusComputado(row), 'admin_polimata')
         value = cfg.label || '—'
       } else if (col.key === 'crit_label') {
         value = row.crit_label || CRIT_LABEL_MAP[row.crit] || '—'
