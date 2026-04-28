@@ -497,8 +497,8 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
   }, [mrc])
 
   const mrcVisiveis = mrc.filter(r => {
-    const sr = (r.status_risco || 'existente').toLowerCase()
-    if (filtroSit === 'existente') return sr === 'existente' || sr === '' || !r.status_risco
+    const sr = (r.status_risco || '').toLowerCase()
+    if (filtroSit === 'existente') return sr === 'existente' || sr === 'ativo' || sr === '' || !r.status_risco
     if (filtroSit === 'evitado') return sr === 'evitado'
     if (filtroSit === 'transferido') return sr === 'transferido'
     return true // 'todos'

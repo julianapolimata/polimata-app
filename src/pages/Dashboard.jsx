@@ -670,8 +670,8 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   }
 
   const controlesVisiveis = area.controles.filter(c => {
-    const sr = (c.status_risco || 'existente').toLowerCase()
-    if (filtSit === 'existente') return sr === 'existente' || sr === '' || !c.status_risco
+    const sr = (c.status_risco || '').toLowerCase()
+    if (filtSit === 'existente') return sr === 'existente' || sr === 'ativo' || sr === '' || !c.status_risco
     if (filtSit === 'evitado') return sr === 'evitado'
     if (filtSit === 'transferido') return sr === 'transferido'
     return true // 'todos'
