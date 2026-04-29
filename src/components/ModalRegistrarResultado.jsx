@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { getFaseAtual } from '../lib/fases'
+import { logRegistrarResultado } from '../lib/auditLog'
 
 const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
   // ═══ STATE ═══
@@ -187,6 +188,9 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
           }).catch(err => console.error('Erro ao enviar email de revisão:', err))
         })
       }
+
+      // Audit log
+      logRegistrarResultado(row, faseAtual, 'Submetido para revisão', row.projeto_id)
 
       onSaved?.(row)
       onClose?.()

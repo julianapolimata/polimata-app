@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import ExcelJS from 'exceljs'
+import HistoricoTab from './HistoricoTab'
+import { logAtualizarControle, logBaixarFicha } from '../lib/auditLog'
 
 const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
   // ═══ STATE ═══
@@ -14,6 +16,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
   const [novaDescControle, setNovaDescControle] = useState('')
   const [saving, setSaving] = useState(false)
   const [perfil, setPerfil] = useState(null)
+  const [showHistorico, setShowHistorico] = useState(false)
 
   // Control fields (Step 2)
   const [editCat, setEditCat] = useState(row.cat || '')
@@ -192,6 +195,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
       }
       await supabase.from('mrc').update(updates).eq('id', row.id)
       await gerarFichaExcel()
+      logAtualizarControle(row, row.projeto_id)
+      logBaixarFicha(row, row.projeto_id)
       onSaved && onSaved()
       onClose && onClose()
     } catch (err) {
@@ -510,6 +515,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         atualizado_por: perfil?.id,
       }
       await supabase.from('mrc').update(updates).eq('id', row.id)
+      logAtualizarControle(row, row.projeto_id)
       alert('✅ Salvo com sucesso! Status: TESTE PENDENTE')
       onSaved && onSaved()
       onClose && onClose()
@@ -1108,7 +1114,20 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Atualizar Controle</div>
             <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.8 }}>{row.rc} · {row.area}</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 28, color: 'white', cursor: 'pointer' }}>×</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={() => setShowHistorico(h => !h)}
+              style={{
+                background: showHistorico ? 'rgba(255,255,255,0.2)' : 'transparent',
+                border: '1px solid rgba(255,255,255,0.3)', borderRadius: 6,
+                padding: '5px 12px', fontSize: 11, fontWeight: 600, color: 'white',
+                cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
+              }}
+            >
+              {showHistorico ? '← Voltar' : '📋 Histórico'}
+            </button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 28, color: 'white', cursor: 'pointer' }}>×</button>
+          </div>
         </div>
 
         {/* STEPPER */}
@@ -1143,9 +1162,15 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
 
         {/* BODY */}
         <div style={{ flex: 1, padding: 24, overflow: 'y', overflowY: 'auto' }}>
-          {step === 1 && renderStep1()}
-          {step === 2 && renderStep2()}
-          {step === 3 && renderStep3()}
+          {showHistorico ? (
+            <HistoricoTab registroId={row.id} />
+          ) : (
+            <>
+              {step === 1 && renderStep1()}
+              {step === 2 && renderStep2()}
+              {step === 3 && renderStep3()}
+            </>
+          )}
         </div>
 
         {/* FOOTER */}

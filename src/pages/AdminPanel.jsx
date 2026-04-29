@@ -3,12 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import ClientesConfig from './config/ClientesConfig'
 import ProjetosConfig from './config/ProjetosConfig'
 import UsuariosConfig from './config/UsuariosConfig'
+import AuditLogConfig from './config/AuditLogConfig'
 import '../styles/admin.css'
 
 const MENU = [
   { id: 'clientes',  label: 'Clientes',       icon: '◎', desc: 'Cadastro e gestão de clientes' },
   { id: 'projetos',  label: 'Projetos',        icon: '◆', desc: 'Projetos, áreas e estrutura' },
   { id: 'usuarios',  label: 'Usuários',        icon: '◈', desc: 'Contas, papéis e permissões' },
+  { id: 'auditoria', label: 'Log de Auditoria', icon: '◉', desc: 'Histórico de alterações e ações' },
 ]
 
 export default function AdminPanel() {
@@ -74,6 +76,7 @@ export default function AdminPanel() {
             {secao === 'clientes' && <ClientesConfig onAbrirProjeto={abrirProjeto} />}
             {secao === 'projetos' && <ProjetosConfig projetoIdInicial={projetoIdAbrir} />}
             {secao === 'usuarios' && <UsuariosConfig />}
+            {secao === 'auditoria' && <AuditLogConfig />}
           </div>
         </div>
       </main>

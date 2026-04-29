@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { getFaseAtual } from '../lib/fases'
+import { logAprovar, logDevolver } from '../lib/auditLog'
 
 const CRIT_MAP = {
   4: { label: 'Crítico', bg: '#FFEBEE', color: '#C62828' },
@@ -84,6 +85,9 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
         }).catch(err => console.error('Erro ao enviar email:', err))
       }
 
+      // Audit log
+      logAprovar(row, row.projeto_id)
+
       onAction?.('aprovado')
       onClose?.()
     } catch (err) {
@@ -133,6 +137,9 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
           body: { type: 'review_completed', data: { autor_id: row.submetido_por, revisor_id: user?.id, ref: row.rc || row.rr, resultado: 'reprovado', nota: nota, area_id: row.area_id } }
         }).catch(err => console.error('Erro ao enviar email:', err))
       }
+
+      // Audit log
+      logDevolver(row, nota, row.projeto_id)
 
       onAction?.('reprovado')
       onClose?.()
