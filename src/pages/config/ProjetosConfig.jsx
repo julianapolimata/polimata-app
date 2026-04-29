@@ -478,6 +478,20 @@ function AbaEstrutura({ projetoId, areas, subprocessos, onReload }) {
                 </div>
               </div>
 
+              {expandido[a.id] && (
+                <div style={{marginTop:12,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:6}}>Subprocessos</div>
+                  {(subsMap[a.id]||[]).length > 0 ? (
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'2px 16px'}}>
+                      {(subsMap[a.id]||[]).map(s => (
+                        <div key={s.id} style={{fontSize:11,color:'var(--txt2)',padding:'3px 0'}}>• {s.nome}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{fontSize:11,color:'var(--txt3)',fontStyle:'italic'}}>Nenhum subprocesso cadastrado</div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
