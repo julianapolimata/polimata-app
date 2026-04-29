@@ -189,13 +189,18 @@
 /* Botões fora dos cards (fundo claro) */
 .adm-main .btn-cfg-sm { color: var(--navy, #00203E); border-color: rgba(0,32,62,0.2); }
 .adm-main .btn-cfg-sm:hover { border-color: var(--copper, #CC915E); color: var(--copper, #CC915E); }
-/* Botões DENTRO dos cards dark — sempre visíveis */
-.adm-main .cfg-card .btn-cfg-sm { color: var(--copper, #CC915E); border-color: var(--copper, #CC915E); }
-.adm-main .cfg-card .btn-cfg-sm:hover { background: rgba(204,145,94,0.15); }
-/* Inputs dentro dos cards dark */
-.adm-main .cfg-card .input-light { background: rgba(255,255,255,0.08); color: var(--cream, #F7F3EE); border-color: rgba(255,255,255,0.15); }
-.adm-main .cfg-card .input-light::placeholder { color: rgba(255,255,255,0.4); }
-.adm-main .cfg-card .input-light:focus { border-color: var(--copper, #CC915E); }
+/* Botões DENTRO dos cards/groups dark — sempre visíveis */
+.adm-main .cfg-card .btn-cfg-sm,
+.adm-main .cfg-group .btn-cfg-sm { color: var(--copper, #CC915E); border-color: var(--copper, #CC915E); }
+.adm-main .cfg-card .btn-cfg-sm:hover,
+.adm-main .cfg-group .btn-cfg-sm:hover { background: rgba(204,145,94,0.15); }
+/* Inputs dentro dos cards/groups dark */
+.adm-main .cfg-card .input-light,
+.adm-main .cfg-group .input-light { background: rgba(255,255,255,0.08); color: var(--cream, #F7F3EE); border-color: rgba(255,255,255,0.15); }
+.adm-main .cfg-card .input-light::placeholder,
+.adm-main .cfg-group .input-light::placeholder { color: rgba(255,255,255,0.4); }
+.adm-main .cfg-card .input-light:focus,
+.adm-main .cfg-group .input-light:focus { border-color: var(--copper, #CC915E); }
 
 /* Tabela de config no fundo claro */
 .adm-main .cfg-table-wrap { border-color: rgba(0,32,62,0.12); }
