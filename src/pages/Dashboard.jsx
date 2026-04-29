@@ -18,6 +18,7 @@ import {
   getNivelMaturidade,
 } from '../lib/calculoMaturidade'
 import { exportarMRCExcel } from '../lib/exportMRC'
+import { gerarTemplateMRC } from '../lib/templateMRC'
 import { getStatusConfig, canEditControl, canRegisterResult, isDevolvido, isAguardandoRevisao, STATUS } from '../lib/statusWorkflow'
 import { carregarConstantes } from '../lib/constantesLoader'
 
@@ -432,7 +433,7 @@ export default function Dashboard() {
           <Route path="/area/:areaId" element={<PorArea projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} navigate={navigate} loadDados={loadDados} />} />
           <Route path="/mrc" element={<MRCCompleta projetoId={projetoAtivo?.id} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} notificacoes={<NotificacoesPanel />} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
-          <Route path="/importar-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
+          <Route path="/importar-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} projeto={projetoAtivo} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
           <Route path="/perfil" element={<Perfil />} />
         </Routes>
       </main>
@@ -484,6 +485,10 @@ function EmptyProjectState({ navigate, isAdmin }) {
           Este projeto ainda não possui riscos e controles cadastrados. Você pode importar em massa usando o template da MRC ou cadastrar um a um na visão por área.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => gerarTemplateMRC()}
+            style={{ padding: '10px 20px', borderRadius: 8, background: 'transparent', color: 'var(--copper)', border: '1px solid var(--copper)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+            📄 Baixar Template MRC
+          </button>
           {isAdmin && (
             <button onClick={() => navigate('/importar-mrc')}
               style={{ padding: '10px 20px', borderRadius: 8, background: 'linear-gradient(135deg, var(--gold-md), var(--gold))', color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -492,7 +497,7 @@ function EmptyProjectState({ navigate, isAdmin }) {
           )}
         </div>
         <p style={{ fontSize: 10, color: 'var(--lt-text3)', marginTop: 16 }}>
-          Na visão por área (sidebar), use o botão "Novo Risco" para cadastrar controles individualmente.
+          Baixe o template para preencher offline e depois solicite a importação ao administrador. Na visão por área (sidebar), use o botão "Novo Risco" para cadastrar controles individualmente.
         </p>
       </div>
     </div>

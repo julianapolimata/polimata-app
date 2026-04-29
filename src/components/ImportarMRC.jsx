@@ -58,13 +58,33 @@ function normImp(val) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// FASES — lista completa com nomes amigáveis
+// ══════════════════════════════════════════════════════════════════════════════
+
+const TODAS_FASES = [
+  { codigo: 'F1',    numero: 1, label: 'F1 — Diagnóstico Inicial' },
+  { codigo: 'F2-E1', numero: 2, label: 'F2-E1 — Teste de Desenho' },
+  { codigo: 'F2-E2', numero: 2, label: 'F2-E2 — Planos de Ação e Aderência' },
+  { codigo: 'F3',    numero: 3, label: 'F3 — Controles Internos' },
+  { codigo: 'F4-C1', numero: 4, label: 'F4-C1 — Auditoria Contínua (Ciclo 1)' },
+  { codigo: 'F4-C2', numero: 4, label: 'F4-C2 — Auditoria Contínua (Ciclo 2)' },
+  { codigo: 'F5',    numero: 5, label: 'F5 — Auditoria Independente' },
+]
+
+function getFasesDisponiveis(numFases) {
+  const n = numFases || 5
+  return TODAS_FASES.filter(f => f.numero <= n)
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE
 // ══════════════════════════════════════════════════════════════════════════════
 
-export default function ImportarMRC({ projetoId, areas, onImported }) {
+export default function ImportarMRC({ projetoId, projeto, areas, onImported }) {
   const { perfil } = useAuth()
   const [file, setFile] = useState(null)
   const [areaSelecionada, setAreaSelecionada] = useState('')
+  const [faseSelecionada, setFaseSelecionada] = useState('')
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [importing, setImporting] = useState(false)
@@ -82,7 +102,10 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
   const isAdmin = perfil?.papel === 'admin_polimata'
   if (!isAdmin) return null
 
-  const areaNome = areas?.find(a => a.id === areaSelecionada)?.nome || ''
+  const isTodasAreas = areaSelecionada === '__todas__'
+  const areaNome = isTodasAreas ? 'Todas as áreas' : (areas?.find(a => a.id === areaSelecionada)?.nome || '')
+  const faseLabel = TODAS_FASES.find(f => f.codigo === faseSelecionada)?.label || ''
+  const fasesDisponiveis = getFasesDisponiveis(projeto?.num_fases)
 
   useEffect(() => {
     supabase.from('projetos').select('id, nome, clientes(nome)').order('nome')
@@ -120,38 +143,74 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
   // ── Importação ──
   async function handleImportar() {
     setShowConfirm(false)
-    if (!preview || !areaSelecionada || !projetoId) return
-    const areaObj = areas.find(a => a.id === areaSelecionada)
-    if (!areaObj) { setErro('Área não encontrada.'); return }
+    if (!preview || !areaSelecionada || !faseSelecionada || !projetoId) return
     setImporting(true); setResultado(null); setErro(null)
     try {
-      const { error: delError } = await supabase.from('mrc').delete().eq('projeto_id', projetoId).eq('area_id', areaObj.id)
-      if (delError) throw new Error(`Erro ao limpar área: ${delError.message}`)
-      const registros = preview.rows.map(row => {
-        const reg = { projeto_id: projetoId, area_id: areaObj.id, ativo: true, status_workflow: 'nao_iniciado', criado_por: perfil?.id || null, atualizado_por: perfil?.id || null }
-        Object.entries(COL_MAP).forEach(([colIdx, field]) => {
-          const val = row[parseInt(colIdx)]; const cleaned = cleanVal(val)
-          if (field === 'crit_label') { reg.crit_label = cleaned; reg.crit = parseCrit(cleaned) }
-          else if (field === 'imp') reg.imp = normImp(cleaned)
-          else if (field === 'prob') reg.prob = normProb(cleaned)
-          else if (field === 'dt_ult' || field === 'dt_pa' || field === 'dt_teste') {
-            if (cleaned instanceof Date) reg[field] = cleaned.toISOString()
-            else if (typeof cleaned === 'string') { try { const d = new Date(cleaned); reg[field] = !isNaN(d) ? d.toISOString() : null } catch { reg[field] = null } }
-            else reg[field] = null
-          } else reg[field] = typeof cleaned === 'string' ? cleaned : cleaned !== null ? String(cleaned) : null
+      if (isTodasAreas) {
+        // Importar para todas as áreas — apaga TUDO do projeto e insere sem area_id específico
+        const { error: delError } = await supabase.from('mrc').delete().eq('projeto_id', projetoId)
+        if (delError) throw new Error(`Erro ao limpar projeto: ${delError.message}`)
+        const registros = preview.rows.map(row => {
+          const reg = { projeto_id: projetoId, ativo: true, status_workflow: 'nao_iniciado', criado_por: perfil?.id || null, atualizado_por: perfil?.id || null }
+          // Tentar vincular à área pelo nome do processo (coluna 2 = área)
+          const areaNomeExcel = cleanVal(row[2])
+          if (areaNomeExcel) {
+            const areaMatch = (areas || []).find(a => a.nome.toLowerCase() === areaNomeExcel.toLowerCase())
+            if (areaMatch) reg.area_id = areaMatch.id
+          }
+          Object.entries(COL_MAP).forEach(([colIdx, field]) => {
+            const val = row[parseInt(colIdx)]; const cleaned = cleanVal(val)
+            if (field === 'crit_label') { reg.crit_label = cleaned; reg.crit = parseCrit(cleaned) }
+            else if (field === 'imp') reg.imp = normImp(cleaned)
+            else if (field === 'prob') reg.prob = normProb(cleaned)
+            else if (field === 'dt_ult' || field === 'dt_pa' || field === 'dt_teste') {
+              if (cleaned instanceof Date) reg[field] = cleaned.toISOString()
+              else if (typeof cleaned === 'string') { try { const d = new Date(cleaned); reg[field] = !isNaN(d) ? d.toISOString() : null } catch { reg[field] = null } }
+              else reg[field] = null
+            } else reg[field] = typeof cleaned === 'string' ? cleaned : cleaned !== null ? String(cleaned) : null
+          })
+          return reg
         })
-        return reg
-      })
-      const batchSize = 50; let inserted = 0
-      for (let i = 0; i < registros.length; i += batchSize) {
-        const batch = registros.slice(i, i + batchSize)
-        const { error: insError } = await supabase.from('mrc').insert(batch)
-        if (insError) throw new Error(`Erro ao inserir batch ${i}: ${insError.message}`)
-        inserted += batch.length
+        const batchSize = 50; let inserted = 0
+        for (let i = 0; i < registros.length; i += batchSize) {
+          const batch = registros.slice(i, i + batchSize)
+          const { error: insError } = await supabase.from('mrc').insert(batch)
+          if (insError) throw new Error(`Erro ao inserir batch ${i}: ${insError.message}`)
+          inserted += batch.length
+        }
+        setResultado({ ok: true, msg: `${inserted} controles importados com sucesso para todas as áreas (${faseLabel}).` })
+      } else {
+        // Importar para área específica
+        const areaObj = areas.find(a => a.id === areaSelecionada)
+        if (!areaObj) { setErro('Área não encontrada.'); return }
+        const { error: delError } = await supabase.from('mrc').delete().eq('projeto_id', projetoId).eq('area_id', areaObj.id)
+        if (delError) throw new Error(`Erro ao limpar área: ${delError.message}`)
+        const registros = preview.rows.map(row => {
+          const reg = { projeto_id: projetoId, area_id: areaObj.id, ativo: true, status_workflow: 'nao_iniciado', criado_por: perfil?.id || null, atualizado_por: perfil?.id || null }
+          Object.entries(COL_MAP).forEach(([colIdx, field]) => {
+            const val = row[parseInt(colIdx)]; const cleaned = cleanVal(val)
+            if (field === 'crit_label') { reg.crit_label = cleaned; reg.crit = parseCrit(cleaned) }
+            else if (field === 'imp') reg.imp = normImp(cleaned)
+            else if (field === 'prob') reg.prob = normProb(cleaned)
+            else if (field === 'dt_ult' || field === 'dt_pa' || field === 'dt_teste') {
+              if (cleaned instanceof Date) reg[field] = cleaned.toISOString()
+              else if (typeof cleaned === 'string') { try { const d = new Date(cleaned); reg[field] = !isNaN(d) ? d.toISOString() : null } catch { reg[field] = null } }
+              else reg[field] = null
+            } else reg[field] = typeof cleaned === 'string' ? cleaned : cleaned !== null ? String(cleaned) : null
+          })
+          return reg
+        })
+        const batchSize = 50; let inserted = 0
+        for (let i = 0; i < registros.length; i += batchSize) {
+          const batch = registros.slice(i, i + batchSize)
+          const { error: insError } = await supabase.from('mrc').insert(batch)
+          if (insError) throw new Error(`Erro ao inserir batch ${i}: ${insError.message}`)
+          inserted += batch.length
+        }
+        const gerente = registros.find(r => r.ger)?.ger || null
+        if (gerente) await supabase.from('areas').update({ gerente }).eq('id', areaObj.id)
+        setResultado({ ok: true, msg: `${inserted} controles importados com sucesso para "${areaObj.nome}" (${faseLabel}).${gerente ? ` Gerente atualizado: ${gerente}.` : ''}` })
       }
-      const gerente = registros.find(r => r.ger)?.ger || null
-      if (gerente) await supabase.from('areas').update({ gerente }).eq('id', areaObj.id)
-      setResultado({ ok: true, msg: `${inserted} controles importados com sucesso para "${areaObj.nome}".${gerente ? ` Gerente atualizado: ${gerente}.` : ''}` })
       setFile(null); setPreview(null)
       if (onImported) onImported()
     } catch (err) { setErro(err.message); setResultado({ ok: false, msg: err.message }) }
@@ -217,28 +276,40 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
           </div>
         </div>
 
-        {/* Step 1 */}
+        {/* Step 1 — Área */}
         <div style={{ marginBottom: 14 }}>
           <div style={label}>1. Selecione a área</div>
           <select value={areaSelecionada} onChange={e => setAreaSelecionada(e.target.value)} style={selectS}>
             <option value="">— Selecione a área —</option>
+            <option value="__todas__">Todas as áreas</option>
             {(areas || []).map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
           </select>
+          {isTodasAreas && <div style={{ fontSize: 10, color: '#D97706', marginTop: 4 }}>Todos os controles do projeto serão substituídos pelos do arquivo.</div>}
         </div>
 
-        {/* Step 2 */}
+        {/* Step 2 — Fase */}
         <div style={{ marginBottom: 14 }}>
-          <div style={label}>2. Selecione o arquivo Excel (.xlsx)</div>
-          <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} disabled={!areaSelecionada} style={{ fontFamily: 'inherit', fontSize: 12, color: 'var(--lt-text2)' }} />
+          <div style={label}>2. Selecione a fase</div>
+          <select value={faseSelecionada} onChange={e => setFaseSelecionada(e.target.value)} disabled={!areaSelecionada} style={selectS}>
+            <option value="">— Selecione a fase —</option>
+            {fasesDisponiveis.map(f => <option key={f.codigo} value={f.codigo}>{f.label}</option>)}
+          </select>
           {!areaSelecionada && <div style={{ fontSize: 10, color: 'var(--lt-text3)', marginTop: 4 }}>Selecione a área primeiro.</div>}
+        </div>
+
+        {/* Step 3 — Arquivo */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={label}>3. Selecione o arquivo Excel (.xlsx)</div>
+          <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} disabled={!areaSelecionada || !faseSelecionada} style={{ fontFamily: 'inherit', fontSize: 12, color: 'var(--lt-text2)' }} />
+          {(!areaSelecionada || !faseSelecionada) && <div style={{ fontSize: 10, color: 'var(--lt-text3)', marginTop: 4 }}>Selecione a área e a fase primeiro.</div>}
           {loading && <div style={{ fontSize: 11, color: 'var(--copper)', marginTop: 6 }}>Lendo arquivo...</div>}
           {erro && <div style={{ fontSize: 11, color: '#DC2626', marginTop: 6, background: 'rgba(239,68,68,0.08)', padding: '6px 10px', borderRadius: 4 }}>{erro}</div>}
         </div>
 
-        {/* Step 3 — Preview */}
+        {/* Step 4 — Preview */}
         {preview && (
           <div style={{ marginBottom: 14 }}>
-            <div style={label}>3. Preview — {previewCount} controles encontrados</div>
+            <div style={label}>4. Preview — {previewCount} controles encontrados</div>
             <div style={{ maxHeight: 360, overflow: 'auto', border: '1px solid var(--lt-border)', borderRadius: 6 }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                 <thead>
@@ -266,13 +337,13 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
           </div>
         )}
 
-        {/* Step 4 — Confirmar */}
-        {preview && areaSelecionada && (
+        {/* Step 5 — Confirmar */}
+        {preview && areaSelecionada && faseSelecionada && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(204,145,94,0.06)', border: '1px solid rgba(204,145,94,0.2)', borderRadius: 8, padding: '12px 16px', gap: 16 }}>
             <div style={{ fontSize: 12, color: 'var(--lt-text2)', lineHeight: 1.5 }}>
-              Importar <strong>{previewCount} controles</strong> para a área <strong>"{areaNome}"</strong>?
-              <br />Todos os controles existentes dessa área serão removidos.
-              {preview.rows[0]?.[3] && <><br />Gerente será atualizado para: <strong>{preview.rows[0][3]}</strong></>}
+              Importar <strong>{previewCount} controles</strong> para <strong>"{areaNome}"</strong> na fase <strong>{faseLabel}</strong>?
+              <br />{isTodasAreas ? 'Todos os controles do projeto serão removidos.' : 'Todos os controles existentes dessa área serão removidos.'}
+              {!isTodasAreas && preview.rows[0]?.[3] && <><br />Gerente será atualizado para: <strong>{preview.rows[0][3]}</strong></>}
             </div>
             <button onClick={() => setShowConfirm(true)} disabled={importing} style={{ background: 'var(--copper)', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap', opacity: importing ? 0.5 : 1 }}>
               {importing ? 'Importando...' : `Importar ${previewCount} controles`}
@@ -332,7 +403,11 @@ export default function ImportarMRC({ projetoId, areas, onImported }) {
             <div style={{ fontSize: 40, marginBottom: 8 }}>⚠</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: '#D97706', marginBottom: 12 }}>Confirmar importação</div>
             <div style={{ fontSize: 13, color: 'var(--lt-text2)', lineHeight: 1.6, marginBottom: 24, textAlign: 'left' }}>
-              Todos os controles existentes da área <strong>"{areaNome}"</strong> serão <span style={{ color: 'var(--res-gp)', fontWeight: 700 }}>permanentemente apagados</span> e substituídos pelos <strong>{previewCount} controles</strong> do arquivo.
+              {isTodasAreas
+                ? <>Todos os controles do projeto serão <span style={{ color: 'var(--res-gp)', fontWeight: 700 }}>permanentemente apagados</span> e substituídos pelos <strong>{previewCount} controles</strong> do arquivo.</>
+                : <>Todos os controles existentes da área <strong>"{areaNome}"</strong> serão <span style={{ color: 'var(--res-gp)', fontWeight: 700 }}>permanentemente apagados</span> e substituídos pelos <strong>{previewCount} controles</strong> do arquivo.</>
+              }
+              <br /><br />Fase: <strong>{faseLabel}</strong>
               <br /><br /><strong>Essa ação não pode ser desfeita.</strong>
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
