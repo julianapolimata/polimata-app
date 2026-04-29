@@ -429,7 +429,7 @@ export default function Dashboard() {
           </div>
         )}
         <Routes>
-          <Route path="/" element={<HomeDash projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} ultimaAtualizacao={ultimaAtualizacao} />} />
+          <Route path="/" element={<HomeDash projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} ultimaAtualizacao={ultimaAtualizacao} loadDados={loadDados} />} />
           <Route path="/area/:areaId" element={<PorArea projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} navigate={navigate} loadDados={loadDados} />} />
           <Route path="/mrc" element={<MRCCompleta projetoId={projetoAtivo?.id} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} notificacoes={<NotificacoesPanel />} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
@@ -475,7 +475,8 @@ function NoProjeto() {
   )
 }
 
-function EmptyProjectState({ navigate, isAdmin }) {
+function EmptyProjectState({ navigate, isAdmin, projetoId, projeto, areasCalc, onImported }) {
+  const [showImportModal, setShowImportModal] = useState(false)
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 400 }}>
       <div style={{ textAlign: 'center', maxWidth: 520, padding: 40, background: 'var(--lt-bg)', borderRadius: 16, border: '1px dashed rgba(204,145,94,0.3)' }}>
@@ -489,17 +490,25 @@ function EmptyProjectState({ navigate, isAdmin }) {
             style={{ padding: '10px 20px', borderRadius: 8, background: 'transparent', color: 'var(--copper)', border: '1px solid var(--copper)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
             📄 Baixar Template MRC
           </button>
-          {isAdmin && (
-            <button onClick={() => navigate('/importar-mrc')}
-              style={{ padding: '10px 20px', borderRadius: 8, background: 'linear-gradient(135deg, var(--gold-md), var(--gold))', color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
-              📥 Importar Template MRC
-            </button>
-          )}
+          <button onClick={() => setShowImportModal(true)}
+            style={{ padding: '10px 20px', borderRadius: 8, background: 'linear-gradient(135deg, var(--gold-md), var(--gold))', color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+            📥 Importar Template MRC
+          </button>
         </div>
         <p style={{ fontSize: 10, color: 'var(--lt-text3)', marginTop: 16 }}>
           Baixe o template para preencher offline e depois solicite a importação ao administrador. Na visão por área (sidebar), use o botão "Novo Risco" para cadastrar controles individualmente.
         </p>
       </div>
+
+      {/* Modal de Importação */}
+      {showImportModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setShowImportModal(false)}>
+          <div style={{ background: 'var(--lt-card)', borderRadius: 16, maxWidth: 920, width: '95%', maxHeight: '90vh', overflow: 'auto', position: 'relative', boxShadow: '0 24px 48px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowImportModal(false)} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', fontSize: 18, color: 'var(--lt-text3)', cursor: 'pointer', zIndex: 1 }} title="Fechar">✕</button>
+            <ImportarMRC projetoId={projetoId} projeto={projeto} areas={areasCalc} allowNonAdmin={true} onImported={() => { setShowImportModal(false); if (onImported) onImported() }} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -508,7 +517,7 @@ function EmptyProjectState({ navigate, isAdmin }) {
 // TELA 1 — DASHBOARD (REDESIGN v7)
 // ══════════════════════════════════════════════════════════════════════════════
 
-function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizacao }) {
+function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizacao, loadDados }) {
   const navigate = useNavigate()
   const { perfil } = useAuth()
   const [areaFiltro, setAreaFiltro] = useState(null)
@@ -566,7 +575,7 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
 
   if (loading) return <Spinner />
   if (!projeto) return <NoProjeto />
-  if (todosControles.length === 0) return <EmptyProjectState navigate={navigate} isAdmin={perfil?.papel === 'admin_polimata'} />
+  if (todosControles.length === 0) return <EmptyProjectState navigate={navigate} isAdmin={perfil?.papel === 'admin_polimata'} projetoId={projeto?.id} projeto={projeto} areasCalc={areasCalc} onImported={() => { if (projeto?.id) loadDados(projeto.id) }} />
 
   const D = dashStyles
 
@@ -1063,6 +1072,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
         <div style={{ fontSize: 10, color: 'var(--lt-text3)', background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 10px' }}>{cf.length} controles</div>
         {(busca || filtCrit || filtImp || filtRes || filtFase || filtSit !== 'existente') && <button onClick={() => { setBusca(''); setFiltCrit(''); setFiltImp(''); setFiltRes(''); setFiltFase(''); setFiltSit('existente') }} style={{ background: 'none', border: 'none', fontSize: 10, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>✕ Limpar</button>}
         {canEdit && <button onClick={() => setModalNovoRisco(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#00203E', border: '1px solid #00203E', borderRadius: 999, padding: '5px 14px', fontSize: 10, fontWeight: 600, color: 'white', cursor: 'pointer', fontFamily: 'inherit' }} title="Criar novo risco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Risco</button>}
+        <button onClick={() => gerarTemplateMRC()} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--copper)', borderRadius: 999, padding: '5px 14px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit' }} title="Baixar template MRC em branco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Template</button>
         <button onClick={() => exportarMRCExcel(cf, `MRC_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`, nome, projeto?.clientes?.nome || '', projeto?.nome || '')} style={PA.btnExport} title="Exportar Excel da área">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
           Excel

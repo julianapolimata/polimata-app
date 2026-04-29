@@ -80,7 +80,7 @@ function getFasesDisponiveis(numFases) {
 // COMPONENTE
 // ══════════════════════════════════════════════════════════════════════════════
 
-export default function ImportarMRC({ projetoId, projeto, areas, onImported }) {
+export default function ImportarMRC({ projetoId, projeto, areas, onImported, allowNonAdmin }) {
   const { perfil } = useAuth()
   const [file, setFile] = useState(null)
   const [areaSelecionada, setAreaSelecionada] = useState('')
@@ -100,7 +100,7 @@ export default function ImportarMRC({ projetoId, projeto, areas, onImported }) {
   const [lbResult, setLbResult] = useState(null)
 
   const isAdmin = perfil?.papel === 'admin_polimata'
-  if (!isAdmin) return null
+  if (!isAdmin && !allowNonAdmin) return null
 
   const isTodasAreas = areaSelecionada === '__todas__'
   const areaNome = isTodasAreas ? 'Todas as áreas' : (areas?.find(a => a.id === areaSelecionada)?.nome || '')
@@ -358,8 +358,8 @@ export default function ImportarMRC({ projetoId, projeto, areas, onImported }) {
         )}
       </div>
 
-      {/* ══════ 3. LIMPAR BASE ══════ */}
-      <div style={card}>
+      {/* ══════ 3. LIMPAR BASE (admin only) ══════ */}
+      {isAdmin && <div style={card}>
         <div style={secTitle}>Limpar Base de Testes</div>
         <div style={{ fontSize: 12, color: 'var(--lt-text2)', lineHeight: 1.5, marginBottom: 14 }}>
           Remove todos os resultados de testes (F1 a F5), revisões e notificações de um projeto. A identificação dos controles (risco, controle, área) é mantida.
@@ -394,7 +394,7 @@ export default function ImportarMRC({ projetoId, projeto, areas, onImported }) {
             )}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* ══════ POP-UP CONFIRMAÇÃO ══════ */}
       {showConfirm && (
