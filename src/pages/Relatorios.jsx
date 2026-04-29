@@ -5,7 +5,9 @@ import { getStatusComputado } from '../lib/fases'
 // ── Multi-select dropdown component ──────────────────────────────────────────
 function MultiSelect({ label, options, selected, onChange, placeholder }) {
   const [open, setOpen] = useState(false)
+  const [openUp, setOpenUp] = useState(false)
   const ref = useRef(null)
+  const btnRef = useRef(null)
 
   useEffect(() => {
     const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
@@ -13,9 +15,13 @@ function MultiSelect({ label, options, selected, onChange, placeholder }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const toggle = val => {
-    if (selected.includes(val)) onChange(selected.filter(v => v !== val))
-    else onChange([...selected, val])
+  const handleOpen = () => {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      setOpenUp(spaceBelow < 280)
+    }
+    setOpen(o => !o)
   }
 
   const displayText = selected.length === 0
@@ -30,7 +36,8 @@ function MultiSelect({ label, options, selected, onChange, placeholder }) {
     <div ref={ref} style={{ position: 'relative' }}>
       <label style={{ fontSize: 11, color: 'var(--txt3)', display: 'block', marginBottom: 4, fontWeight: 500 }}>{label}</label>
       <button
-        onClick={() => setOpen(o => !o)}
+        ref={btnRef}
+        onClick={handleOpen}
         style={{
           width: '100%', padding: '8px 10px', fontSize: 12,
           border: selected.length > 0 ? '1.5px solid var(--copper)' : '1px solid var(--brd)',
@@ -47,12 +54,15 @@ function MultiSelect({ label, options, selected, onChange, placeholder }) {
       </button>
       {open && (
         <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4,
+          position: 'absolute',
+          ...(openUp
+            ? { bottom: '100%', marginBottom: 4 }
+            : { top: '100%', marginTop: 4 }),
+          left: 0, right: 0,
           background: 'var(--card-bg, #fff)', border: '1px solid var(--brd)',
           borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-          zIndex: 100, maxHeight: 220, overflowY: 'auto', padding: '4px 0',
+          zIndex: 100, maxHeight: 260, overflowY: 'auto', padding: '4px 0',
         }}>
-          {/* Select all / clear */}
           <div style={{ padding: '6px 12px', borderBottom: '1px solid var(--brd)', display: 'flex', gap: 8 }}>
             <button
               onClick={() => onChange(options.map(o => o.value))}
@@ -200,7 +210,7 @@ export default function Relatorios({ projeto, areasCalc, todosControles, cliente
   ]
 
   return (
-    <div style={{ padding: '32px 40px', maxWidth: 960, fontFamily: "'Montserrat', sans-serif" }}>
+    <div style={{ padding: '32px 40px 300px', maxWidth: 960, fontFamily: "'Montserrat', sans-serif" }}>
       <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--txt1)', margin: '0 0 4px' }}>
         Gerar relatório
       </h2>
