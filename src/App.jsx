@@ -1,11 +1,36 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Component } from 'react'
 import { ToastProvider } from './components/Toast'
 import { ConfirmProvider } from './components/ConfirmDialog'
 import Login from './pages/Login'
 import RedefinirSenha from './pages/RedefinirSenha'
 import Dashboard from './pages/Dashboard'
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null } }
+  static getDerivedStateFromError(error) { return { error } }
+  componentDidCatch(err, info) { console.error('React ErrorBoundary:', err, info) }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ minHeight: '100vh', background: '#F3EEE4', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ maxWidth: 480, textAlign: 'center' }}>
+            <h2 style={{ color: '#00203E', fontSize: 18, fontWeight: 300, fontFamily: "'Raleway', sans-serif", marginBottom: 12 }}>Erro ao carregar</h2>
+            <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C62828', padding: '12px 16px', borderRadius: 8, fontSize: 12, marginBottom: 16, textAlign: 'left', wordBreak: 'break-word' }}>
+              {this.state.error.message || String(this.state.error)}
+            </div>
+            <button onClick={() => { this.setState({ error: null }); window.location.reload() }}
+              style={{ padding: '10px 24px', borderRadius: 8, border: '1px solid #CC915E', background: '#CC915E', color: '#fff', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>
+              Recarregar
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function LoadingScreen() {
   const [slow, setSlow] = useState(false)
@@ -136,14 +161,16 @@ export default function App() {
   if (needsPasswordSetup) return <PasswordSetupPage />
 
   return (
-    <ToastProvider>
-      <ConfirmProvider>
-        <Routes>
-          <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-          <Route path="/redefinir-senha" element={<RedefinirSenha />} />
-          <Route path="/*" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        </Routes>
-      </ConfirmProvider>
-    </ToastProvider>
+    <ErrorBoundary>
+      <ToastProvider>
+        <ConfirmProvider>
+          <Routes>
+            <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+            <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+            <Route path="/*" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          </Routes>
+        </ConfirmProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   )
 }
