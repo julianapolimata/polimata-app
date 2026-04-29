@@ -199,6 +199,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const location = useLocation()
   const [projetos, setProjetos] = useState([])
+  const [projetosLoaded, setProjetosLoaded] = useState(false)
   const [projetoAtivo, setProjetoAtivo] = useState(null)
   const [projetoResumos, setProjetoResumos] = useState({})
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -213,9 +214,9 @@ export default function Dashboard() {
     const { data } = await supabase.from('projetos').select('*, clientes(nome, slug)').eq('ativo', true).order('criado_em', { ascending: false })
     if (data) {
       setProjetos(data)
-      // Buscar resumos para o seletor de projetos
       loadResumos(data)
     }
+    setProjetosLoaded(true)
   }
 
   async function loadResumos(projs) {
@@ -301,11 +302,15 @@ export default function Dashboard() {
   const mainLightClass = isHomeDash ? '' : 'main-light'
   const ultimaAtualizacao = useMemo(() => getUltimaAtualizacao(todosControles), [todosControles])
 
+  // Aguardando carregamento inicial dos projetos
+  if (!projetosLoaded) {
+    return <div className="loading-screen"><div className="spinner" /></div>
+  }
   // Seletor de projetos — exibido quando nenhum projeto está selecionado
   if (!projetoAtivo && projetos.length > 0) {
     return <ProjectSelector projetos={projetos} resumos={projetoResumos} perfil={perfil} onSelect={p => { setProjetoAtivo(p); navigate('/') }} signOut={signOut} />
   }
-  if (!projetoAtivo && projetos.length === 0 && !loading) {
+  if (!projetoAtivo && projetos.length === 0) {
     return <NoProjeto />
   }
 
