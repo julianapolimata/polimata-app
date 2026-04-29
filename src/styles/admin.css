@@ -176,7 +176,7 @@
   /* Herdará os estilos de cfg-section, cfg-cards, etc. */
 }
 
-/* ── Overrides: config components no fundo claro ── */
+/* ── Overrides: textos no fundo claro do admin (FORA dos cards dark) ── */
 .adm-main .cfg-form-title { color: var(--navy, #00203E); }
 .adm-main .cfg-form-sub { color: #64748b; }
 .adm-main .cfg-back { color: var(--navy, #00203E); border-color: rgba(0,32,62,0.2); }
@@ -184,9 +184,6 @@
 .adm-main .cfg-section-title { color: var(--navy, #00203E); }
 .adm-main .cfg-section-sub { color: #64748b; }
 .adm-main .cfg-card { border-color: rgba(0,32,62,0.1); }
-.adm-main .cfg-card-nome { color: var(--navy, #00203E); }
-.adm-main .cfg-card-meta { color: #64748b; }
-.adm-main .cfg-card-arrow { color: #94a3b8; }
 .adm-main .cfg-empty { color: #64748b; }
 .adm-main .cfg-erro { color: #dc2626; }
 .adm-main .btn-cfg-sm { color: var(--navy, #00203E); border-color: rgba(0,32,62,0.2); }
