@@ -137,9 +137,16 @@
 /* ── Main ── */
 .adm-main {
   flex: 1;
+  min-height: 0;          /* Allow flex child to shrink below content size */
   overflow-y: auto;
   background: var(--lt-bg, #F0F2F5);
 }
+
+/* Force scrollbar visible on light background */
+.adm-main::-webkit-scrollbar { width: 8px; }
+.adm-main::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); }
+.adm-main::-webkit-scrollbar-thumb { background: rgba(0,32,62,0.2); border-radius: 4px; }
+.adm-main::-webkit-scrollbar-thumb:hover { background: rgba(0,32,62,0.4); }
 
 .adm-content {
   max-width: 1100px;
