@@ -189,6 +189,18 @@
 .adm-main .btn-cfg-sm { color: var(--navy, #00203E); border-color: rgba(0,32,62,0.2); }
 .adm-main .btn-cfg-sm:hover { border-color: var(--copper, #CC915E); color: var(--copper, #CC915E); }
 
+/* Tabela de config no fundo claro */
+.adm-main .cfg-table-wrap { border-color: rgba(0,32,62,0.12); }
+.adm-main .cfg-table thead th { background: var(--navy, #00203E); color: #fff; border-color: rgba(0,32,62,0.1); }
+.adm-main .cfg-table tbody td { color: var(--navy, #00203E); border-color: rgba(0,32,62,0.08); }
+.adm-main .cfg-table tbody td:nth-child(2) { color: #64748b; } /* email column */
+.adm-main .btn-tbl-del { color: #e87171; }
+
+/* Inputs no fundo claro */
+.adm-main .input-light { background: #fff; color: var(--navy, #00203E); border: 1px solid rgba(0,32,62,0.2); }
+.adm-main .input-light::placeholder { color: #94a3b8; }
+.adm-main .input-light:focus { border-color: var(--copper, #CC915E); outline: none; }
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .adm-sidebar {
