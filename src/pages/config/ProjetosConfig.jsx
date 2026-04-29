@@ -459,17 +459,19 @@ function AbaEstrutura({ projetoId, areas, subprocessos, onReload }) {
             <div className="cfg-group" style={{padding:'14px 18px'}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                 <div style={{display:'flex',alignItems:'center',gap:12,flex:1,cursor:'pointer'}} onClick={()=>toggleExpand(a.id)}>
-                  <span style={{fontSize:10,color:'var(--txt3)'}}>{expandido[a.id] ? '▼' : '▶'}</span>
+                  <span style={{fontSize:10,color:'var(--txt3)',transition:'transform .15s',transform:expandido[a.id]?'rotate(90deg)':'rotate(0)'}}>{'▶'}</span>
                   <span className="tag-prefixo">{a.prefixo}</span>
                   <div>
                     <div style={{fontSize:13,fontWeight:500,color:'var(--txt1)'}}>{a.nome}</div>
-                    <div style={{fontSize:10,color:'var(--txt3)',marginTop:2}}>
-                      {a.gerencia && <span>Gerência: {a.gerencia}{a.gerencia_email ? ` (${a.gerencia_email})` : ''} · </span>}
-                      {a.resp_area_nome && <span>Resp: {a.resp_area_nome}{a.resp_area_email ? ` (${a.resp_area_email})` : ''} · </span>}
-                      Peso: {(a.peso*100).toFixed(1)}%
-                      <span style={{margin:'0 4px',opacity:0.3}}>·</span>
-                      {(subsMap[a.id]||[]).length} subprocesso{(subsMap[a.id]||[]).length !== 1 ? 's' : ''}
-                    </div>
+                    {!expandido[a.id] && (
+                      <div style={{fontSize:10,color:'var(--txt3)',marginTop:2}}>
+                        {a.gerencia && <span>Gerência: {a.gerencia} · </span>}
+                        {a.resp_area_nome && <span>Resp: {a.resp_area_nome} · </span>}
+                        Peso: {(a.peso*100).toFixed(1)}%
+                        <span style={{margin:'0 4px',opacity:0.3}}>·</span>
+                        {(subsMap[a.id]||[]).length} subprocesso{(subsMap[a.id]||[]).length !== 1 ? 's' : ''}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div style={{display:'flex',gap:6}}>
@@ -479,17 +481,60 @@ function AbaEstrutura({ projetoId, areas, subprocessos, onReload }) {
               </div>
 
               {expandido[a.id] && (
-                <div style={{marginTop:12,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.06)'}}>
-                  <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:6}}>Subprocessos</div>
-                  {(subsMap[a.id]||[]).length > 0 ? (
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'2px 16px'}}>
-                      {(subsMap[a.id]||[]).map(s => (
-                        <div key={s.id} style={{fontSize:11,color:'var(--txt2)',padding:'3px 0'}}>• {s.nome}</div>
-                      ))}
+                <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+                  {/* Dados gerais */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'12px 20px',marginBottom:16}}>
+                    <div>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Área / Processo</div>
+                      <div style={{fontSize:13,color:'var(--txt1)'}}>{a.nome || '—'}</div>
                     </div>
-                  ) : (
-                    <div style={{fontSize:11,color:'var(--txt3)',fontStyle:'italic'}}>Nenhum subprocesso cadastrado</div>
-                  )}
+                    <div>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Prefixo</div>
+                      <div style={{fontSize:13,color:'var(--txt1)'}}>{a.prefixo || '—'}</div>
+                    </div>
+                    <div>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Peso (%)</div>
+                      <div style={{fontSize:13,color:'var(--txt1)'}}>{a.peso ? (a.peso*100).toFixed(1)+'%' : '—'}</div>
+                    </div>
+                  </div>
+
+                  {/* Gerência */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 20px',marginBottom:16}}>
+                    <div>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Gerência</div>
+                      <div style={{fontSize:13,color:'var(--txt1)'}}>{a.gerencia || '—'}</div>
+                    </div>
+                    <div>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Email da Gerência</div>
+                      <div style={{fontSize:13,color:'var(--txt1)'}}>{a.gerencia_email || '—'}</div>
+                    </div>
+                  </div>
+
+                  {/* Responsável */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 20px',marginBottom:16}}>
+                    <div>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Responsável da Área</div>
+                      <div style={{fontSize:13,color:'var(--txt1)'}}>{a.resp_area_nome || '—'}</div>
+                    </div>
+                    <div>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Email do Responsável</div>
+                      <div style={{fontSize:13,color:'var(--txt1)'}}>{a.resp_area_email || '—'}</div>
+                    </div>
+                  </div>
+
+                  {/* Subprocessos */}
+                  <div>
+                    <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:6}}>Subprocessos</div>
+                    {(subsMap[a.id]||[]).length > 0 ? (
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 20px'}}>
+                        {(subsMap[a.id]||[]).map(s => (
+                          <div key={s.id} style={{fontSize:12,color:'var(--txt2)',padding:'4px 0'}}>• {s.nome}</div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{fontSize:11,color:'var(--txt3)',fontStyle:'italic'}}>Nenhum subprocesso cadastrado</div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

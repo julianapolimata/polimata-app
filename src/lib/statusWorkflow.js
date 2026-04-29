@@ -85,10 +85,11 @@ export function canEditControl(status) {
 
 /**
  * Verifica se o profissional pode registrar resultado de teste
- * Pode: em_analise, teste_pendente (já tem dados, pode registrar teste)
+ * Pode: em_analise (baixou a ficha e realizou o teste)
+ * Não pode: teste_pendente (salvou sem gerar ficha — precisa baixar a ficha primeiro)
  */
 export function canRegisterResult(status) {
-  return [STATUS.EM_ANALISE, STATUS.TESTE_PENDENTE].includes(status)
+  return status === STATUS.EM_ANALISE
 }
 
 /**

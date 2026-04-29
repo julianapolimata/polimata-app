@@ -489,9 +489,9 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
       } else if (col.key === '_hist_f1') {
         value = fmtHist(row.r1)
       } else if (col.key === '_hist_f2d') {
-        value = fmtHist(row.st_pa)
+        value = (row.r1||'').toLowerCase() === 'efetivo' ? 'N/A' : fmtHist(row.st_pa)
       } else if (col.key === '_hist_f2e') {
-        value = fmtHist(row.r_ader)
+        value = (row.r1||'').toLowerCase() === 'efetivo' ? 'N/A' : fmtHist(row.r_ader)
       } else if (col.key === '_hist_f3') {
         value = fmtHist(row.r3)
       } else if (col.key === '_hist_f4c1') {

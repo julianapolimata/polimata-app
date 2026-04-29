@@ -13,6 +13,7 @@ import ModalRegistrarResultado from '../components/ModalRegistrarResultado'
 import ModalRevisar from '../components/ModalRevisar'
 import NotificacoesPanel from '../components/NotificacoesPanel'
 import ImportarMRC from '../components/ImportarMRC'
+import Relatorios from './Relatorios'
 import {
   calcularIndiceEmpresa,
   getNivelMaturidade,
@@ -401,6 +402,7 @@ export default function Dashboard() {
           {sidebarOpen && <div className="sb-sep">Operação</div>}
           <SideNavItem icon="📋" label="MRC Completa" active={location.pathname === '/mrc'} onClick={() => navigate('/mrc')} open={sidebarOpen}
             badge={todosControles.length > 0 ? todosControles.length : null} />
+          <SideNavItem icon="📄" label="Relatórios" active={location.pathname === '/relatorios'} onClick={() => navigate('/relatorios')} open={sidebarOpen} />
           {isAdmin && (<>{sidebarOpen && <div className="sb-sep">Administração</div>}
             <SideNavItem icon="📥" label="Manutenção MRC" active={location.pathname === '/importar-mrc'} onClick={() => navigate('/importar-mrc')} open={sidebarOpen} /></>)}
         </nav>
@@ -442,6 +444,7 @@ export default function Dashboard() {
           <Route path="/" element={<HomeDash projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} ultimaAtualizacao={ultimaAtualizacao} loadDados={loadDados} />} />
           <Route path="/area/:areaId" element={<PorArea projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} navigate={navigate} loadDados={loadDados} />} />
           <Route path="/mrc" element={<MRCCompleta projetoId={projetoAtivo?.id} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} notificacoes={<NotificacoesPanel />} />} />
+          <Route path="/relatorios" element={<Relatorios projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
           <Route path="/importar-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} projeto={projetoAtivo} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
           <Route path="/perfil" element={<Perfil />} />
@@ -803,10 +806,9 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   const [rowRegistrarResultado, setRowRegistrarResultado] = useState(null)
   const [rowRevisar, setRowRevisar] = useState(null)
   const [dashCollapsed, setDashCollapsed] = useState(false)
-  const topBarRef = useRef(null)
+  // topBarRef removido
   const tableScrollRef = useRef(null)
-  const syncing = useRef(false)
-  const syncScroll = (src, dst) => { if (syncing.current) return; syncing.current = true; if (dst.current) dst.current.scrollLeft = src.current.scrollLeft; syncing.current = false }
+  // syncScroll removido
   const papelAtivo = simularPerfil || perfil?.papel
   const canEdit = papelAtivo === 'admin_polimata' || papelAtivo === 'consultor_polimata'
   const isAdmin = papelAtivo === 'admin_polimata'
@@ -953,8 +955,8 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   function faseVal(c, key, rawVal) {
     const override = getFaseDisplayOverride(c, key)
     if (override !== null) return override
-    // F1 efetivo → F2 columns show N/A
-    if ((key === 'st_pa' || key === 'r_ader') && (c.r1||'').toLowerCase() === 'efetivo' && !rawVal) return 'N/A'
+    // F1 efetivo → F2 columns show N/A (pula F2 inteira, vai direto p/ F3)
+    if ((key === 'st_pa' || key === 'r_ader') && (c.r1||'').toLowerCase() === 'efetivo') return 'N/A'
     return normalizeFaseValue(rawVal)
   }
   // Headers de fase coloridos
@@ -1101,8 +1103,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
 
       {/* TABELA MRC */}
       <div style={PA.tabelaWrap}>
-        <div ref={topBarRef} onScroll={() => syncScroll(topBarRef, tableScrollRef)} style={{ overflowX: 'auto', overflowY: 'hidden', flexShrink: 0 }}><div style={{ height: 1, width: PA_DATA_COLS.reduce((s, c) => s + c.w, 0) + FASE_HDR.length * FASE_W + 130 }} /></div>
-        <div ref={tableScrollRef} onScroll={() => syncScroll(tableScrollRef, topBarRef)} style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', minHeight: 0 }}>
+        <div ref={tableScrollRef} style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', minHeight: 0 }}>
           <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>
               {PA_DATA_COLS.map((col, i) =>
@@ -1131,6 +1132,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
                 {!isCliente && <td style={{ ...tdS, textAlign: 'center', width: 120, minWidth: 120 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
                       {canEdit && <button onClick={e => { e.stopPropagation(); setAtualizarRow(c) }} style={{ background: 'rgba(204,145,94,0.08)', border: '1px solid rgba(204,145,94,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Atualizar</button>}
+                      {canEdit && canRegisterResult(getStatusComputado(c)) && <button onClick={e => { e.stopPropagation(); setRowRegistrarResultado(c) }} style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.25)', borderRadius: 4, padding: '2px 10px', fontSize: 10, fontWeight: 600, color: '#16A34A', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Registrar Resultado</button>}
                       {isAdmin && isAguardandoRevisao(getStatusComputado(c)) && <button onClick={e => { e.stopPropagation(); setRowRevisar(c) }} style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 4, padding: '2px 10px', fontSize: 9, fontWeight: 700, color: '#2563EB', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>Revisar</button>}
                       {getAlertas(c).map((a, idx) => <span key={idx} style={{ fontSize: 7, fontWeight: 600, color: a.color, background: a.bg, padding: '2px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.3, whiteSpace: 'nowrap', lineHeight: 1.2 }}>{a.label}</span>)}
                     </div>
