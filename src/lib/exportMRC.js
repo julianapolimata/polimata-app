@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs'
 import { getFaseLabel as getFaseLabelUtil, getFaseInfo, getStatusComputado, normalizeFaseValue } from './fases'
 import { getStatusConfig } from './statusWorkflow'
+import { supabase } from './supabase'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPORT MRC PARA EXCEL (.xlsx) — Polímata brand
@@ -68,7 +69,7 @@ const MRC_COLUMNS = [
   // ── COMPUTADOS (AE-AF) ──
   { key: 'fase', header: 'Fase Atual', width: 24, computed: true },
   { key: 'status_atual', header: 'Status Atual', width: 18, computed: true },
-  { key: 'num_regressoes', header: 'Regressões', width: 12 },
+  // Colunas de regressão são adicionadas dinamicamente em buildMRCSheet
 ]
 
 const CRIT_LABEL_MAP = { 4: '4. Crítico', 3: '3. Significativo', 2: '2. Moderado', 1: '1. Baixo' }
@@ -367,8 +368,15 @@ function buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome) {
 // ABA 2: DADOS DA MRC
 // ══════════════════════════════════════════════════════════════════════════════
 
-function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNome) {
-  const lastCol = MRC_COLUMNS.length + 1
+function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNome, regressoesMap = {}) {
+  // Determinar quantas colunas de regressão são necessárias
+  const maxRegressoes = Math.max(0, ...controles.map(c => c.num_regressoes || 0))
+  const regCols = []
+  for (let i = 1; i <= maxRegressoes; i++) {
+    regCols.push({ key: `_reg_${i}`, header: `Regressão ${i}`, width: 24, computed: true })
+  }
+  const ALL_COLUMNS = [...MRC_COLUMNS, ...regCols]
+  const lastCol = ALL_COLUMNS.length + 1
   const ws = wb.addWorksheet(tituloAba, {
     views: [{ state: 'frozen', ySplit: 4, xSplit: 1, showGridLines: false }],
     properties: { defaultRowHeight: 15 },
@@ -376,7 +384,7 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
   })
 
   ws.getColumn(1).width = 4
-  MRC_COLUMNS.forEach((col, idx) => { ws.getColumn(idx + 2).width = col.width })
+  ALL_COLUMNS.forEach((col, idx) => { ws.getColumn(idx + 2).width = col.width })
 
   // ── HEADER (merge B) ──
   ws.getRow(1).height = 15
@@ -413,11 +421,11 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
   ws.getCell(4, 1).fill = COL_HEADER_FILL
   ws.getCell(4, 1).border = { bottom: { style: 'medium', color: { argb: GOLD } } }
 
-  MRC_COLUMNS.forEach((col, idx) => {
+  ALL_COLUMNS.forEach((col, idx) => {
     const cell = colHeaderRow.getCell(idx + 2)
     cell.value = col.header
-    cell.fill = COL_HEADER_FILL
-    cell.font = COL_HEADER_FONT
+    cell.fill = col.key.startsWith('_reg_') ? { type: 'pattern', pattern: 'solid', fgColor: { argb: '4A3000' } } : COL_HEADER_FILL
+    cell.font = col.key.startsWith('_reg_') ? { ...COL_HEADER_FONT, color: { argb: 'FFFFC107' } } : COL_HEADER_FONT
     cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true }
     cell.border = { bottom: { style: 'medium', color: { argb: GOLD } } }
   })
@@ -475,12 +483,24 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
     const excelRow = ws.getRow(rowIdx + 5)
     ws.getCell(rowIdx + 5, 1).fill = CREME_FILL
 
-    MRC_COLUMNS.forEach((col, colIdx) => {
+    ALL_COLUMNS.forEach((col, colIdx) => {
       const cell = excelRow.getCell(colIdx + 2)
       let value
 
+      // Campos computados — regressão dinâmica
+      if (col.key.startsWith('_reg_')) {
+        const regIdx = parseInt(col.key.replace('_reg_', ''), 10) - 1
+        const regs = regressoesMap[row.id] || []
+        const ev = regs[regIdx]
+        if (ev) {
+          const fase = ev.fase_origem || '—'
+          const dt = ev.criado_em ? new Date(ev.criado_em).toLocaleDateString('pt-BR') : '—'
+          value = `${fase} — ${dt}`
+        } else {
+          value = '—'
+        }
       // Campos computados — vitrine
-      if (col.key === '_vitrine_resultado') {
+      } else if (col.key === '_vitrine_resultado') {
         value = vitrineResultado(row)
       } else if (col.key === '_vitrine_incons') {
         value = vitrineIncons(row)
@@ -537,6 +557,9 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
         const cor = getCritColor(row.crit)
         if (cor) cell.font = { ...BODY_FONT, bold: true, color: cor }
       }
+      if (col.key.startsWith('_reg_') && value !== '—') {
+        cell.font = { ...BODY_FONT, color: { argb: '7A5700' } }
+      }
     })
   })
 
@@ -560,8 +583,33 @@ export async function exportarMRCExcel(controles, nomeArquivo, tituloAba = 'MRC'
   const iconBase64 = await fetchIconBase64()
   const iconId = iconBase64 ? wb.addImage({ base64: iconBase64, extension: 'png' }) : null
 
+  // Buscar eventos de regressão do audit_log
+  let regressoesMap = {}
+  const controlIds = controles.filter(c => (c.num_regressoes || 0) > 0).map(c => c.id)
+  if (controlIds.length > 0) {
+    try {
+      const { data: logs } = await supabase
+        .from('audit_log')
+        .select('registro_id, detalhes, criado_em')
+        .eq('acao', 'REGRESSAO')
+        .in('registro_id', controlIds)
+        .order('criado_em', { ascending: true })
+      if (logs) {
+        logs.forEach(log => {
+          if (!regressoesMap[log.registro_id]) regressoesMap[log.registro_id] = []
+          regressoesMap[log.registro_id].push({
+            fase_origem: log.detalhes?.fase_origem || '—',
+            criado_em: log.criado_em,
+          })
+        })
+      }
+    } catch (err) {
+      console.warn('Não foi possível buscar regressões do audit_log:', err)
+    }
+  }
+
   buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome)
-  buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNome)
+  buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNome, regressoesMap)
 
   const buffer = await wb.xlsx.writeBuffer()
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
