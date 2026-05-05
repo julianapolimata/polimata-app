@@ -3,8 +3,46 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "polimata-ci.vercel.app"
+        }
+      ],
+      "destination": "https://app.polimatagrc.com.br/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "polimata-ci-julianapolimatas-projects.vercel.app"
+        }
+      ],
+      "destination": "https://app.polimatagrc.com.br/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "polimata-ci-git-main-julianapolimatas-projects.vercel.app"
+        }
+      ],
+      "destination": "https://app.polimatagrc.com.br/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
