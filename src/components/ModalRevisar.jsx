@@ -169,7 +169,7 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
     <div style={S.overlay} onClick={e => e.target === e.currentTarget && onClose?.()}>
       <div style={S.modal}>
         <div style={{ ...S.header, borderBottomColor: '#22C55E' }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>✅ Confirmar Aprovação</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 300, fontFamily: "'Raleway', sans-serif", letterSpacing: 0.3 }}>✅ Confirmar Aprovação</h2>
           <p style={{ margin: '0.3rem 0 0', fontSize: 11, opacity: 0.8 }}>{row?.rc} — {row?.area} — {faseAtual}</p>
         </div>
         <div style={S.body}>
@@ -198,7 +198,7 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
     <div style={S.overlay} onClick={e => e.target === e.currentTarget && onClose?.()}>
       <div style={S.modal}>
         <div style={{ ...S.header, borderBottomColor: '#EF4444' }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>↩ Reprovar Análise</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 300, fontFamily: "'Raleway', sans-serif", letterSpacing: 0.3 }}>↩ Reprovar Análise</h2>
           <p style={{ margin: '0.3rem 0 0', fontSize: 11, opacity: 0.8 }}>{row?.rc} — {row?.area} — {faseAtual}</p>
         </div>
         <div style={S.body}>
@@ -228,7 +228,7 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
     <div style={S.overlay} onClick={e => e.target === e.currentTarget && onClose?.()}>
       <div style={S.modal}>
         <div style={S.header}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>📋 Histórico de Revisões — {row?.rc}</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 300, fontFamily: "'Raleway', sans-serif", letterSpacing: 0.3 }}>📋 Histórico de Revisões — {row?.rc}</h2>
         </div>
         <div style={S.body}>
           {loadingHist ? <div style={{ textAlign: 'center', padding: 20, color: '#7A8B9C' }}>Carregando...</div> :
@@ -268,7 +268,7 @@ const ModalRevisar = ({ row, onClose, onAction }) => {
       <div style={S.modal}>
         <div style={{ ...S.header, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>🔍 Revisão de Análise</h2>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 300, fontFamily: "'Raleway', sans-serif", letterSpacing: 0.3 }}>🔍 Revisão de Análise</h2>
             <p style={{ margin: '0.3rem 0 0', fontSize: 11, opacity: 0.8 }}>{row?.rc} · {row?.rr} — {row?.area}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', fontSize: 28, cursor: 'pointer', padding: 0 }}>×</button>

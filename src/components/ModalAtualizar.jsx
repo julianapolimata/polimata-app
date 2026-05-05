@@ -1109,10 +1109,11 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
       <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)', maxWidth: 700, width: '90vw', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {/* HEADER */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: '#00203E', color: 'white' }}>
+        <div style={{ padding: '22px 24px 18px', borderBottom: '1px solid rgba(255,255,255,0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: '#00203E', color: 'white' }}>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Atualizar Controle</div>
-            <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.8 }}>{row.rc} · {row.area}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--copper-soft)', marginBottom: 4 }}>Matriz de Riscos · Controle</div>
+            <div style={{ fontSize: 20, fontWeight: 300, fontFamily: "'Raleway', sans-serif", letterSpacing: 0.3, lineHeight: 1.2 }}>Atualizar Controle</div>
+            <div style={{ fontSize: 12, fontWeight: 500, opacity: 0.72, marginTop: 4 }}>{row.rc} · {row.area}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button

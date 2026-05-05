@@ -622,15 +622,15 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
               <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginBottom: 24 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                   <div style={{ borderRight: '1px solid #e5e7eb', paddingRight: 12 }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Ref. Risco</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--lt-text3)', textTransform: 'uppercase', marginBottom: 4, letterSpacing: 0.4 }}>Ref. Risco</div>
                     <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{novoRiscoData?.rr}</div>
                   </div>
                   <div style={{ borderRight: '1px solid #e5e7eb', paddingRight: 12 }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Ref. Controle</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--lt-text3)', textTransform: 'uppercase', marginBottom: 4, letterSpacing: 0.4 }}>Ref. Controle</div>
                     <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{novoRiscoData?.rc}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Subprocesso</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--lt-text3)', textTransform: 'uppercase', marginBottom: 4, letterSpacing: 0.4 }}>Subprocesso</div>
                     <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{subprocesso}</div>
                   </div>
                 </div>
