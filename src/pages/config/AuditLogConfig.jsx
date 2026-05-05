@@ -80,48 +80,48 @@ const S = {
   wrap: { fontFamily: "'Montserrat', sans-serif" },
   filters: { display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20, alignItems: 'flex-end' },
   filterGroup: { display: 'flex', flexDirection: 'column', gap: 4 },
-  filterLabel: { fontSize: 11, fontWeight: 500, color: 'var(--txt3)' },
+  filterLabel: { fontSize: 11, fontWeight: 500, color: 'var(--lt-text3)' },
   select: {
-    padding: '7px 10px', fontSize: 12, border: '1px solid var(--brd)',
-    borderRadius: 6, background: 'var(--card-bg, #fff)', color: 'var(--txt1)',
+    padding: '7px 10px', fontSize: 12, border: '1px solid var(--lt-border)',
+    borderRadius: 6, background: 'var(--lt-card, #fff)', color: 'var(--lt-text)',
     fontFamily: 'inherit', minWidth: 140,
   },
   input: {
-    padding: '7px 10px', fontSize: 12, border: '1px solid var(--brd)',
-    borderRadius: 6, background: 'var(--card-bg, #fff)', color: 'var(--txt1)',
+    padding: '7px 10px', fontSize: 12, border: '1px solid var(--lt-border)',
+    borderRadius: 6, background: 'var(--lt-card, #fff)', color: 'var(--lt-text)',
     fontFamily: 'inherit', minWidth: 200,
   },
   table: { width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 },
   th: {
     textAlign: 'left', padding: '10px 12px', fontSize: 11, fontWeight: 600,
-    color: 'var(--txt3)', borderBottom: '2px solid var(--brd)',
-    position: 'sticky', top: 0, background: 'var(--card-bg, #fff)', zIndex: 2,
+    color: 'var(--lt-text3)', borderBottom: '2px solid var(--lt-border)',
+    position: 'sticky', top: 0, background: 'var(--lt-card, #fff)', zIndex: 2,
   },
   td: {
-    padding: '9px 12px', borderBottom: '1px solid var(--brd)',
-    color: 'var(--txt1)', verticalAlign: 'top',
+    padding: '9px 12px', borderBottom: '1px solid var(--lt-border)',
+    color: 'var(--lt-text)', verticalAlign: 'top',
   },
   badge: (bg, color) => ({
     display: 'inline-block', padding: '2px 8px', borderRadius: 4,
     fontSize: 10, fontWeight: 600, background: bg, color,
   }),
   empty: {
-    textAlign: 'center', padding: 40, color: 'var(--txt3)', fontSize: 13,
+    textAlign: 'center', padding: 40, color: 'var(--lt-text3)', fontSize: 13,
   },
   pager: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    marginTop: 16, fontSize: 12, color: 'var(--txt3)',
+    marginTop: 16, fontSize: 12, color: 'var(--lt-text3)',
   },
   pagerBtn: {
-    padding: '6px 14px', fontSize: 12, border: '1px solid var(--brd)',
-    borderRadius: 6, background: 'var(--card-bg, #fff)', color: 'var(--txt1)',
+    padding: '6px 14px', fontSize: 12, border: '1px solid var(--lt-border)',
+    borderRadius: 6, background: 'var(--lt-card, #fff)', color: 'var(--lt-text)',
     cursor: 'pointer', fontFamily: 'inherit',
   },
-  tableWrap: { overflowX: 'auto', maxHeight: 'calc(100vh - 320px)', overflowY: 'auto', borderRadius: 8, border: '1px solid var(--brd)' },
-  loading: { textAlign: 'center', padding: 40, color: 'var(--txt3)', fontSize: 13 },
+  tableWrap: { overflowX: 'auto', maxHeight: 'calc(100vh - 320px)', overflowY: 'auto', borderRadius: 8, border: '1px solid var(--lt-border)' },
+  loading: { textAlign: 'center', padding: 40, color: 'var(--lt-text3)', fontSize: 13 },
   countBadge: {
     display: 'inline-block', padding: '2px 10px', borderRadius: 10,
-    fontSize: 11, fontWeight: 600, background: 'rgba(0,32,62,0.08)', color: 'var(--txt1)',
+    fontSize: 11, fontWeight: 600, background: 'rgba(0,32,62,0.08)', color: 'var(--lt-text)',
     marginLeft: 8,
   },
 }
@@ -247,9 +247,9 @@ export default function AuditLogConfig() {
                   </td>
                   <td style={{ ...S.td, fontSize: 11 }}>{log.tabela}</td>
                   <td style={S.td}>{formatCampo(log.campo)}</td>
-                  <td style={{ ...S.td, fontSize: 11, color: 'var(--txt3)' }}>{truncate(log.valor_anterior)}</td>
+                  <td style={{ ...S.td, fontSize: 11, color: 'var(--lt-text3)' }}>{truncate(log.valor_anterior)}</td>
                   <td style={{ ...S.td, fontSize: 11, fontWeight: 500 }}>{truncate(log.valor_novo)}</td>
-                  <td style={{ ...S.td, fontSize: 11, color: 'var(--txt3)' }}>
+                  <td style={{ ...S.td, fontSize: 11, color: 'var(--lt-text3)' }}>
                     {log.detalhes?.descricao ? truncate(log.detalhes.descricao, 50) : '—'}
                   </td>
                 </tr>
