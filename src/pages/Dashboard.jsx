@@ -2,6 +2,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { getFaseNumero, getResultadoVitrine, getFaseLabel, getStatusComputado, getFaseDisplayOverride, normalizeFaseValue } from '../lib/fases'
+import { formatNomeEmpresa } from '../lib/formatNome'
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom'
 import Configuracoes from './Configuracoes'
 import AdminPanel from './AdminPanel'
@@ -148,7 +149,7 @@ function ProjectSelector({ projetos, resumos, perfil, onSelect, signOut, onAdmin
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {projetos.map(p => {
             const r = resumos[p.id] || {}
-            const clienteNome = p.clientes?.nome || '—'
+            const clienteNome = formatNomeEmpresa(p.clientes?.nome_fantasia || p.clientes?.nome) || '—'
             const isAtivo = p.ativo !== false
             const mat = r.maturidade
             const matColor = mat ? (mat.nivel === 'N5' ? '#22D4A0' : mat.nivel === 'N4' ? '#5B8FF9' : mat.nivel === 'N3' ? '#D4A030' : mat.nivel === 'N2' ? '#F97316' : '#EF4444') : null
@@ -263,7 +264,7 @@ export default function Dashboard() {
 
   async function loadProjetos() {
     try {
-      const { data, error } = await supabase.from('projetos').select('*, clientes(nome, slug)').eq('ativo', true).order('criado_em', { ascending: false })
+      const { data, error } = await supabase.from('projetos').select('*, clientes(nome, nome_fantasia, slug)').eq('ativo', true).order('criado_em', { ascending: false })
       if (error) console.error('Erro ao carregar projetos:', error)
       if (data && data.length > 0) {
         setProjetos(data)
@@ -403,7 +404,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div style={{ fontSize: 12, color: 'var(--cream)', fontWeight: 500, lineHeight: 1.3, marginTop: 4 }}>
-              {projetoAtivo.clientes?.nome}
+              {formatNomeEmpresa(projetoAtivo.clientes?.nome_fantasia || projetoAtivo.clientes?.nome)}
             </div>
             <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>
               {projetoAtivo.nome}
@@ -469,8 +470,8 @@ export default function Dashboard() {
         <Routes>
           <Route path="/" element={<HomeDash projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} ultimaAtualizacao={ultimaAtualizacao} loadDados={loadDados} />} />
           <Route path="/area/:areaId" element={<PorArea projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} navigate={navigate} loadDados={loadDados} />} />
-          <Route path="/mrc" element={<MRCCompleta projetoId={projetoAtivo?.id} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} notificacoes={<NotificacoesPanel />} papel={perfil?.papel} />} />
-          <Route path="/relatorios" element={<Relatorios projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} />} />
+          <Route path="/mrc" element={<MRCCompleta projetoId={projetoAtivo?.id} clienteNome={formatNomeEmpresa(projetoAtivo?.clientes?.nome_fantasia || projetoAtivo?.clientes?.nome) || ''} projetoNome={projetoAtivo?.nome || ''} notificacoes={<NotificacoesPanel />} papel={perfil?.papel} />} />
+          <Route path="/relatorios" element={<Relatorios projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} clienteNome={formatNomeEmpresa(projetoAtivo?.clientes?.nome_fantasia || projetoAtivo?.clientes?.nome) || ''} projetoNome={projetoAtivo?.nome || ''} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
           <Route path="/importar-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} projeto={projetoAtivo} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
           <Route path="/perfil" element={<Perfil />} />
@@ -606,7 +607,7 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
   }, [critPorArea])
 
   const nivelEmpresa = getNivelMaturidade(empresa.indice)
-  const clienteNome = projeto?.clientes?.nome || 'Cliente'
+  const clienteNome = formatNomeEmpresa(projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome) || 'Cliente'
 
   function toggleAreaFiltro(nome) {
     setAreaFiltro(prev => prev === nome ? null : nome)
@@ -1138,7 +1139,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
                 {canEdit && <button onClick={() => setModalNovoRisco(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#00203E', border: '1px solid #00203E', borderRadius: 999, padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'white', cursor: 'pointer', fontFamily: 'inherit' }} title="Criar novo risco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Risco</button>}
                 <button onClick={() => gerarTemplateMRC()} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--copper-text)', borderRadius: 999, padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'var(--copper-text)', cursor: 'pointer', fontFamily: 'inherit' }} title="Baixar template MRC em branco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Template</button>
-                <button onClick={() => exportarMRCExcel(cf, `MRC_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`, nome, projeto?.clientes?.nome || '', projeto?.nome || '')} style={PA.btnExport} title="Exportar Excel da área">
+                <button onClick={() => exportarMRCExcel(cf, `MRC_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`, nome, formatNomeEmpresa(projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome) || '', projeto?.nome || '')} style={PA.btnExport} title="Exportar Excel da área">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
                   Excel
                 </button>
