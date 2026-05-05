@@ -199,15 +199,14 @@ export default function Login() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            padding: '10px 22px',
-            background: `linear-gradient(135deg, ${SITE.copper} 0%, ${SITE.copperDeep} 100%)`,
-            color: '#fff',
+            padding: '14px 28px',
+            background: SITE.copper,
+            color: SITE.navy,
             borderRadius: 999,
-            fontSize: 14,
-            fontWeight: 600,
-            letterSpacing: '0.02em',
+            fontSize: '0.95rem',
+            fontWeight: 500,
+            letterSpacing: '0.01em',
             fontFamily: "'Montserrat', sans-serif",
-            boxShadow: '0 4px 14px rgba(200,137,92,0.30)',
             whiteSpace: 'nowrap',
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -262,7 +261,7 @@ export default function Login() {
           header { min-height: 70px !important; }
           header > div { padding: 14px 20px !important; gap: 12px !important; }
           header img { height: 40px !important; }
-          header > div > div:last-child { font-size: 11px !important; padding: 7px 14px !important; }
+          header > div > div:last-child { padding: 10px 22px !important; font-size: 0.9rem !important; }
           .login-grid {
             grid-template-columns: 1fr !important;
             gap: 32px !important;
