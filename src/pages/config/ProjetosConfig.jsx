@@ -381,8 +381,10 @@ function AbaEstrutura({ projetoId, areas, subprocessos, onReload }) {
       peso: parseFloat(area.peso) || 0,
       gerencia: area.gerencia || null,
       gerencia_email: area.gerencia_email || null,
+      gerencia_recebe_email_mensal: !!area.gerencia_recebe_email_mensal,
       resp_area_nome: area.resp_area_nome || null,
       resp_area_email: area.resp_area_email || null,
+      resp_area_recebe_email_mensal: !!area.resp_area_recebe_email_mensal,
     }
     let areaId = area.id
     if (area.id) {
@@ -447,7 +449,7 @@ function AbaEstrutura({ projetoId, areas, subprocessos, onReload }) {
       </div>
 
       {novaArea && (
-        <AreaFormV2 area={{nome:'',prefixo:'',peso:'',gerencia:'',resp_area_nome:'',resp_area_email:''}}
+        <AreaFormV2 area={{nome:'',prefixo:'',peso:'',gerencia:'',gerencia_email:'',gerencia_recebe_email_mensal:false,resp_area_nome:'',resp_area_email:'',resp_area_recebe_email_mensal:false}}
           onSave={salvarArea} onCancel={()=>setNovaArea(false)} saving={saving} />
       )}
 
@@ -505,7 +507,7 @@ function AbaEstrutura({ projetoId, areas, subprocessos, onReload }) {
                       <div style={{fontSize:13,color:'var(--txt1)'}}>{a.gerencia || '—'}</div>
                     </div>
                     <div>
-                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Email da Gerência</div>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Email da Gerência {a.gerencia_recebe_email_mensal && <span style={{fontSize:9,color:'var(--copper)',marginLeft:4}} title="Recebe e-mail mensal">✉</span>}</div>
                       <div style={{fontSize:13,color:'var(--txt1)'}}>{a.gerencia_email || '—'}</div>
                     </div>
                   </div>
@@ -517,7 +519,7 @@ function AbaEstrutura({ projetoId, areas, subprocessos, onReload }) {
                       <div style={{fontSize:13,color:'var(--txt1)'}}>{a.resp_area_nome || '—'}</div>
                     </div>
                     <div>
-                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Email do Responsável</div>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--txt3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Email do Responsável {a.resp_area_recebe_email_mensal && <span style={{fontSize:9,color:'var(--copper)',marginLeft:4}} title="Recebe e-mail mensal">✉</span>}</div>
                       <div style={{fontSize:13,color:'var(--txt1)'}}>{a.resp_area_email || '—'}</div>
                     </div>
                   </div>
@@ -587,11 +589,29 @@ function AreaFormV2({ area, onSave, onCancel, saving, subprocessosExistentes }) 
       </div>
       <div className="cfg-row2" style={{marginTop:10}}>
         <div className="cfg-field"><label>Gerência</label><input className="input-light" value={form.gerencia||''} onChange={e=>u('gerencia',e.target.value)} placeholder="Ex: Diretoria Financeira" /></div>
-        <div className="cfg-field"><label>Email da Gerência</label><input className="input-light" type="email" value={form.gerencia_email||''} onChange={e=>u('gerencia_email',e.target.value)} placeholder="gerencia@empresa.com" /></div>
+        <div className="cfg-field">
+          <label>Email da Gerência</label>
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            <label style={{display:'inline-flex',alignItems:'center',gap:4,cursor:'pointer',fontSize:10,color:'var(--txt3, #94a3b8)',whiteSpace:'nowrap',padding:'0 6px',border:'1px solid var(--lt-border, rgba(0,32,62,0.12))',borderRadius:6,height:32}} title="Marque para receber o e-mail de reporte mensal">
+              <input type="checkbox" checked={!!form.gerencia_recebe_email_mensal} onChange={e=>u('gerencia_recebe_email_mensal', e.target.checked)} />
+              ✉ mensal
+            </label>
+            <input className="input-light" style={{flex:1}} type="email" value={form.gerencia_email||''} onChange={e=>u('gerencia_email',e.target.value)} placeholder="gerencia@empresa.com" />
+          </div>
+        </div>
       </div>
       <div className="cfg-row2" style={{marginTop:10}}>
         <div className="cfg-field"><label>Responsável da Área</label><input className="input-light" value={form.resp_area_nome||''} onChange={e=>u('resp_area_nome',e.target.value)} placeholder="Nome do responsável" /></div>
-        <div className="cfg-field"><label>Email do Responsável</label><input className="input-light" type="email" value={form.resp_area_email||''} onChange={e=>u('resp_area_email',e.target.value)} placeholder="resp@empresa.com" /></div>
+        <div className="cfg-field">
+          <label>Email do Responsável</label>
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            <label style={{display:'inline-flex',alignItems:'center',gap:4,cursor:'pointer',fontSize:10,color:'var(--txt3, #94a3b8)',whiteSpace:'nowrap',padding:'0 6px',border:'1px solid var(--lt-border, rgba(0,32,62,0.12))',borderRadius:6,height:32}} title="Marque para receber o e-mail de reporte mensal">
+              <input type="checkbox" checked={!!form.resp_area_recebe_email_mensal} onChange={e=>u('resp_area_recebe_email_mensal', e.target.checked)} />
+              ✉ mensal
+            </label>
+            <input className="input-light" style={{flex:1}} type="email" value={form.resp_area_email||''} onChange={e=>u('resp_area_email',e.target.value)} placeholder="resp@empresa.com" />
+          </div>
+        </div>
       </div>
 
       {/* Subprocessos inline */}

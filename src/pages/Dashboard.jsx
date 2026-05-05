@@ -20,7 +20,7 @@ import {
 } from '../lib/calculoMaturidade'
 import { exportarMRCExcel } from '../lib/exportMRC'
 import { gerarTemplateMRC } from '../lib/templateMRC'
-import { getStatusConfig, canEditControl, canRegisterResult, isDevolvido, isAguardandoRevisao, STATUS } from '../lib/statusWorkflow'
+import { getStatusConfig, canEditControl, canRegisterResult, isDevolvido, isAguardandoRevisao, STATUS, getProximaAcao, PROXIMA_ACAO_OPCOES } from '../lib/statusWorkflow'
 import { carregarConstantes } from '../lib/constantesLoader'
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -443,7 +443,7 @@ export default function Dashboard() {
         <Routes>
           <Route path="/" element={<HomeDash projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} ultimaAtualizacao={ultimaAtualizacao} loadDados={loadDados} />} />
           <Route path="/area/:areaId" element={<PorArea projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} loading={loading} navigate={navigate} loadDados={loadDados} />} />
-          <Route path="/mrc" element={<MRCCompleta projetoId={projetoAtivo?.id} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} notificacoes={<NotificacoesPanel />} />} />
+          <Route path="/mrc" element={<MRCCompleta projetoId={projetoAtivo?.id} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} notificacoes={<NotificacoesPanel />} papel={perfil?.papel} />} />
           <Route path="/relatorios" element={<Relatorios projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} clienteNome={projetoAtivo?.clientes?.nome || ''} projetoNome={projetoAtivo?.nome || ''} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
           <Route path="/importar-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} projeto={projetoAtivo} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
@@ -797,6 +797,8 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   const [filtRes, setFiltRes] = useState('')
   const [filtFase, setFiltFase] = useState('')
   const [filtSit, setFiltSit] = useState('existente')
+  const [filtStatus, setFiltStatus] = useState('')      // visão Polímata: status_workflow
+  const [filtAcao, setFiltAcao] = useState('')          // visão Polímata: próxima ação
   const [sortCol, setSortCol] = useState(null)
   const [sortDir, setSortDir] = useState('asc')
   const [simularPerfil, setSimularPerfil] = useState(null)
@@ -888,6 +890,8 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
     if (filtImp && String(c.imp||'') !== filtImp) return false
     if (filtRes) { const rg = getResultadoGeral(c); if (!rg || rg !== filtRes) return false }
     if (filtFase) { const fc = getFaseCodigo(c); if (fc !== filtFase) return false }
+    if (!isCliente && filtStatus) { if (getStatusComputado(c) !== filtStatus) return false }
+    if (!isCliente && filtAcao) { if (getProximaAcao(getStatusComputado(c)) !== filtAcao) return false }
     return true
   })
 
@@ -1094,8 +1098,21 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
         <select value={filtFase} onChange={e => setFiltFase(e.target.value)} style={PA.filtroSel}><option value="">Todas as fases</option>{fasesDisponiveis.map(f => <option key={f} value={f}>{f}</option>)}</select>
         <select value={filtRes} onChange={e => setFiltRes(e.target.value)} style={PA.filtroSel}><option value="">Todos resultados</option>{ress.map(c => <option key={c} value={c}>{c}</option>)}</select>
         <select value={filtSit} onChange={e => setFiltSit(e.target.value)} style={PA.filtroSel}><option value="existente">Existentes</option><option value="evitado">Evitados</option><option value="transferido">Transferidos</option><option value="todos">Todos</option></select>
+        {!isCliente && <select value={filtStatus} onChange={e => setFiltStatus(e.target.value)} style={{ ...PA.filtroSel, borderColor: 'var(--copper)' }} title="Filtro interno Polímata">
+          <option value="">Todos status</option>
+          <option value="nao_iniciado">Não Iniciado</option>
+          <option value="em_analise">Em Análise</option>
+          <option value="teste_pendente">Teste Pendente</option>
+          <option value="em_revisao">Em Revisão</option>
+          <option value="aprovado">Aprovado</option>
+          <option value="reprovado">Devolvido</option>
+        </select>}
+        {!isCliente && <select value={filtAcao} onChange={e => setFiltAcao(e.target.value)} style={{ ...PA.filtroSel, borderColor: 'var(--copper)' }} title="Filtro interno Polímata">
+          <option value="">Todas ações</option>
+          {PROXIMA_ACAO_OPCOES.map(a => <option key={a} value={a}>{a}</option>)}
+        </select>}
         <div style={{ fontSize: 10, color: 'var(--lt-text3)', background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 10px' }}>{cf.length} controles</div>
-        {(busca || filtCrit || filtImp || filtRes || filtFase || filtSit !== 'existente') && <button onClick={() => { setBusca(''); setFiltCrit(''); setFiltImp(''); setFiltRes(''); setFiltFase(''); setFiltSit('existente') }} style={{ background: 'none', border: 'none', fontSize: 10, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>✕ Limpar</button>}
+        {(busca || filtCrit || filtImp || filtRes || filtFase || filtSit !== 'existente' || filtStatus || filtAcao) && <button onClick={() => { setBusca(''); setFiltCrit(''); setFiltImp(''); setFiltRes(''); setFiltFase(''); setFiltSit('existente'); setFiltStatus(''); setFiltAcao('') }} style={{ background: 'none', border: 'none', fontSize: 10, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>✕ Limpar</button>}
         {canEdit && <button onClick={() => setModalNovoRisco(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#00203E', border: '1px solid #00203E', borderRadius: 999, padding: '5px 14px', fontSize: 10, fontWeight: 600, color: 'white', cursor: 'pointer', fontFamily: 'inherit' }} title="Criar novo risco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Risco</button>}
         <button onClick={() => gerarTemplateMRC()} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--copper)', borderRadius: 999, padding: '5px 14px', fontSize: 10, fontWeight: 600, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit' }} title="Baixar template MRC em branco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Template</button>
         <button onClick={() => exportarMRCExcel(cf, `MRC_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`, nome, projeto?.clientes?.nome || '', projeto?.nome || '')} style={PA.btnExport} title="Exportar Excel da área">

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { exportarMRCExcel } from '../lib/exportMRC'
 import { getFaseInfo as getFaseInfoUtil, getResultadoVitrine, getStatusComputado, getFaseLabel, getFaseDisplayOverride, normalizeFaseValue } from '../lib/fases'
-import { getStatusConfig } from '../lib/statusWorkflow'
+import { getStatusConfig, getProximaAcao, PROXIMA_ACAO_OPCOES } from '../lib/statusWorkflow'
 
 // ─── CONSTANTES ──────────────────────────────────────────────────────────────
 
@@ -454,12 +454,15 @@ function TabelaMRC({ rows, onOpenModal }) {
 
 // ─── COMPONENTE PRINCIPAL ────────────────────────────────────────────────────
 
-export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notificacoes }) {
+export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notificacoes, papel }) {
+  const isClienteMRC = papel === 'gestor_cliente' || papel === 'usuario_cliente'
   const [mrc, setMrc] = useState([]); const [areas, setAreas] = useState([]); const [loading, setLoading] = useState(true); const [erro, setErro] = useState(null)
   const [busca, setBusca] = useState(''); const [filtroArea, setFiltroArea] = useState(''); const [filtroCrit, setFiltroCrit] = useState('')
   const [filtroImp, setFiltroImp] = useState(''); const [filtroProb, setFiltroProb] = useState(''); const [filtroR1, setFiltroR1] = useState(''); const [filtroNivel, setFiltroNivel] = useState('')
   const [filtroFase, setFiltroFase] = useState('')
   const [filtroSit, setFiltroSit] = useState('existente')
+  const [filtroStatus, setFiltroStatus] = useState('')
+  const [filtroAcao, setFiltroAcao] = useState('')
   const [modalRow, setModalRow] = useState(null)
   const [dashCollapsed, setDashCollapsed] = useState(false)
 
@@ -520,6 +523,8 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
     if (filtroR1 && getResultadoVitrine(r) !== filtroR1) return false
     if (filtroNivel) { const nivel = NIVEIS.find(n => n.id === filtroNivel); if (nivel && getResultadoVitrine(r) !== nivel.resultado) return false }
     if (filtroFase) { const fi = getFaseInfo(r); if (fi.label !== filtroFase) return false }
+    if (!isClienteMRC && filtroStatus) { if (getStatusComputado(r) !== filtroStatus) return false }
+    if (!isClienteMRC && filtroAcao) { if (getProximaAcao(getStatusComputado(r)) !== filtroAcao) return false }
     if (busca) { const q = busca.toLowerCase(); return (r.rr||'').toLowerCase().includes(q)||(r.rc||'').toLowerCase().includes(q)||(r.area||'').toLowerCase().includes(q)||(r.sub||'').toLowerCase().includes(q)||(r.dr||'').toLowerCase().includes(q)||(r.dc||'').toLowerCase().includes(q)||(r.incons||'').toLowerCase().includes(q)||(r.passos_f1||'').toLowerCase().includes(q) }
     return true
   })
@@ -528,8 +533,8 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
 
   const visibleRows = filtered.slice(0, MAX_ROWS); const isLimited = filtered.length > MAX_ROWS
   const handleHeatmapCell = (imp, prob, sel) => { if (sel) { setFiltroImp(''); setFiltroProb('') } else { setFiltroImp(imp); setFiltroProb(prob) } }
-  const limparFiltros = () => { setBusca(''); setFiltroArea(''); setFiltroCrit(''); setFiltroImp(''); setFiltroProb(''); setFiltroR1(''); setFiltroNivel(''); setFiltroFase(''); setFiltroSit('existente') }
-  const temFiltro = busca || filtroArea || filtroCrit || filtroImp || filtroProb || filtroR1 || filtroNivel || filtroFase || filtroSit !== 'existente'
+  const limparFiltros = () => { setBusca(''); setFiltroArea(''); setFiltroCrit(''); setFiltroImp(''); setFiltroProb(''); setFiltroR1(''); setFiltroNivel(''); setFiltroFase(''); setFiltroSit('existente'); setFiltroStatus(''); setFiltroAcao('') }
+  const temFiltro = busca || filtroArea || filtroCrit || filtroImp || filtroProb || filtroR1 || filtroNivel || filtroFase || filtroSit !== 'existente' || filtroStatus || filtroAcao
 
   if (loading) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:300,color:'var(--txt3)' }}><div className="spinner" style={{marginRight:10}}/><span>Carregando MRC…</span></div>
   if (erro) return <div style={{ padding:32,color:'var(--in)' }}>Erro ao carregar MRC: {erro}</div>
@@ -633,6 +638,8 @@ export default function MRCCompleta({ projetoId, clienteNome, projetoNome, notif
         <select value={filtroFase} onChange={e => setFiltroFase(e.target.value)} style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit', fontSize: 11, color: 'var(--lt-text2)', cursor: 'pointer', outline: 'none' }}><option value="">Todas as fases</option>{fasesDisponiveis.map(f => <option key={f} value={f}>{f}</option>)}</select>
         <select value={filtroR1} onChange={e => setFiltroR1(e.target.value)} style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit', fontSize: 11, color: 'var(--lt-text2)', cursor: 'pointer', outline: 'none' }}><option value="">Todos resultados</option><option>Efetivo</option><option>Inefetivo</option><option>GAP</option><option>Teste Não Realizado</option></select>
         <select value={filtroSit} onChange={e => setFiltroSit(e.target.value)} style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit', fontSize: 11, color: 'var(--lt-text2)', cursor: 'pointer', outline: 'none' }}><option value="existente">Existentes</option><option value="evitado">Evitados</option><option value="transferido">Transferidos</option><option value="todos">Todos</option></select>
+        {!isClienteMRC && <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={{ background: 'var(--lt-card)', border: '1px solid var(--copper)', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit', fontSize: 11, color: 'var(--lt-text2)', cursor: 'pointer', outline: 'none' }} title="Filtro interno Polímata"><option value="">Todos status</option><option value="nao_iniciado">Não Iniciado</option><option value="em_analise">Em Análise</option><option value="teste_pendente">Teste Pendente</option><option value="em_revisao">Em Revisão</option><option value="aprovado">Aprovado</option><option value="reprovado">Devolvido</option></select>}
+        {!isClienteMRC && <select value={filtroAcao} onChange={e => setFiltroAcao(e.target.value)} style={{ background: 'var(--lt-card)', border: '1px solid var(--copper)', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit', fontSize: 11, color: 'var(--lt-text2)', cursor: 'pointer', outline: 'none' }} title="Filtro interno Polímata"><option value="">Todas ações</option>{PROXIMA_ACAO_OPCOES.map(a => <option key={a} value={a}>{a}</option>)}</select>}
         <span style={{ fontSize: 10, color: 'var(--lt-text3)', fontWeight: 600 }}>{filtered.length} controles</span>
         {temFiltro && <button onClick={limparFiltros} style={{ background: 'none', border: 'none', fontSize: 10, color: 'var(--copper)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>✕ Limpar</button>}
         <button style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 600, color: '#16A34A', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' }} onClick={() => exportarMRCExcel(filtered, 'MRC_Completa_' + new Date().toISOString().slice(0,10), 'MRC Completa', clienteNome, projetoNome)}>Excel</button>

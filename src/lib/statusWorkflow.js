@@ -107,6 +107,44 @@ export function isAguardandoRevisao(status) {
 }
 
 /**
+ * Retorna a próxima ação a ser tomada com base no status_workflow.
+ * Útil para a coluna "Ação" e filtros internos (visão Polímata).
+ *
+ * Mapeamento:
+ *   nao_iniciado    → Atualizar         (preencher premissas)
+ *   teste_pendente  → Baixar Ficha      (gerar ficha de teste)
+ *   em_analise      → Registrar Resultado
+ *   em_revisao      → Revisar           (admin)
+ *   reprovado       → Editar            (controle devolvido)
+ *   aprovado        → Concluído
+ */
+export const PROXIMA_ACAO = {
+  nao_iniciado:   'Atualizar',
+  teste_pendente: 'Baixar Ficha',
+  em_analise:     'Registrar Resultado',
+  em_revisao:     'Revisar',
+  reprovado:      'Editar',
+  aprovado:       'Concluído',
+}
+
+export function getProximaAcao(status) {
+  return PROXIMA_ACAO[status] || '—'
+}
+
+/**
+ * Lista de opções (label) usadas em filtros de "Próxima Ação".
+ * Mantém ordem de fluxo natural do workflow.
+ */
+export const PROXIMA_ACAO_OPCOES = [
+  'Atualizar',
+  'Baixar Ficha',
+  'Registrar Resultado',
+  'Revisar',
+  'Editar',
+  'Concluído',
+]
+
+/**
  * Todos os valores válidos de status_workflow (para referência)
  */
 export const ALL_STATUS = Object.values(STATUS)
