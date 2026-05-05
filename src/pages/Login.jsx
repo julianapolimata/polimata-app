@@ -78,7 +78,7 @@ function Hero() {
       </h1>
       <p style={{
         fontSize: 15, color: 'rgba(247,243,238,0.70)',
-        lineHeight: 1.75, margin: '0 0 44px', maxWidth: 460,
+        lineHeight: 1.75, margin: '0 0 28px', maxWidth: 460,
       }}>
         Acompanhe a evolução dos projetos, a maturidade dos seus
         processos, exporte relatórios e tenha sua matriz de riscos e
