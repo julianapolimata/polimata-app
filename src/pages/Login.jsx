@@ -86,12 +86,6 @@ function Hero() {
         sintonia com a metodologia Polímata.
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>
-        <ContatoItem icon={ICONS.whatsapp} label="WhatsApp"  value="+55 (19) 99779-3378"        href="https://wa.me/5519997793378" />
-        <ContatoItem icon={ICONS.email}    label="Email"     value="contato@polimatagrc.com.br" href="mailto:contato@polimatagrc.com.br" />
-        <ContatoItem icon={ICONS.globe}    label="Site"      value="polimatagrc.com.br"         href="https://polimatagrc.com.br" />
-      </div>
-
       <div style={{
         padding: '16px 20px',
         background: 'rgba(204,145,94,0.06)',
@@ -99,13 +93,20 @@ function Hero() {
         borderRadius: 12,
         fontSize: 12, color: 'rgba(247,243,238,0.7)',
         lineHeight: 1.65,
+        marginBottom: 18,
       }}>
         <strong style={{ color: 'var(--copper-soft)', fontWeight: 600 }}>Ainda não é cliente?</strong>{' '}
         Conheça nossa metodologia de Governança, Riscos e Compliance no{' '}
         <a href="https://polimatagrc.com.br" target="_blank" rel="noopener noreferrer"
            style={{ color: 'var(--copper-soft)', textDecoration: 'underline', textUnderlineOffset: 2 }}>
           site institucional
-        </a>{' '}— ou fale com a gente acima.
+        </a>{' '}— ou fale com a gente abaixo.
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <ContatoItem icon={ICONS.whatsapp} label="WhatsApp"  value="+55 (19) 99779-3378"        href="https://wa.me/5519997793378" />
+        <ContatoItem icon={ICONS.email}    label="Email"     value="contato@polimatagrc.com.br" href="mailto:contato@polimatagrc.com.br" />
+        <ContatoItem icon={ICONS.globe}    label="Site"      value="polimatagrc.com.br"         href="https://polimatagrc.com.br" />
       </div>
     </div>
   )
