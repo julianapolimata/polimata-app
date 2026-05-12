@@ -37,6 +37,7 @@ function semaforoPrazo(prazo, status) {
 // ─── PÁGINA PRINCIPAL ─────────────────────────────────────────────────────
 export default function Solicitacoes({ projeto }) {
   const { perfil } = useAuth()
+  const isCliente = perfil?.papel === 'gestor_cliente' || perfil?.papel === 'usuario_cliente'
   const [solicitacoes, setSolicitacoes] = useState([])
   const [controles, setControles] = useState([])
   const [areas, setAreas] = useState([])
@@ -47,6 +48,7 @@ export default function Solicitacoes({ projeto }) {
   const [filtFase, setFiltFase] = useState('')
   const [modalNova, setModalNova] = useState(false)
   const [modalEdit, setModalEdit] = useState(null)
+  const [modalResponder, setModalResponder] = useState(null)
 
   async function load() {
     if (!projeto?.id) return
@@ -103,12 +105,12 @@ export default function Solicitacoes({ projeto }) {
       <div style={S.header}>
         <div>
           <div style={S.eyebrow}>Polímata · Gestão</div>
-          <div style={S.title}>Solicitações de Evidência</div>
-          <div style={S.sub}>{solicitacoes.length} solicita{solicitacoes.length === 1 ? 'ção' : 'ções'} · {projeto?.nome}</div>
+          <div style={S.title}>{isCliente ? 'Minhas Solicitações' : 'Solicitações de Evidência'}</div>
+          <div style={S.sub}>{isCliente ? `${solicitacoes.filter(s => ['aguardando','em_andamento','recusada'].includes(s.status)).length} aguardando sua resposta · ` : ''}{solicitacoes.length} solicita{solicitacoes.length === 1 ? 'ção' : 'ções'} · {projeto?.nome}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={async () => { await exportarSolicitacoesExcel({ solicitacoes: filtradas, controles, areas, clienteNome: formatNomeEmpresa(projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome) || '', projetoNome: projeto?.nome || '' }) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#16A34A', cursor: 'pointer', fontFamily: 'inherit' }}>📥 Excel</button>
-          <button onClick={() => setModalNova(true)} style={S.btnPrimary}>+ Nova Solicitação</button>
+          {!isCliente && <button onClick={() => setModalNova(true)} style={S.btnPrimary}>+ Nova Solicitação</button>}
         </div>
       </div>
 
@@ -136,6 +138,7 @@ export default function Solicitacoes({ projeto }) {
           <thead>
             <tr>
               {['Nº','Área','Fase','Controle','Título','Responsável Cliente','Prazo','Status'].map(h => <th key={h} style={S.th}>{h}</th>)}
+              {isCliente && <th style={S.th}>Ação</th>}
             </tr>
           </thead>
           <tbody>
@@ -145,7 +148,7 @@ export default function Solicitacoes({ projeto }) {
               const area = areaMap[s.area_id]
               const sem = semaforoPrazo(s.prazo, s.status)
               return (
-                <tr key={s.id} onClick={() => setModalEdit(s)} style={S.row}>
+                <tr key={s.id} onClick={() => isCliente ? null : setModalEdit(s)} style={{...S.row, cursor: isCliente ? 'default' : 'pointer'}}>
                   <td style={{ ...S.td, fontWeight: 700, color: 'var(--copper)' }}>{s.numero}</td>
                   <td style={S.td}>{area?.nome || '—'}</td>
                   <td style={S.td}>{s.fase || '—'}</td>
@@ -157,6 +160,13 @@ export default function Solicitacoes({ projeto }) {
                     {sem && <div style={{ marginTop: 2, fontSize: 10, fontWeight: 600, color: sem.color, background: sem.bg, padding: '1px 6px', borderRadius: 4, display: 'inline-block' }}>{sem.label}</div>}
                   </td>
                   <td style={S.td}><StatusBadge status={s.status} /></td>
+                  {isCliente && <td style={S.td}>
+                    {['aguardando','em_andamento','recusada'].includes(s.status) ? (
+                      <button onClick={e => { e.stopPropagation(); setModalResponder(s) }} style={{ background: 'var(--copper)', color: '#fff', border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Responder</button>
+                    ) : (
+                      <button onClick={e => { e.stopPropagation(); setModalResponder(s) }} style={{ background: 'transparent', border: '1px solid var(--lt-border)', borderRadius: 6, padding: '5px 12px', fontSize: 11, fontWeight: 600, color: 'var(--lt-text2)', cursor: 'pointer', fontFamily: 'inherit' }}>Ver</button>
+                    )}
+                  </td>}
                 </tr>
               )
             })}
@@ -166,6 +176,91 @@ export default function Solicitacoes({ projeto }) {
 
       {modalNova && <ModalSolicitacao projeto={projeto} controles={controles} areas={areas} perfil={perfil} onClose={() => setModalNova(false)} onSaved={() => { setModalNova(false); load() }} />}
       {modalEdit && <ModalSolicitacao projeto={projeto} controles={controles} areas={areas} perfil={perfil} solicitacao={modalEdit} onClose={() => setModalEdit(null)} onSaved={() => { setModalEdit(null); load() }} />}
+      {modalResponder && <ModalResponder solicitacao={modalResponder} perfil={perfil} controles={controles} areas={areas} onClose={() => setModalResponder(null)} onSaved={() => { setModalResponder(null); load() }} />}
+    </div>
+  )
+}
+
+// ─── MODAL CLIENTE — RESPONDER ────────────────────────────────────────────
+function ModalResponder({ solicitacao, perfil, controles, areas, onClose, onSaved }) {
+  const ctrl = controles.find(c => c.id === solicitacao.controle_id)
+  const area = areas.find(a => a.id === solicitacao.area_id)
+  const podeResponder = ['aguardando','em_andamento','recusada'].includes(solicitacao.status)
+  const [link, setLink] = useState(solicitacao.evidencia_link || '')
+  const [descricao, setDescricao] = useState(solicitacao.evidencia_descricao || '')
+  const [novoStatus, setNovoStatus] = useState('em_andamento')
+  const [saving, setSaving] = useState(false)
+  const [erro, setErro] = useState('')
+
+  async function salvar(statusFinal) {
+    setSaving(true); setErro('')
+    try {
+      const payload = {
+        evidencia_link: link.trim() || null,
+        evidencia_descricao: descricao.trim() || null,
+        status: statusFinal,
+      }
+      if (statusFinal === 'recebida') payload.data_resposta = new Date().toISOString()
+      const { error } = await supabase.from('solicitacoes').update(payload).eq('id', solicitacao.id)
+      if (error) throw error
+      onSaved()
+    } catch(e) { setErro(e.message); setSaving(false) }
+  }
+
+  const M = mStyles
+  return (
+    <div style={M.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={M.modal}>
+        <div style={M.header}>
+          <div>
+            <div style={M.eyebrow}>Solicitação {solicitacao.numero}</div>
+            <div style={M.title}>{solicitacao.titulo}</div>
+          </div>
+          <button onClick={onClose} style={M.close}>×</button>
+        </div>
+        <div style={M.body}>
+          {erro && <div style={M.erro}>{erro}</div>}
+
+          <div style={M.group}>
+            <div style={M.groupTitle}>Pedido da Polímata</div>
+            <div style={{ fontSize: 12, color: 'var(--lt-text2)', lineHeight: 1.5, padding: '10px 14px', background: 'var(--lt-bg)', borderRadius: 6, border: '1px solid var(--lt-border)' }}>
+              {solicitacao.descricao || '(sem descrição detalhada)'}
+            </div>
+            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--lt-text3)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {area && <span>Área: <strong>{area.nome}</strong></span>}
+              {solicitacao.fase && <span>Fase: <strong>{solicitacao.fase}</strong></span>}
+              {ctrl && <span>Controle: <strong style={{ color: 'var(--copper-text)' }}>{ctrl.rc}</strong></span>}
+              {solicitacao.prazo && <span>Prazo: <strong>{new Date(solicitacao.prazo).toLocaleDateString('pt-BR')}</strong></span>}
+            </div>
+          </div>
+
+          <div style={M.group}>
+            <div style={M.groupTitle}>Sua resposta</div>
+            <div style={M.field}><label style={M.label}>Link da evidência (Google Drive)</label>
+              <input value={link} onChange={e=>setLink(e.target.value)} disabled={!podeResponder} placeholder="Cole aqui o link da pasta ou arquivo no Drive" style={M.input} />
+            </div>
+            <div style={M.field}><label style={M.label}>Descrição do que está enviando</label>
+              <textarea value={descricao} onChange={e=>setDescricao(e.target.value)} disabled={!podeResponder} rows={3} placeholder="Ex: Política de Compras vigente, versão de janeiro/2026 (PDF)" style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
+            </div>
+          </div>
+
+          {!podeResponder && (
+            <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(0,32,62,0.04)', border: '1px solid var(--lt-border)', borderRadius: 6, fontSize: 12, color: 'var(--lt-text2)' }}>
+              <strong>Status: {STATUS_CFG[solicitacao.status]?.label || solicitacao.status}</strong>. Esta solicitação não está mais aberta para resposta.
+            </div>
+          )}
+        </div>
+        <div style={M.footer}>
+          <div style={{ flex: 1 }} />
+          <button onClick={onClose} style={M.btn}>Fechar</button>
+          {podeResponder && (
+            <>
+              <button onClick={() => salvar('em_andamento')} disabled={saving} style={{ ...M.btn, color: 'var(--copper)', borderColor: 'rgba(204,145,94,0.4)' }}>Salvar progresso</button>
+              <button onClick={() => salvar('recebida')} disabled={saving || !link.trim()} style={{ ...M.btnPrimary, opacity: (saving || !link.trim()) ? 0.5 : 1 }} title={!link.trim() ? 'Informe o link da evidência primeiro' : ''}>✓ Enviar resposta</button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
