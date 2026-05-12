@@ -238,7 +238,7 @@ function ColunasPanel({ visCols, setVisCols, open, onClose }) {
 
 // ─── MODAL ───────────────────────────────────────────────────────────────────
 
-export function ModalDetalhe({ row, projeto, onClose }) {
+export function ModalDetalhe({ row, projeto, onClose, onEditar }) {
   const [tab, setTab] = useState('ident')
   if (!row) return null
   const isDiagModal = projeto?.f1_tem_teste === false
@@ -260,7 +260,18 @@ export function ModalDetalhe({ row, projeto, onClose }) {
   return (
     <div className="overlay open" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
-        <div className="modal-hdr"><div><div className="modal-ttl">{row.rc}{row.area ? ` · ${row.area}` : ''}</div><div className="modal-sub">{row.sub}</div></div><button className="modal-cls" onClick={onClose}>×</button></div>
+        <div className="modal-hdr">
+          <div><div className="modal-ttl">{row.rc}{row.area ? ` · ${row.area}` : ''}</div><div className="modal-sub">{row.sub}</div></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {onEditar && (
+              <button onClick={onEditar} title="Editar este controle" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(204,145,94,0.12)', border: '1px solid rgba(204,145,94,0.35)', borderRadius: 999, padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'var(--copper-text)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Editar
+              </button>
+            )}
+            <button className="modal-cls" onClick={onClose}>×</button>
+          </div>
+        </div>
         <div className="modal-tabs">{tabs.map(t => (<div key={t.id} className={`mtab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</div>))}</div>
         <div className="modal-body">
 
@@ -489,7 +500,7 @@ const MRC_DATA_COLS = [
 ]
 const MRC_FASE_KEYS = ['r1', 'st_pa', 'r_ader', 'r3', 'r_f4c1', 'r_f4c2', 'r_f5']
 
-function sortVal(row, k) {
+function sortVal(row, k, projeto) {
   if (k === '_dt') return row.dt_ult || row.atualizado_em || row.criado_em || ''
   if (k === '_resultado') return getResultadoVitrine(row, projeto)
   if (k === '_fase_atual') return getFaseLabel(row)
@@ -509,7 +520,7 @@ function badgeExistencia(val) {
   return <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: c.bg, color: c.color, textTransform: 'uppercase', letterSpacing: 0.3 }}>{val}</span>
 }
 
-function TabelaMRC({ rows, onOpenModal, isDiagnostico = false }) {
+function TabelaMRC({ rows, onOpenModal, isDiagnostico = false, projeto }) {
   const [sortCol, setSortCol] = useState(null)
   const [sortDir, setSortDir] = useState('asc')
   const toggle = (k) => { if (sortCol === k) { setSortDir(d => d === 'asc' ? 'desc' : 'asc') } else { setSortCol(k); setSortDir('asc') } }
@@ -530,7 +541,7 @@ function TabelaMRC({ rows, onOpenModal, isDiagnostico = false }) {
   const sorted = useMemo(() => {
     if (!sortCol) return rows
     return [...rows].sort((a, b) => {
-      let va = sortVal(a, sortCol), vb = sortVal(b, sortCol)
+      let va = sortVal(a, sortCol, projeto), vb = sortVal(b, sortCol, projeto)
       if (sortCol === '_dt') { va = va ? new Date(va).getTime() : 0; vb = vb ? new Date(vb).getTime() : 0; return sortDir === 'asc' ? va - vb : vb - va }
       va = String(va).toLowerCase(); vb = String(vb).toLowerCase()
       const cmp = va.localeCompare(vb, 'pt-BR')
@@ -815,7 +826,7 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
       {/* TABELA */}
       <div style={{ flex: 1, minHeight: 0, background: 'var(--lt-card)', borderRadius: 12, border: '1px solid var(--lt-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
         {isLimited && <div style={{ background: 'rgba(234,179,8,0.1)', color: '#92400E', fontSize: 10, padding: '4px 14px', borderBottom: '1px solid var(--lt-border)', fontWeight: 500 }}>Exibindo {MAX_ROWS} de {filtered.length} — refine os filtros</div>}
-        <TabelaMRC rows={visibleRows} onOpenModal={setModalRow} />
+        <TabelaMRC rows={visibleRows} onOpenModal={setModalRow} isDiagnostico={isDiagnostico} projeto={projeto} />
       </div>
 
       {modalRow && <ModalDetalhe row={modalRow} projeto={projeto} onClose={() => setModalRow(null)} />}

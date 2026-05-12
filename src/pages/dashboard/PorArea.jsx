@@ -464,7 +464,11 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
                       const st = getStatusComputado(c)
                       // Define UMA ação primária por contexto (a "próxima ação" do workflow)
                       let primary = null, secondary = null
-                      if (canEdit && st === 'rascunho') {
+                      // Em projeto diagnóstico (sem teste de efetividade), workflow simplificado:
+                      // sempre permite editar o controle (existência, criticidade, etc.)
+                      if (isDiagnostico && canEdit) {
+                        primary = { label: '✏ Editar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => setAtualizarRow(c) }
+                      } else if (canEdit && st === 'rascunho') {
                         primary = { label: '▶ Continuar', color: '#92400E', bg: 'rgba(234,179,8,0.15)', border: 'rgba(234,179,8,0.40)', onClick: () => setAtualizarRow(c) }
                       } else if (canEdit && st === 'em_analise') {
                         primary = { label: 'Registrar Resultado', color: '#15803D', bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.35)', onClick: () => setRowRegistrarResultado(c) }
@@ -487,7 +491,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
           </table>
         </div>
       </div>
-      {modalRow && <ModalDetalhe row={modalRow} onClose={() => setModalRow(null)} />}
+      {modalRow && <ModalDetalhe row={modalRow} projeto={projeto} onClose={() => setModalRow(null)} onEditar={canEdit ? () => { setAtualizarRow(modalRow); setModalRow(null) } : undefined} />}
       {atualizarRow && <ModalAtualizar row={atualizarRow} onClose={() => setAtualizarRow(null)} onSaved={() => { setAtualizarRow(null); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} />}
       {modalNovoRisco && <ModalNovoRisco onClose={() => setModalNovoRisco(false)} onSaved={() => { setModalNovoRisco(false); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} areaFixa={area} />}
       {rowRegistrarResultado && <ModalRegistrarResultado row={rowRegistrarResultado} onClose={() => setRowRegistrarResultado(null)} onSaved={() => { setRowRegistrarResultado(null); if (projeto?.id) loadDados(projeto.id) }} responsaveis={[]} />}
