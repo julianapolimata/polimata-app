@@ -110,13 +110,32 @@ export function getFaseInfo(c) {
 
 /**
  * Retorna o resultado vitrine (último resultado válido, de F5 até F1).
- * Usado para exibir o resultado "atual" do controle independente da fase.
+ * Em projetos com f1_tem_teste=false, retorna a existência declarada na F1-E1.
  */
-export function getResultadoVitrine(c) {
+export function getResultadoVitrine(c, projeto) {
   if (!c) return '—'
+  if (projeto && projeto.f1_tem_teste === false) {
+    return c.existencia || '—'
+  }
   const chain = [c.r_f5, c.r_f4c2, c.r_f4c1, c.r3, c.r_ader, c.st_pa, c.r1]
   for (const v of chain) { if (v && v !== 'Teste Não Realizado' && v !== 'N/A') return v }
   return c.r1 || '—'
+}
+
+/**
+ * Retorna categoria de recomendação derivada da existência (projetos sem teste).
+ * Inexistente → 'Implementar controle'
+ * Parcial     → 'Complementar / formalizar'
+ * Existente   → 'Manter'
+ */
+export function getCategoriaRecomendacao(c, projeto) {
+  if (!c || !projeto || projeto.f1_tem_teste !== false) return null
+  switch (c.existencia) {
+    case 'Inexistente': return 'Implementar controle'
+    case 'Parcial':     return 'Complementar / formalizar'
+    case 'Existente':   return 'Manter'
+    default:            return null
+  }
 }
 
 /**
@@ -261,8 +280,7 @@ export function normalizeFaseValue(val) {
   if (v === 'gap') return 'GAP'
   // Evitado / Transferido (já normalizados pelo getFaseDisplayOverride)
   if (v === 'evitado') return 'Evitado'
-  if (v === 'transferido') return 'Transferido'
-  // N/A (F2 pulada, fases pós-evitado, etc.)
+  if (v === 'transferido') return  // N/A (F2 pulada, fases pós-evitado, etc.)
   if (v === 'n/a') return 'N/A'
   // Não iniciado
   if (v === 'teste não realizado' || v === 'não iniciado') return 'Não Iniciado'

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { exportarMRCExcel } from '../lib/exportMRC'
-import { getFaseInfo as getFaseInfoUtil, getResultadoVitrine, getStatusComputado, getFaseLabel, getFaseDisplayOverride, normalizeFaseValue } from '../lib/fases'
+import { getFaseInfo as getFaseInfoUtil, getResultadoVitrine, getStatusComputado, getFaseLabel, getFaseDisplayOverride, normalizeFaseValue, getCategoriaRecomendacao } from '../lib/fases'
 import { getStatusConfig, getProximaAcao, PROXIMA_ACAO_OPCOES } from '../lib/statusWorkflow'
 
 // ─── CONSTANTES ──────────────────────────────────────────────────────────────
@@ -237,10 +237,19 @@ function ColunasPanel({ visCols, setVisCols, open, onClose }) {
 
 // ─── MODAL ───────────────────────────────────────────────────────────────────
 
-export function ModalDetalhe({ row, onClose }) {
+export function ModalDetalhe({ row, projeto, onClose }) {
   const [tab, setTab] = useState('ident')
   if (!row) return null
-  const tabs = [{ id:'ident',label:'Identificação' },{ id:'f1',label:'Diagnóstico Inicial' },{ id:'f2e1',label:'Teste de Desenho' },{ id:'f2e2',label:'Teste de Aderência' },{ id:'f3',label:'Revisão Controles Internos' },{ id:'f4c1',label:'Auditoria Contínua C1' },{ id:'f4c2',label:'Auditoria Contínua C2' },{ id:'f5',label:'Auditoria Independente' }]
+  const isDiagModal = projeto?.f1_tem_teste === false
+  const tabs = isDiagModal
+    ? [{ id:'ident',label:'Identificação' },{ id:'f1',label:'Diagnóstico Inicial' }]
+    : [{ id:'ident',label:'Identificação' },{ id:'f1',label:'Diagnóstico Inicial' },{ id:'f2e1',label:'Teste de Desenho' },{ id:'f2e2',label:'Teste de Aderência' },{ id:'f3',label:'Revisão Controles Internos' },{ id:'f4c1',label:'Auditoria Contínua C1' },{ id:'f4c2',label:'Auditoria Contínua C2' },{ id:'f5',label:'Auditoria Independente' }]
+  const categoriaRec = getCategoriaRecomendacao(row, projeto)
+  const corCategoria = ({
+    'Implementar controle': '#EF4444',
+    'Complementar / formalizar': '#FACC15',
+    'Manter': '#22C55E',
+  })[categoriaRec] || 'var(--copper)'
   const field = (l, v, fw) => { if (!v || v === 'N/A' || v === '') return null; return <div style={fw ? { marginBottom: 12 } : {}}><div className="ml">{l}</div><div className="mv">{v}</div></div> }
   const fieldTag = (l, v) => { if (!v || v === 'N/A' || v === '') return null; return <div><div className="ml">{l}</div><div style={{ marginTop: 3 }}><span className="tag">{v}</span></div></div> }
   const fieldText = (l, v) => { if (!v || v === 'N/A' || v === '') return null; return <div style={{ marginBottom: 14 }}>{l && <div className="ml">{l}</div>}<div className="mv-t">{v}</div></div> }
@@ -289,7 +298,24 @@ export function ModalDetalhe({ row, onClose }) {
           </div>)}
 
           {tab === 'f1' && (<div className="tp active">
-            <div className="ms"><div className="ms-t">Resultado do Diagnóstico</div><div className="mr3">{field('Resultado Diagnóstico', row.r1 ? badge(R1_MAP[row.r1]||'b-na', row.r1) : null)}{field('Impacto', row.imp ? badge(IMP_MAP[row.imp]||'', row.imp) : null)}{field('Probabilidade', row.prob ? badge(PROB_MAP[row.prob]||'', row.prob) : null)}</div><div className="mr">{field('Criticidade', critBadge(row.crit))}</div></div>
+            {isDiagModal ? (
+              <div className="ms"><div className="ms-t">Diagnóstico — Existência do Controle</div>
+                <div className="mr3">
+                  {field('Existência', row.existencia ? badgeExistencia(row.existencia) : null)}
+                  {field('Impacto', row.imp ? badge(IMP_MAP[row.imp]||'', row.imp) : null)}
+                  {field('Probabilidade', row.prob ? badge(PROB_MAP[row.prob]||'', row.prob) : null)}
+                </div>
+                <div className="mr">{field('Criticidade', critBadge(row.crit))}</div>
+                {categoriaRec && (
+                  <div style={{ marginTop: 12, padding: '8px 12px', background: `${corCategoria}15`, borderLeft: `3px solid ${corCategoria}`, borderRadius: 4 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, color: 'var(--lt-text3)', marginBottom: 2 }}>Ação Sugerida</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: corCategoria }}>{categoriaRec}</div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="ms"><div className="ms-t">Resultado do Diagnóstico</div><div className="mr3">{field('Resultado Diagnóstico', row.r1 ? badge(R1_MAP[row.r1]||'b-na', row.r1) : null)}{field('Impacto', row.imp ? badge(IMP_MAP[row.imp]||'', row.imp) : null)}{field('Probabilidade', row.prob ? badge(PROB_MAP[row.prob]||'', row.prob) : null)}</div><div className="mr">{field('Criticidade', critBadge(row.crit))}</div></div>
+            )}
             {row.passos_f1 && row.passos_f1 !== 'N/A' && <div className="ms"><div className="ms-t">Passos de Teste</div>{fieldText(null, row.passos_f1)}</div>}
             {row.incons && row.incons !== 'N/A' && <div className="ms"><div className="ms-t">Inconsistências Identificadas</div>{fieldText(null, row.incons)}</div>}
             {row.rec && row.rec !== 'N/A' && <div className="ms"><div className="ms-t">Recomendações</div>{fieldText(null, row.rec)}</div>}
@@ -718,7 +744,7 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
         <TabelaMRC rows={visibleRows} onOpenModal={setModalRow} />
       </div>
 
-      {modalRow && <ModalDetalhe row={modalRow} onClose={() => setModalRow(null)} />}
+      {modalRow && <ModalDetalhe row={modalRow} projeto={projeto} onClose={() => setModalRow(null)} />}
     </div>
   )
 }
