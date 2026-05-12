@@ -301,7 +301,9 @@ function buildResumoSheet(wb, controles, areas, iconId, clienteNome, projetoNome
   secArea.font = { name: 'Montserrat', bold: true, size: 8, color: { argb: 'FFAAAAAA' } }
   secArea.fill = CREME_FILL
 
-  const areaHeaders = ['Área', 'Total', 'Efetivo', 'Inefetivo', 'GAP']
+  const areaHeaders = isDiag
+    ? ['Área', 'Total', 'Existente', 'Parcial', 'Inexistente']
+    : ['Área', 'Total', 'Efetivo', 'Inefetivo', 'GAP']
   areaHeaders.forEach((h, i) => {
     const cell = ws.getCell(areaStartRow + 1, 3 + i)
     cell.value = h
@@ -315,9 +317,15 @@ function buildResumoSheet(wb, controles, areas, iconId, clienteNome, projetoNome
   areasSorted.forEach((area, idx) => {
     const areaControles = controles.filter(c => c.area_id === area.id)
     const row = areaStartRow + 2 + idx
-    const ef = areaControles.filter(c => (vitrineResultado(c) || '').toLowerCase() === 'efetivo').length
-    const inf = areaControles.filter(c => (vitrineResultado(c) || '').toLowerCase() === 'inefetivo').length
-    const gp = areaControles.filter(c => { const v = (vitrineResultado(c) || '').toLowerCase(); return v === 'gap' || v === 'gap de processo' }).length
+    const ef = isDiag
+      ? areaControles.filter(c => c.existencia === 'Existente').length
+      : areaControles.filter(c => (vitrineResultado(c) || '').toLowerCase() === 'efetivo').length
+    const inf = isDiag
+      ? areaControles.filter(c => c.existencia === 'Parcial').length
+      : areaControles.filter(c => (vitrineResultado(c) || '').toLowerCase() === 'inefetivo').length
+    const gp = isDiag
+      ? areaControles.filter(c => c.existencia === 'Inexistente').length
+      : areaControles.filter(c => { const v = (vitrineResultado(c) || '').toLowerCase(); return v === 'gap' || v === 'gap de processo' }).length
 
     const zebra = idx % 2 === 1 ? { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F8F6F2' } } : undefined
     const vals = [area.nome || '—', areaControles.length, ef, inf, gp]
@@ -573,14 +581,22 @@ function buildMatrizSheet(wb, controles, iconId, clienteNome, projetoNome, isDia
   const totalEf = controles.filter(c => (vitrineResultado(c) || '').toLowerCase() === 'efetivo').length
   const totalIn = controles.filter(c => (vitrineResultado(c) || '').toLowerCase() === 'inefetivo').length
   const totalGp = controles.filter(c => { const v = (vitrineResultado(c) || '').toLowerCase(); return v === 'gap' || v === 'gap de processo' }).length
+  const totalEx = controles.filter(c => c.existencia === 'Existente').length
+  const totalPc = controles.filter(c => c.existencia === 'Parcial').length
+  const totalIx = controles.filter(c => c.existencia === 'Inexistente').length
   const tot = controles.length
 
   const resumoTitle = ws.getCell('C15')
-  resumoTitle.value = 'RESUMO'
+  resumoTitle.value = isDiag ? 'RESUMO — EXISTÊNCIA' : 'RESUMO'
   resumoTitle.font = { name: 'Montserrat', bold: true, size: 8, color: { argb: 'FFAAAAAA' } }
   resumoTitle.fill = CREME_FILL
 
-  const summaryCards = [
+  const summaryCards = isDiag ? [
+    { label: 'TOTAL DE CONTROLES', value: tot, sub: 'controles', color: NAVY, border: NAVY },
+    { label: 'EXISTENTES', value: totalEx, sub: tot > 0 ? `${Math.round(totalEx / tot * 100)}% do total` : '—', color: '22C55E', border: '22C55E' },
+    { label: 'PARCIAIS', value: totalPc, sub: tot > 0 ? `${Math.round(totalPc / tot * 100)}% do total` : '—', color: 'FACC15', border: 'FACC15' },
+    { label: 'INEXISTENTES', value: totalIx, sub: tot > 0 ? `${Math.round(totalIx / tot * 100)}% do total` : '—', color: 'EF4444', border: 'EF4444' },
+  ] : [
     { label: 'TOTAL DE CONTROLES', value: tot, sub: 'controles', color: NAVY, border: NAVY },
     { label: 'EFETIVOS', value: totalEf, sub: tot > 0 ? `${Math.round(totalEf / tot * 100)}% do total` : '—', color: '22C55E', border: '22C55E' },
     { label: 'INEFETIVOS', value: totalIn, sub: tot > 0 ? `${Math.round(totalIn / tot * 100)}% do total` : '—', color: 'FACC15', border: 'FACC15' },

@@ -602,7 +602,7 @@ function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizac
   const kpis = useMemo(() => {
     let ef = 0, inf = 0, gap = 0, pa = 0
     todosControles.forEach(c => {
-      const rv = getResultadoVitrine(c)
+      const rv = getResultadoVitrine(c, projeto)
       if (isEfetivo(rv)) ef++
       else if (isInefetivo(rv)) inf++
       else if (isGap(rv)) gap++
@@ -900,7 +900,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   function getAlertas(c) {
     const alertas = []
     const sw = c.status_workflow
-    const rv = (getResultadoVitrine(c) || '').toLowerCase()
+    const rv = (getResultadoVitrine(c, projeto) || '').toLowerCase()
     // Devolvido (reprovado na revisão) — prioridade máxima
     if (sw === 'reprovado') alertas.push({ label: 'Devolvido', color: '#DC2626', bg: 'rgba(239,68,68,0.08)' })
     // Ficha pendente: salvou dados mas não baixou a ficha de teste
@@ -938,7 +938,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
 
   // Resultado geral: retorna o resultado da fase mais avançada do controle
   function getResultadoGeral(c) {
-    const v = getResultadoVitrine(c)
+    const v = getResultadoVitrine(c, projeto)
     if (!v || v === '—') return null
     return v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
   }
@@ -975,7 +975,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   const PA_FASE_KEYS = ['r1', 'st_pa', 'r_ader', 'r3', 'r_f4c1', 'r_f4c2', 'r_f5']
   const toggleSort = (k) => { if (sortCol === k) { setSortDir(d => d === 'asc' ? 'desc' : 'asc') } else { setSortCol(k); setSortDir('asc') } }
   const sortArrow = (k) => sortCol === k ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
-  function paSortVal(row, k) { if (k === '_dt') return row.dt_ult || row.atualizado_em || row.criado_em || ''; if (k === '_resultado') return getResultadoVitrine(row); if (k === '_fase_atual') return getFaseLabel(row); if (k === '_status_atual') return getStatusComputado(row); return row[k] ?? '' }
+  function paSortVal(row, k) { if (k === '_dt') return row.dt_ult || row.atualizado_em || row.criado_em || ''; if (k === '_resultado') return getResultadoVitrine(row, projeto); if (k === '_fase_atual') return getFaseLabel(row); if (k === '_status_atual') return getStatusComputado(row); return row[k] ?? '' }
 
   const cfSorted = !sortCol ? cf : [...cf].sort((a, b) => {
     let va = paSortVal(a, sortCol), vb = paSortVal(b, sortCol)
@@ -1269,7 +1269,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
                 <Td w={120}>{c.sub}</Td>
                 <td style={{ ...tdS, color: 'var(--copper-text)', fontWeight: 700, width: 80, minWidth: 80, textAlign: 'center' }}>{c.rr}</td><Td w={200}>{c.dr}</Td>
                 <td style={{ ...tdS, color: 'var(--copper-text)', fontWeight: 700, width: 90, minWidth: 90, textAlign: 'center' }}>{c.rc}</td><Td w={200}>{c.dc}</Td>
-                <td style={{ ...tdS, width: 90, minWidth: 90, textAlign: 'center' }}>{badgeR(getResultadoVitrine(c))}</td>
+                <td style={{ ...tdS, width: 90, minWidth: 90, textAlign: 'center' }}>{badgeR(getResultadoVitrine(c, projeto))}</td>
                 <td style={{ ...tdS, width: 110, minWidth: 110, textAlign: 'center' }}>{badgeCrit(c.crit)}</td>
                 <td style={{ ...tdS, width: 130, minWidth: 130, fontSize: 11, fontWeight: 500, textAlign: 'center' }}>{getFaseLabel(c)}{c.num_regressoes > 0 && <RegressaoBadge n={c.num_regressoes} />}</td>
                 <td style={{ ...tdS, width: 110, minWidth: 110, textAlign: 'center' }}>{(() => { const st = getStatusComputado(c); const cfg = getStatusBadge(st); return <span style={{ fontSize: 10, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{cfg.label}</span> })()}</td>

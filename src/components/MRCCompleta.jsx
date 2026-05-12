@@ -128,7 +128,7 @@ function getFaseInfo(row) {
 
 function FaseAtual({ row }) {
   const { label, cor } = getFaseInfo(row)
-  const resultado = getResultadoVitrine(row)
+  const resultado = getResultadoVitrine(row, projeto)
   return (
     <div className="fase-atual-cell">
       <div className="fase-atual-label" style={{ borderLeftColor: cor }}>{label}</div>
@@ -139,14 +139,14 @@ function FaseAtual({ row }) {
 
 // ─── HEATMAP COM E/I/G ──────────────────────────────────────────────────────
 
-function Heatmap({ data, filtroImp, filtroProb, onFilterCell }) {
+function Heatmap({ data, filtroImp, filtroProb, onFilterCell, projeto }) {
   const cells = {}
   HM_IMPS.forEach(i => HM_PROBS.forEach(p => { cells[`${i}|${p}`] = { n: 0, e: 0, i: 0, g: 0 } }))
   data.forEach(r => {
     const key = `${r.imp}|${r.prob}`
     if (!cells[key]) return
     cells[key].n++
-    const res = (getResultadoVitrine(r) || '').toLowerCase()
+    const res = (getResultadoVitrine(r, projeto) || '').toLowerCase()
     if (res === 'efetivo') cells[key].e++
     else if (res === 'inefetivo') cells[key].i++
     else if (res === 'gap') cells[key].g++
@@ -157,7 +157,7 @@ function Heatmap({ data, filtroImp, filtroProb, onFilterCell }) {
     if (!r.crit) return
     const k = `C${r.crit}`; if (!totais[k]) return
     totais[k].n++
-    const res = (getResultadoVitrine(r) || '').toLowerCase()
+    const res = (getResultadoVitrine(r, projeto) || '').toLowerCase()
     if (res === 'efetivo') totais[k].e++; else if (res === 'inefetivo') totais[k].i++; else if (res === 'gap') totais[k].g++
   })
 
@@ -211,9 +211,9 @@ function Heatmap({ data, filtroImp, filtroProb, onFilterCell }) {
 
 // ─── RÉGUA ───────────────────────────────────────────────────────────────────
 
-function Regua({ data, filtroNivel, onToggleNivel }) {
+function Regua({ data, filtroNivel, onToggleNivel, projeto }) {
   const c = {}; NIVEIS.forEach(n => { c[n.id] = 0 })
-  data.forEach(r => { const res = getResultadoVitrine(r); if (res === 'Inefetivo') c.N1++; else if (res === 'GAP') c.N2++; else if (res === 'Efetivo' || res === 'efetivo') c.N5++ })
+  data.forEach(r => { const res = getResultadoVitrine(r, projeto); if (res === 'Inefetivo') c.N1++; else if (res === 'GAP') c.N2++; else if (res === 'Efetivo' || res === 'efetivo') c.N5++ })
   return (
     <div className="regua">
       {NIVEIS.map(n => (<div key={n.id} className={`rn ${n.cls} ${filtroNivel === n.id ? 'ativo' : ''}`} onClick={() => onToggleNivel(filtroNivel === n.id ? '' : n.id)}><div className="rn-c">{c[n.id]}</div><div className="rn-n">{n.nome}</div></div>))}
@@ -419,7 +419,7 @@ const MRC_FASE_KEYS = ['r1', 'st_pa', 'r_ader', 'r3', 'r_f4c1', 'r_f4c2', 'r_f5'
 
 function sortVal(row, k) {
   if (k === '_dt') return row.dt_ult || row.atualizado_em || row.criado_em || ''
-  if (k === '_resultado') return getResultadoVitrine(row)
+  if (k === '_resultado') return getResultadoVitrine(row, projeto)
   if (k === '_fase_atual') return getFaseLabel(row)
   if (k === '_status_atual') return getStatusComputado(row)
   return row[k] ?? ''
@@ -485,7 +485,7 @@ function TabelaMRC({ rows, onOpenModal, isDiagnostico = false }) {
               <TdMRC w={200}>{row.dr}</TdMRC>
               <td style={{ ...mrcTdS, color: 'var(--copper-text)', fontWeight: 700, width: 90, minWidth: 90, textAlign: 'center' }}>{row.rc}</td>
               <TdMRC w={200}>{row.dc}</TdMRC>
-              {!isDiagnostico && <td style={{ ...mrcTdS, width: 90, minWidth: 90, textAlign: 'center' }}>{badgeResultado(getResultadoVitrine(row))}</td>}
+              {!isDiagnostico && <td style={{ ...mrcTdS, width: 90, minWidth: 90, textAlign: 'center' }}>{badgeResultado(getResultadoVitrine(row, projeto))}</td>}
               <td style={{ ...mrcTdS, width: 110, minWidth: 110, textAlign: 'center' }}>{critBadge(row.crit)}</td>
               {!isDiagnostico && <td style={{ ...mrcTdS, width: 130, minWidth: 130, fontSize: 11, fontWeight: 500, textAlign: 'center' }}>{getFaseLabel(row)}{row.num_regressoes > 0 && <RegressaoBadgeMRC n={row.num_regressoes} />}</td>}
               <td style={{ ...mrcTdS, width: 110, minWidth: 110, textAlign: 'center' }}>{(() => { const st = getStatusComputado(row); const cfg = getStatusConfig(st); return <span style={{ fontSize: 10, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{cfg.label}</span> })()}</td>
@@ -546,12 +546,12 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
     let ef = 0, inf = 0, gap = 0, pa = 0
     let ex = 0, pc = 0, ix = 0, crit = 0
     mrc.forEach(c => {
-      const r = (getResultadoVitrine(c) || '').toLowerCase()
+      const r = (getResultadoVitrine(c, projeto) || '').toLowerCase()
       if (r === 'efetivo') ef++
       else if (r === 'inefetivo') inf++
       else if (r === 'gap' || r === 'gap de processo') gap++
       const needsPA = ['inefetivo','gap','gap de processo'].some(v =>
-        (getResultadoVitrine(c)||'').toLowerCase() === v
+        (getResultadoVitrine(c, projeto)||'').toLowerCase() === v
       )
       const paDone = ['efetivo','concluído','concluido','ok'].includes((c.st_pa||'').toLowerCase())
       if (needsPA && !paDone) pa++
@@ -587,9 +587,9 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
     if (filtroProb && r.prob !== filtroProb) return false
     if (filtroR1) {
       if (isDiagnostico) { if ((r.existencia || '') !== filtroR1) return false }
-      else if (getResultadoVitrine(r) !== filtroR1) return false
+      else if (getResultadoVitrine(r, projeto) !== filtroR1) return false
     }
-    if (filtroNivel) { const nivel = NIVEIS.find(n => n.id === filtroNivel); if (nivel && getResultadoVitrine(r) !== nivel.resultado) return false }
+    if (filtroNivel) { const nivel = NIVEIS.find(n => n.id === filtroNivel); if (nivel && getResultadoVitrine(r, projeto) !== nivel.resultado) return false }
     if (filtroFase) { const fi = getFaseInfo(r); if (fi.label !== filtroFase) return false }
     if (!isClienteMRC && filtroStatus) { if (getStatusComputado(r) !== filtroStatus) return false }
     if (!isClienteMRC && filtroAcao) { if (getProximaAcao(getStatusComputado(r)) !== filtroAcao) return false }
