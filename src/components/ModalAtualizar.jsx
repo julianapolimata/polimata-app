@@ -5,7 +5,12 @@ import HistoricoTab from './HistoricoTab'
 import { logAtualizarControle, logBaixarFicha } from '../lib/auditLog'
 import { formatNomeEmpresa } from '../lib/formatNome'
 
+import ModalComentario from './ModalComentario'
+import { useAuth } from '../contexts/AuthContext'
+
 const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
+  const { perfil: perfilAuth } = useAuth()
+  const [comentarioFor, setComentarioFor] = useState(null)
   // ═══ STATE ═══
   const [step, setStep] = useState(1)
   const [statusChoice, setStatusChoice] = useState(null)
@@ -124,8 +129,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         atualizado_em: new Date().toISOString(),
         atualizado_por: perfil?.id,
       }).eq('id', row.id)
-      onSaved && onSaved()
-      onClose && onClose()
+      setComentarioFor({ controleId: row?.id, acao: 'Controle atualizado' })
+      // onClose/onSaved será chamado quando o pop-up de comentário fechar
     } catch (err) {
       alert('Erro ao salvar: ' + err.message)
     } finally {
@@ -163,8 +168,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         atualizado_em: new Date().toISOString(),
         atualizado_por: perfil?.id,
       }).eq('id', row.id)
-      onSaved && onSaved()
-      onClose && onClose()
+      setComentarioFor({ controleId: row?.id, acao: 'Controle atualizado' })
+      // onClose/onSaved será chamado quando o pop-up de comentário fechar
     } catch (err) {
       alert('Erro ao transferir: ' + err.message)
     } finally {
@@ -198,8 +203,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
       await gerarFichaExcel()
       logAtualizarControle(row, row.projeto_id)
       logBaixarFicha(row, row.projeto_id)
-      onSaved && onSaved()
-      onClose && onClose()
+      setComentarioFor({ controleId: row?.id, acao: 'Controle atualizado' })
+      // onClose/onSaved será chamado quando o pop-up de comentário fechar
     } catch (err) {
       alert('Erro: ' + err.message)
     } finally {
@@ -518,8 +523,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
       await supabase.from('mrc').update(updates).eq('id', row.id)
       logAtualizarControle(row, row.projeto_id)
       alert('✅ Salvo com sucesso! Status: TESTE PENDENTE')
-      onSaved && onSaved()
-      onClose && onClose()
+      setComentarioFor({ controleId: row?.id, acao: 'Controle atualizado' })
+      // onClose/onSaved será chamado quando o pop-up de comentário fechar
     } catch (err) {
       alert('Erro: ' + err.message)
     } finally {
@@ -1107,6 +1112,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
 
   // ═══ MAIN RENDER ═══
   return (
+    <>
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
       <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)', maxWidth: 700, width: '90vw', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {/* HEADER */}
@@ -1218,6 +1224,17 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         </div>
       </div>
     </div>
+    {comentarioFor && (
+      <ModalComentario
+        controleId={comentarioFor.controleId}
+        projetoId={projeto?.id}
+        perfil={perfilAuth}
+        acao={comentarioFor.acao}
+        onClose={() => { setComentarioFor(null); onSaved && onSaved(); onClose && onClose() }}
+        onSaved={() => { setComentarioFor(null); onSaved && onSaved(); onClose && onClose() }}
+      />
+    )}
+    </>
   )
 }
 
