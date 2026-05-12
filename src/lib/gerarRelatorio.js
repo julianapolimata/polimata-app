@@ -183,7 +183,7 @@ function getCritColor(crit) {
 // ABA 1: RESUMO EXECUTIVO
 // ══════════════════════════════════════════════════════════════════════════════
 
-function buildResumoSheet(wb, controles, areas, iconId, clienteNome, projetoNome) {
+function buildResumoSheet(wb, controles, areas, iconId, clienteNome, projetoNome, isDiag = false) {
   const lastCol = 8
   const ws = wb.addWorksheet('Resumo Executivo', {
     views: [{ showGridLines: false }],
@@ -201,14 +201,22 @@ function buildResumoSheet(wb, controles, areas, iconId, clienteNome, projetoNome
   const totalIn = controles.filter(c => (vitrineResultado(c) || '').toLowerCase() === 'inefetivo').length
   const totalGp = controles.filter(c => { const v = (vitrineResultado(c) || '').toLowerCase(); return v === 'gap' || v === 'gap de processo' }).length
   const totalNi = controles.length - totalEf - totalIn - totalGp
+  const totalEx = controles.filter(c => c.existencia === 'Existente').length
+  const totalPc = controles.filter(c => c.existencia === 'Parcial').length
+  const totalIx = controles.filter(c => c.existencia === 'Inexistente').length
   const tot = controles.length
 
   const secTitle = ws.getCell('B5')
-  secTitle.value = 'INDICADORES GERAIS'
+  secTitle.value = isDiag ? 'DIAGNÓSTICO — EXISTÊNCIA' : 'INDICADORES GERAIS'
   secTitle.font = { name: 'Montserrat', bold: true, size: 8, color: { argb: 'FFAAAAAA' } }
   secTitle.fill = CREME_FILL
 
-  const cards = [
+  const cards = isDiag ? [
+    { label: 'TOTAL', value: tot, sub: 'controles', color: NAVY, border: NAVY },
+    { label: 'EXISTENTES', value: totalEx, sub: tot > 0 ? `${Math.round(totalEx / tot * 100)}%` : '—', color: '22C55E', border: '22C55E' },
+    { label: 'PARCIAIS', value: totalPc, sub: tot > 0 ? `${Math.round(totalPc / tot * 100)}%` : '—', color: 'FACC15', border: 'FACC15' },
+    { label: 'INEXISTENTES', value: totalIx, sub: tot > 0 ? `${Math.round(totalIx / tot * 100)}%` : '—', color: 'EF4444', border: 'EF4444' },
+  ] : [
     { label: 'TOTAL', value: tot, sub: 'controles', color: NAVY, border: NAVY },
     { label: 'EFETIVOS', value: totalEf, sub: tot > 0 ? `${Math.round(totalEf / tot * 100)}%` : '—', color: '22C55E', border: '22C55E' },
     { label: 'INEFETIVOS', value: totalIn, sub: tot > 0 ? `${Math.round(totalIn / tot * 100)}%` : '—', color: 'FACC15', border: 'FACC15' },
@@ -394,7 +402,7 @@ function getCellValue(row, col) {
   return raw != null && raw !== '' ? raw : '—'
 }
 
-function buildAreaSheet(wb, areaNome, controles, iconId, clienteNome, projetoNome) {
+function buildAreaSheet(wb, areaNome, controles, iconId, clienteNome, projetoNome, isDiag = false) {
   const lastCol = DETAIL_COLUMNS.length + 1
   const sheetName = (areaNome || 'Sem Área').substring(0, 31)
   const ws = wb.addWorksheet(sheetName, {
@@ -460,7 +468,7 @@ function buildAreaSheet(wb, areaNome, controles, iconId, clienteNome, projetoNom
 // ABA: MATRIZ DE CALOR
 // ══════════════════════════════════════════════════════════════════════════════
 
-function buildMatrizSheet(wb, controles, iconId, clienteNome, projetoNome) {
+function buildMatrizSheet(wb, controles, iconId, clienteNome, projetoNome, isDiag = false) {
   const lastCol = 8
   const ws = wb.addWorksheet('Matriz de Calor', {
     views: [{ showGridLines: false }],
@@ -629,7 +637,7 @@ const PLANO_COLUMNS = [
   { key: 'fase', header: 'Fase Atual', width: 22 },
 ]
 
-function buildPlanosSheet(wb, controles, iconId, clienteNome, projetoNome) {
+function buildPlanosSheet(wb, controles, iconId, clienteNome, projetoNome, isDiag = false) {
   // Only controls that have inconsistencies or non-effective results
   const planosControles = controles.filter(c => {
     const resultado = (vitrineResultado(c) || '').toLowerCase()
@@ -718,31 +726,31 @@ export async function gerarRelatorioExcel({ controles, areas, secoes, clienteNom
   const iconBase64 = await fetchIconBase64()
   const iconId = iconBase64 ? wb.addImage({ base64: iconBase64, extension: 'png' }) : null
 
+  const isDiag = projeto?.f1_tem_teste === false
+
   if (secoes.resumo) {
-    buildResumoSheet(wb, controles, areas, iconId, clienteNome, projetoNome)
+    buildResumoSheet(wb, controles, areas, iconId, clienteNome, projetoNome, isDiag)
   }
 
   if (secoes.detalhamento) {
-    // Group by area
     const areaMap = {}
     controles.forEach(c => {
       const areaId = c.area_id || '__sem_area'
       if (!areaMap[areaId]) areaMap[areaId] = { nome: c.area || 'Sem Área', controles: [] }
       areaMap[areaId].controles.push(c)
     })
-    // Sort areas alphabetically
     const sortedAreas = Object.values(areaMap).sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
     sortedAreas.forEach(a => {
-      buildAreaSheet(wb, a.nome, a.controles, iconId, clienteNome, projetoNome)
+      buildAreaSheet(wb, a.nome, a.controles, iconId, clienteNome, projetoNome, isDiag)
     })
   }
 
   if (secoes.matriz) {
-    buildMatrizSheet(wb, controles, iconId, clienteNome, projetoNome)
+    buildMatrizSheet(wb, controles, iconId, clienteNome, projetoNome, isDiag)
   }
 
   if (secoes.planos) {
-    buildPlanosSheet(wb, controles, iconId, clienteNome, projetoNome)
+    buildPlanosSheet(wb, controles, iconId, clienteNome, projetoNome, isDiag)
   }
 
   const buffer = await wb.xlsx.writeBuffer()
