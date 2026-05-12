@@ -154,7 +154,8 @@ function ProjectSelector({ projetos, resumos, perfil, onSelect, signOut, onAdmin
             const clienteNome = formatNomeEmpresa(p.clientes?.nome_fantasia || p.clientes?.nome) || '—'
             const isAtivo = p.ativo !== false
             const mat = r.maturidade
-            const matColor = mat ? (mat.nivel === 'N5' ? '#22D4A0' : mat.nivel === 'N4' ? '#5B8FF9' : mat.nivel === 'N3' ? '#D4A030' : mat.nivel === 'N2' ? '#F97316' : '#EF4444') : null
+            const isDiagP = r.isDiag === true
+            const matColor = mat ? (mat.nivel === 'N5' ? '#22D4A0' : mat.nivel === 'N4' ? '#5B8FF9' : mat.nivel === 'N3' ? '#D4A030' : mat.nivel === 'N2' ? '#F97316' : '#EF4444') : (isDiagP ? '#CC915E' : null)
             return (
               <div
                 key={p.id}
@@ -187,12 +188,20 @@ function ProjectSelector({ projetos, resumos, perfil, onSelect, signOut, onAdmin
                     }}>
                       {isAtivo ? 'Ativo' : 'Concluído'}
                     </span>
-                    {mat && (
+                    {mat && !isDiagP && (
                       <span style={{
                         fontSize: 10, padding: '3px 12px', borderRadius: 999, fontWeight: 700, letterSpacing: 0.3,
                         background: `${matColor}22`, color: matColor, border: `1px solid ${matColor}55`,
                       }} title={mat.nome}>
                         {mat.nivel}
+                      </span>
+                    )}
+                    {isDiagP && (
+                      <span style={{
+                        fontSize: 10, padding: '3px 12px', borderRadius: 999, fontWeight: 700, letterSpacing: 0.3,
+                        background: 'rgba(204,145,94,0.15)', color: 'var(--copper)', border: '1px solid rgba(204,145,94,0.4)',
+                      }} title="Diagnóstico Apenas (sem teste de efetividade)">
+                        Diagnóstico
                       </span>
                     )}
                   </div>
@@ -201,7 +210,10 @@ function ProjectSelector({ projetos, resumos, perfil, onSelect, signOut, onAdmin
                 <div style={{ display: 'flex', gap: 22, fontSize: 11, color: 'rgba(247,243,238,0.55)', flexWrap: 'wrap', alignItems: 'center' }}>
                   <span><strong style={{ color: 'var(--cream)', fontWeight: 500 }}>{r.totalControles ?? '—'}</strong> controles</span>
                   <span><strong style={{ color: 'var(--cream)', fontWeight: 500 }}>{r.totalAreas ?? '—'}</strong> áreas</span>
-                  {mat && <span>Maturidade <strong style={{ color: matColor, fontWeight: 600 }}>{mat.nome}</strong></span>}
+                  {mat && !isDiagP && <span>Maturidade <strong style={{ color: matColor, fontWeight: 600 }}>{mat.nome}</strong></span>}
+                  {isDiagP && r.diagnostico && (
+                    <span>Diagnóstico: <strong style={{ color: '#22C55E', fontWeight: 600 }}>{r.diagnostico.existentes}</strong> · <strong style={{ color: '#FACC15', fontWeight: 600 }}>{r.diagnostico.parciais}</strong> · <strong style={{ color: '#EF4444', fontWeight: 600 }}>{r.diagnostico.inexistentes}</strong></span>
+                  )}
                   {r.ultimaAtividade && <span>Últ. atividade: <strong style={{ color: 'var(--cream)', fontWeight: 500 }}>{r.ultimaAtividade}</strong></span>}
                 </div>
               </div>
@@ -285,25 +297,37 @@ export default function Dashboard() {
     try {
       await Promise.all(projs.map(async (p) => {
         try {
-          const [mrcRes, areaRes, matRes] = await Promise.all([
-            supabase.from('mrc').select('id, dt_ult, atualizado_em, criado_em', { count: 'exact' }).eq('projeto_id', p.id),
+          const isDiag = p.f1_tem_teste === false
+          const queries = [
+            supabase.from('mrc').select('id, dt_ult, atualizado_em, criado_em' + (isDiag ? ', existencia' : ''), { count: 'exact' }).eq('projeto_id', p.id),
             supabase.from('areas').select('id', { count: 'exact' }).eq('projeto_id', p.id),
-            supabase.from('vw_maturidade_areas').select('percentual').eq('projeto_id', p.id),
-          ])
+          ]
+          if (!isDiag) queries.push(supabase.from('vw_maturidade_areas').select('percentual').eq('projeto_id', p.id))
+          const results = await Promise.all(queries)
+          const mrcRes = results[0]; const areaRes = results[1]; const matRes = results[2]
           const totalControles = mrcRes.count || 0
           const totalAreas = areaRes.count || 0
-          const matRows = matRes.data || []
           let maturidade = null
-          if (matRows.length > 0) {
-            const avg = matRows.reduce((s, m) => s + (m.percentual || 0), 0) / matRows.length
-            maturidade = getNivelMaturidade(avg)
+          let diagnostico = null
+          if (isDiag) {
+            const rows = mrcRes.data || []
+            const ex = rows.filter(r => r.existencia === 'Existente').length
+            const pc = rows.filter(r => r.existencia === 'Parcial').length
+            const ix = rows.filter(r => r.existencia === 'Inexistente').length
+            diagnostico = { existentes: ex, parciais: pc, inexistentes: ix, total: rows.length }
+          } else if (matRes) {
+            const matRows = matRes.data || []
+            if (matRows.length > 0) {
+              const avg = matRows.reduce((s, m) => s + (m.percentual || 0), 0) / matRows.length
+              maturidade = getNivelMaturidade(avg)
+            }
           }
           let maxDate = null
           ;(mrcRes.data || []).forEach(c => {
             const d = c.dt_ult || c.atualizado_em || c.criado_em
             if (d) { const dt = new Date(d); if (!isNaN(dt) && (!maxDate || dt > maxDate)) maxDate = dt }
           })
-          resumos[p.id] = { totalControles, totalAreas, maturidade, ultimaAtividade: maxDate ? maxDate.toLocaleDateString('pt-BR') : null }
+          resumos[p.id] = { totalControles, totalAreas, maturidade, diagnostico, isDiag, ultimaAtividade: maxDate ? maxDate.toLocaleDateString('pt-BR') : null }
         } catch { resumos[p.id] = {} }
       }))
     } catch (err) {
