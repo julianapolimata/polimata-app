@@ -242,8 +242,8 @@ export function ModalDetalhe({ row, projeto, onClose }) {
   if (!row) return null
   const isDiagModal = projeto?.f1_tem_teste === false
   const tabs = isDiagModal
-    ? [{ id:'ident',label:'Identificação' },{ id:'f1',label:'Diagnóstico Inicial' }]
-    : [{ id:'ident',label:'Identificação' },{ id:'f1',label:'Diagnóstico Inicial' },{ id:'f2e1',label:'Teste de Desenho' },{ id:'f2e2',label:'Teste de Aderência' },{ id:'f3',label:'Revisão Controles Internos' },{ id:'f4c1',label:'Auditoria Contínua C1' },{ id:'f4c2',label:'Auditoria Contínua C2' },{ id:'f5',label:'Auditoria Independente' }]
+    ? [{ id:'ident',label:'Identificação' },{ id:'f1',label:'Diagnóstico Inicial' },{ id:'historico',label:'Histórico' }]
+    : [{ id:'ident',label:'Identificação' },{ id:'f1',label:'Diagnóstico Inicial' },{ id:'f2e1',label:'Teste de Desenho' },{ id:'f2e2',label:'Teste de Aderência' },{ id:'f3',label:'Revisão Controles Internos' },{ id:'f4c1',label:'Auditoria Contínua C1' },{ id:'f4c2',label:'Auditoria Contínua C2' },{ id:'f5',label:'Auditoria Independente' },{ id:'historico',label:'Histórico' }]
   const categoriaRec = getCategoriaRecomendacao(row, projeto)
   const corCategoria = ({
     'Implementar controle': '#EF4444',
@@ -348,6 +348,8 @@ export function ModalDetalhe({ row, projeto, onClose }) {
             <div className="ms"><div className="ms-t">Auditoria Independente</div><div className="mr">{field('Resultado', row.r_f5 ? badge(R1_MAP[row.r_f5]||'b-na', row.r_f5) : null)}</div>{fieldText('Inconsistências', row.incons_f5)}{fieldText('Recomendações', row.rec_f5)}</div>
           </div>)}
 
+          {tab === 'historico' && (<div className="tp active"><HistoricoControle controleId={row.id} /></div>)}
+
         </div>
         <div className="modal-ftr"><button className="btn btn-ghost btn-sm" onClick={onClose}>Fechar</button></div>
       </div>
@@ -358,6 +360,43 @@ export function ModalDetalhe({ row, projeto, onClose }) {
 // ─── TABELA MRC ──────────────────────────────────────────────────────────────
 
 // Headers de fase coloridos (padrão PorArea)
+function HistoricoControle({ controleId }) {
+  const [comentarios, setComentarios] = useState([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    let cancel = false
+    ;(async () => {
+      const { data } = await supabase.from('controle_comentarios').select('id, autor_nome, texto, criado_em').eq('controle_id', controleId).order('criado_em', { ascending: false })
+      if (!cancel) { setComentarios(data || []); setLoading(false) }
+    })()
+    return () => { cancel = true }
+  }, [controleId])
+  if (loading) return <div style={{ padding: 16, color: 'var(--lt-text3)', fontSize: 12 }}>Carregando histórico…</div>
+  if (comentarios.length === 0) return (
+    <div className="ms"><div className="ms-t">Histórico de Comentários</div>
+      <div style={{ fontSize: 12, color: 'var(--lt-text3)', fontStyle: 'italic', padding: '8px 0' }}>
+        Nenhum comentário registrado ainda. Os comentários aparecem aqui depois que você salva o controle (definitivo ou rascunho) — eles ajudam a lembrar onde a revisão parou, pendências externas, decisões metodológicas.
+      </div>
+    </div>
+  )
+  return (
+    <div className="ms">
+      <div className="ms-t">Histórico de Comentários ({comentarios.length})</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+        {comentarios.map(c => (
+          <div key={c.id} style={{ padding: '10px 14px', background: 'var(--lt-bg)', border: '1px solid var(--lt-border)', borderLeft: '3px solid var(--copper)', borderRadius: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--lt-text3)' }}>
+              <span>{c.autor_nome || 'Anônimo'}</span>
+              <span>{new Date(c.criado_em).toLocaleString('pt-BR')}</span>
+            </div>
+            <div style={{ fontSize: 12.5, color: 'var(--lt-text)', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{c.texto}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const MRC_FASE_HDR = [
   { h: 'Fase 1\nDiagnóstico', bg: '#00203E' },
   { h: 'Fase 2\nE1 - Desenho', bg: '#1D3B5C' },

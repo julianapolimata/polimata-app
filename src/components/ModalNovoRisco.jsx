@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import ExcelJS from 'exceljs'
+import ModalComentario from './ModalComentario'
 
 const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
   // ═══ STATE ═══
@@ -8,6 +9,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
   const [saving, setSaving] = useState(false)
   const [perfil, setPerfil] = useState(null)
   const [novoRiscoData, setNovoRiscoData] = useState(null)
+  const [comentarioFor, setComentarioFor] = useState(null)
   // responsaveis removido — não há resp. por subprocesso na metodologia
   const [sistemas, setSistemas] = useState([])
   const [subprocessos, setSubprocessos] = useState([])
@@ -300,8 +302,9 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
         if (error) throw error
         saved = data?.[0]
       }
-      onSaved?.(saved)
-      onClose?.()
+      setSaving(false)
+      setComentarioFor({ controle: saved, acao: 'Rascunho salvo' })
+      return
     } catch (err) {
       console.error('Erro ao salvar rascunho:', err)
       alert('Erro ao salvar rascunho: ' + (err.message || err))
@@ -330,8 +333,9 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
         alert('Risco salvo com sucesso! Geração de ficha Excel em implementação.')
       }
 
-      onSaved?.(saved)
-      onClose?.()
+      setSaving(false)
+      setComentarioFor({ controle: saved, acao: comDownload ? 'Controle salvo (com ficha)' : 'Controle salvo' })
+      return
     } catch (err) {
       console.error('Erro ao salvar:', err)
       alert('Erro ao salvar. Tente novamente.')
@@ -1036,6 +1040,16 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
           )}
         </div>
       </div>
+      {comentarioFor && (
+        <ModalComentario
+          controleId={comentarioFor.controle?.id}
+          projetoId={projeto?.id}
+          perfil={perfil}
+          acao={comentarioFor.acao}
+          onClose={() => { const c = comentarioFor.controle; setComentarioFor(null); onSaved?.(c); onClose?.() }}
+          onSaved={() => { const c = comentarioFor.controle; setComentarioFor(null); onSaved?.(c); onClose?.() }}
+        />
+      )}
     </div>
   )
 }
