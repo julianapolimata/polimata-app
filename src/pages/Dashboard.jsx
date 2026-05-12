@@ -358,7 +358,7 @@ export default function Dashboard() {
       const [areasRes, mrcRes, matRes] = await Promise.all([
         supabase.from('areas').select('id, nome, prefixo, peso, gerente, ordem').eq('projeto_id', pid).order('ordem'),
         supabase.from('mrc').select('*').eq('projeto_id', pid),
-        supabase.from('vw_maturidade_areas').select('area_id, percentual, nivel, nome, total, efetivos, inefetivos, gaps, regredidos').eq('projeto_id', pid),
+        supabase.from('vw_maturidade_areas').select('area_id, percentual, nivel, nome, total_controles, efetivos, inefetivos, gaps, regredidos').eq('projeto_id', pid),
       ])
       const controles = mrcRes.data || [], areas = areasRes.data || []
       const matData = matRes.data || []
@@ -369,7 +369,7 @@ export default function Dashboard() {
           ...a,
           controles: ca,
           calc: mat
-            ? { percentual: parseFloat(mat.percentual) || 0, nivel: mat.nivel, nome: mat.nome, totais: { ativos: mat.total, efetivos: mat.efetivos, inefetivos: mat.inefetivos, gap: mat.gaps, regredidos: mat.regredidos } }
+            ? { percentual: parseFloat(mat.percentual) || 0, nivel: mat.nivel, nome: mat.nome, totais: { ativos: mat.total_controles, efetivos: mat.efetivos, inefetivos: mat.inefetivos, gap: mat.gaps, regredidos: mat.regredidos } }
             : { percentual: 0, nivel: 'N1', nome: 'Não confiável', totais: { ativos: 0, efetivos: 0, inefetivos: 0, gap: 0, regredidos: 0 } },
         }
       })
