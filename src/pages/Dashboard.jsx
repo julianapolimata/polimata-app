@@ -916,17 +916,25 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
   if (!projeto) return <NoProjeto />
   if (!area) return <div style={{ background: 'var(--lt-bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, fontFamily: "'Montserrat', sans-serif" }}><div style={{ color: 'var(--lt-text3)' }}>Área não encontrada.</div><button onClick={() => navigate('/')} style={{ marginTop: 12, padding: '6px 16px', borderRadius: 999, border: '1px solid var(--lt-border)', background: 'var(--lt-card)', color: 'var(--lt-text)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11 }}>← Voltar</button></div>
 
+  const isDiagnostico = projeto?.f1_tem_teste === false
   const somaPesos = areasCalc.reduce((s, a) => s + (a.peso||0), 0)
   const pesoEmpresa = somaPesos > 0 ? ((area.peso||0)/somaPesos*100).toFixed(1) : '0'
   const p = area.calc?.percentual||0, nv = getNivelMaturidade(p)
   let efetivos=0, inefetivos=0, gaps=0, planosAcao=0
+  let pa_ex=0, pa_pc=0, pa_ix=0, pa_crit=0
   area.controles.forEach(c => {
-    const rv = getResultadoVitrine(c)
+    const rv = getResultadoVitrine(c, projeto)
     if (isEfetivo(rv)) efetivos++
     else if (isInefetivo(rv)) inefetivos++
     else if (isGap(rv)) gaps++
     if (precisaPlanoAcao(c) && !planoAcaoConcluido(c)) planosAcao++
+    if (c.existencia === 'Existente') pa_ex++
+    else if (c.existencia === 'Parcial') pa_pc++
+    else if (c.existencia === 'Inexistente') pa_ix++
+    if (c.crit === 4) pa_crit++
   })
+  const pa_total = area.controles.length
+  const pa_pct = (n) => pa_total > 0 ? Math.round(n / pa_total * 100) : 0
 
   // Resultado geral: retorna o resultado da fase mais avançada do controle
   function getResultadoGeral(c) {
@@ -1117,7 +1125,36 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
           </div>
         </div>
 
-        {/* KPI GRID 3×2 */}
+        {/* KPI GRID — versão diagnóstico ou maturidade */}
+        {isDiagnostico ? (
+          <div style={PA.kpiGrid}>
+            <div style={{ ...PA.kpiCard, borderTopColor: 'var(--navy)' }}>
+              <div style={PA.kpiLabel}>Total de Controles</div>
+              <div style={{ ...PA.kpiValor, color: 'var(--navy)' }}>{pa_total}</div>
+              <div style={PA.kpiSub}>Peso empresa: {pesoEmpresa}%</div>
+            </div>
+            <div style={{ ...PA.kpiCard, borderTopColor: '#22C55E' }}>
+              <div style={PA.kpiLabel}>Existentes</div>
+              <div style={{ ...PA.kpiValor, color: '#22C55E' }}>{pa_ex}</div>
+              <div style={PA.kpiSub}>{pa_pct(pa_ex)}% do total</div>
+            </div>
+            <div style={{ ...PA.kpiCard, borderTopColor: '#FACC15' }}>
+              <div style={PA.kpiLabel}>Parciais</div>
+              <div style={{ ...PA.kpiValor, color: '#FACC15' }}>{pa_pc}</div>
+              <div style={PA.kpiSub}>{pa_pct(pa_pc)}% do total</div>
+            </div>
+            <div style={{ ...PA.kpiCard, borderTopColor: '#EF4444' }}>
+              <div style={PA.kpiLabel}>Inexistentes</div>
+              <div style={{ ...PA.kpiValor, color: '#EF4444' }}>{pa_ix}</div>
+              <div style={PA.kpiSub}>{pa_pct(pa_ix)}% do total</div>
+            </div>
+            <div style={{ ...PA.kpiCard, borderTopColor: 'var(--copper)' }}>
+              <div style={PA.kpiLabel}>Riscos Críticos</div>
+              <div style={{ ...PA.kpiValor, color: 'var(--copper)' }}>{pa_crit}</div>
+              <div style={PA.kpiSub}>atenção prioritária</div>
+            </div>
+          </div>
+        ) : (
         <div style={PA.kpiGrid}>
           <div style={{ ...PA.kpiCard, borderTopColor: 'var(--copper)' }}>
             <div style={PA.kpiLabel}>Maturidade</div>
@@ -1150,7 +1187,7 @@ function PorArea({ projeto, areasCalc, todosControles, loading, navigate, loadDa
             <div style={{ ...PA.kpiValor, color: 'var(--copper)' }}>{planosAcao}</div>
             <div style={PA.kpiSub}>Em desenvolvimento</div>
           </div>
-        </div>
+        </div>)}
       </div>}
 
       {/* FILTROS — duas linhas: essenciais (sempre) + drawer "Mais filtros" (colapsável) */}
