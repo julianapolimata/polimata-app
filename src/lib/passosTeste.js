@@ -16,7 +16,7 @@ export async function loadPassosTeste(controleId) {
   if (!controleId) return []
   const { data, error } = await supabase
     .from('controle_passos_teste')
-    .select('id, ordem, descricao, gerar_solicitacao')
+    .select('id, ordem, descricao, documentacao_solicitada, gerar_solicitacao')
     .eq('controle_id', controleId)
     .order('ordem', { ascending: true })
   if (error) {
@@ -43,7 +43,12 @@ async function loadSolicitacoesAtivasDosPassos(passoIds) {
 
 // Gera defaults para uma nova solicitação a partir de um passo + controle.
 function montarSolicitacaoFromPasso({ passo, controle, projetoId }) {
-  const desc = (passo.descricao || '').trim()
+  // A descrição da solicitação vem da documentação_solicitada do passo
+  // (é o que o cliente vai receber). Se estiver vazia, cai pra descrição do
+  // passo como fallback — assim solicitações antigas não viram em branco.
+  const docSolic = (passo.documentacao_solicitada || '').trim()
+  const descPasso = (passo.descricao || '').trim()
+  const desc = docSolic || descPasso
   const tituloCurto = desc.length > 60 ? desc.slice(0, 60) + '…' : desc
   const fase = getFaseInfo(controle)?.codigo || null
   return {
@@ -78,7 +83,7 @@ export async function syncPassosESolicitacoes({ controle, passos, projetoId }) {
   const antigos = await loadPassosTeste(controle.id)
 
   // 2. Separa novos (sem id) e existentes (com id) do front
-  const desejados = (passos || []).filter(p => (p.descricao || '').trim() !== '' || p.id)
+  const desejados = (passos || []).filter(p => (p.descricao || '').trim() !== '' || (p.documentacao_solicitada || '').trim() !== '' || p.id)
   const idsDesejados = new Set(desejados.filter(p => p.id).map(p => p.id))
 
   // 3. DELETE: passos que sumiram do front (linha removida pelo botão ✕)
@@ -99,6 +104,7 @@ export async function syncPassosESolicitacoes({ controle, passos, projetoId }) {
     controle_id: controle.id,
     ordem: idx + 1,
     descricao: (p.descricao || '').trim(),
+    documentacao_solicitada: (p.documentacao_solicitada || '').trim(),
     gerar_solicitacao: !!p.gerar_solicitacao,
   }))
 
@@ -107,7 +113,12 @@ export async function syncPassosESolicitacoes({ controle, passos, projetoId }) {
     if (linha.id) {
       const { data, error } = await supabase
         .from('controle_passos_teste')
-        .update({ ordem: linha.ordem, descricao: linha.descricao, gerar_solicitacao: linha.gerar_solicitacao })
+        .update({
+          ordem: linha.ordem,
+          descricao: linha.descricao,
+          documentacao_solicitada: linha.documentacao_solicitada,
+          gerar_solicitacao: linha.gerar_solicitacao,
+        })
         .eq('id', linha.id)
         .select()
         .single()
@@ -152,5 +163,5 @@ export async function syncPassosESolicitacoes({ controle, passos, projetoId }) {
 
 // Helper: linha em branco padrão para a UI
 export function criarPassoVazio() {
-  return { id: null, descricao: '', gerar_solicitacao: false, _local: true }
+  return { id: null, descricao: '', documentacao_solicitada: '', gerar_solicitacao: false, _local: true }
 }

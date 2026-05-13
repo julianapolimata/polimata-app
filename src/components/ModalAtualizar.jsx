@@ -509,9 +509,9 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     const passosFicha = (passos || []).filter(pp => (pp.descricao || '').trim() !== '')
     const ws2 = workbook.addWorksheet('Teste', { views: [{ showGridLines: false }] })
     ws2.columns = [
-      { width: 2.36 }, { width: 5 }, { width: 60 }, { width: 50 }, { width: 16 },
+      { width: 2.36 }, { width: 5 }, { width: 50 }, { width: 50 }, { width: 50 }, { width: 16 },
     ]
-    ws2.mergeCells(2, 2, 2, 5)
+    ws2.mergeCells(2, 2, 2, 6)
     const t1 = ws2.getCell(2, 2)
     t1.value = '7. EXECUÇÃO DO TESTE E EVIDÊNCIAS'
     t1.font = fontBase({ bold: true, color: { argb: GOLD } })
@@ -520,7 +520,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     ws2.getRow(2).height = 15
 
     // Cabeçalho da tabela de passos (linha 4)
-    const hdr = ['#', 'Passo do Teste', 'Evidência / Observação', 'Solicitação?']
+    const hdr = ['#', 'Passo do Teste', 'Documentação Solicitada', 'Evidência / Observação', 'Solicitação?']
     hdr.forEach((h, idx) => {
       const cell = ws2.getCell(4, 2 + idx)
       cell.value = h
@@ -533,7 +533,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
 
     if (passosFicha.length === 0) {
       // Mensagem se o controle não tem passos cadastrados
-      ws2.mergeCells(5, 2, 5, 5)
+      ws2.mergeCells(5, 2, 5, 6)
       const v = ws2.getCell(5, 2)
       v.value = 'Nenhum passo de teste cadastrado para este controle.'
       v.font = fontBase({ color: { argb: GRAY99 }, italic: true })
@@ -557,22 +557,30 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         cellDesc.border = allHair
         cellDesc.fill = fillSolid(F8)
 
-        const cellEv = ws2.getCell(r, 4)
+        const cellDoc = ws2.getCell(r, 4)
+        cellDoc.value = pp.documentacao_solicitada || ''
+        cellDoc.font = fontBase({ color: { argb: GRAY33 } })
+        cellDoc.alignment = alignVCWrap
+        cellDoc.border = allHair
+        cellDoc.fill = fillSolid(F8)
+
+        const cellEv = ws2.getCell(r, 5)
         cellEv.value = ''
         cellEv.font = fontBase({ color: { argb: GRAY33 } })
         cellEv.alignment = alignVCWrap
         cellEv.border = { ...allHair, left: { style: 'thin', color: { argb: BGRAY } } }
         cellEv.fill = fillSolid(WHITE)
 
-        const cellSol = ws2.getCell(r, 5)
+        const cellSol = ws2.getCell(r, 6)
         cellSol.value = pp.gerar_solicitacao ? 'Sim' : 'Não'
         cellSol.font = fontBase({ bold: !!pp.gerar_solicitacao, color: { argb: pp.gerar_solicitacao ? COPPER : GRAY99 } })
         cellSol.alignment = { horizontal: 'center', vertical: 'middle' }
         cellSol.border = allHair
         cellSol.fill = fillSolid(F8)
 
-        // Altura proporcional ao tamanho da descrição (mínimo 38)
-        const linhas = Math.max(2, Math.ceil((pp.descricao || '').length / 70))
+        // Altura proporcional ao maior texto entre descrição e documentação (mínimo 38)
+        const maiorTexto = Math.max((pp.descricao || '').length, (pp.documentacao_solicitada || '').length)
+        const linhas = Math.max(2, Math.ceil(maiorTexto / 60))
         ws2.getRow(r).height = Math.max(38, linhas * 16)
       })
     }

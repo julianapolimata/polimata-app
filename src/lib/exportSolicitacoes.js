@@ -85,7 +85,7 @@ export async function exportarSolicitacoesExcel({ solicitacoes, controles, areas
   })
 
   // Tabela resumo
-  const headers = ['Nº', 'Área', 'Fase', 'Controle', 'Título', 'Descrição', 'Resp. Cliente', 'Email Resp.', 'Solicitado em', 'Prazo', 'Status', 'Link Evidência', 'Comentários']
+  const headers = ['Nº', 'Área', 'Fase', 'Controle', 'Descrição', 'Resp. Cliente', 'Email Resp.', 'Solicitado em', 'Prazo', 'Status', 'Link Evidência', 'Comentários']
   const headerRow = 9
   headers.forEach((h, i) => {
     const cell = wsResumo.getCell(headerRow, 2 + i)
@@ -94,7 +94,7 @@ export async function exportarSolicitacoesExcel({ solicitacoes, controles, areas
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } }
     cell.alignment = { vertical: 'middle', horizontal: 'center' }
   })
-  const widths = [12, 18, 8, 14, 36, 42, 22, 28, 14, 12, 14, 30, 30]
+  const widths = [12, 18, 8, 14, 60, 22, 28, 14, 12, 14, 30, 30]
   widths.forEach((w, i) => { wsResumo.getColumn(2 + i).width = w })
 
   solicitacoes.forEach((s, idx) => {
@@ -102,7 +102,7 @@ export async function exportarSolicitacoesExcel({ solicitacoes, controles, areas
     const ctrl = ctrlMap[s.controle_id]
     const area = areaMap[s.area_id]
     const vals = [
-      s.numero, area?.nome || '—', s.fase || '—', ctrl?.rc || '—', s.titulo || '',
+      s.numero, area?.nome || '—', s.fase || '—', ctrl?.rc || '—',
       s.descricao || '', s.responsavel_cliente_nome || '', s.responsavel_cliente_email || '',
       fmtDateTime(s.data_solicitacao), fmtDate(s.prazo),
       STATUS_LABEL[s.status] || s.status, s.evidencia_link || '', s.comentarios || '',
@@ -144,14 +144,14 @@ export async function exportarSolicitacoesExcel({ solicitacoes, controles, areas
     sols.forEach(s => { const f = s.fase || 'Sem fase'; if (!porFase[f]) porFase[f] = []; porFase[f].push(s) })
     const fases = Object.keys(porFase).sort()
 
-    const headers2 = ['Nº', 'Fase', 'Controle', 'Título', 'Descrição', 'Resp. Cliente', 'Solicitado em', 'Prazo', 'Status', 'Link Evidência', 'Comentários']
-    const widths2 = [12, 8, 14, 36, 42, 22, 14, 12, 14, 30, 30]
+    const headers2 = ['Nº', 'Fase', 'Controle', 'Descrição', 'Resp. Cliente', 'Solicitado em', 'Prazo', 'Status', 'Link Evidência', 'Comentários']
+    const widths2 = [12, 8, 14, 60, 22, 14, 12, 14, 30, 30]
     widths2.forEach((w, i) => { ws.getColumn(2 + i).width = w })
 
     let r = 5
     fases.forEach(fase => {
       // Cabeçalho da fase
-      ws.mergeCells(r, 2, r, 12)
+      ws.mergeCells(r, 2, r, 11)
       const faseCell = ws.getCell(r, 2)
       faseCell.value = `Fase: ${fase}`
       faseCell.font = { name: 'Montserrat', bold: true, size: 11, color: { argb: COPPER } }
@@ -174,7 +174,7 @@ export async function exportarSolicitacoesExcel({ solicitacoes, controles, areas
       porFase[fase].forEach(s => {
         const ctrl = ctrlMap[s.controle_id]
         const vals = [
-          s.numero, s.fase || '—', ctrl?.rc || '—', s.titulo || '',
+          s.numero, s.fase || '—', ctrl?.rc || '—',
           s.descricao || '', s.responsavel_cliente_nome || '',
           fmtDateTime(s.data_solicitacao), fmtDate(s.prazo),
           STATUS_LABEL[s.status] || s.status, s.evidencia_link || '', s.comentarios || '',
