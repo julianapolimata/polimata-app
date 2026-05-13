@@ -39,8 +39,6 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
   const [showInconsistenciaAlert, setShowInconsistenciaAlert] = useState(false)
   const [melhoria, setMelhoria] = useState(row?.melhoria ? 'sim' : 'nao')
   const [descMelhoria, setDescMelhoria] = useState(row?.incons_ader || '')
-  const [impacto, setImpacto] = useState(row?.imp?.toString() || '')
-  const [probabilidade, setProbabilidade] = useState(row?.prob?.toString() || '')
   const [temPA, setTemPA] = useState(row?.dem_pa ? 'sim' : 'nao')
   const [paDesc, setPaDesc] = useState(row?.dem_pa || '')
   const [paResp, setPaResp] = useState(row?.resp_pa || '')
@@ -53,26 +51,6 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
   const showPA = resultado === 'inefetivo' || resultado === 'gap'
   const showDescMelhoria = melhoria === 'sim'
 
-  // Cálculo de criticidade
-  const criticidade = impacto && probabilidade 
-    ? parseInt(impacto) * parseInt(probabilidade) 
-    : null
-
-  const getCriticidadeLabel = (crit) => {
-    if (!crit) return { label: '', color: '' }
-    const map = {
-      1: { label: 'Baixo', color: '#E8F5E9', colorText: '#1B5E20' },
-      2: { label: 'Moderado', color: '#FFCC80', colorText: '#E65100' },
-      3: { label: 'Significativo', color: '#FFCC80', colorText: '#E65100' },
-      4: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' },
-      6: { label: 'Significativo', color: '#FFCC80', colorText: '#E65100' },
-      8: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' },
-      9: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' },
-      12: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' },
-      16: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' }
-    }
-    return map[crit] || { label: 'Moderado', color: '#FFCC80', colorText: '#E65100' }
-  }
 
   // ═══ VALIDAÇÃO ═══
   const canSave = resultado &&
@@ -101,10 +79,6 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
       incons: resultado !== 'efetivo' ? inconsistencia : null,
       melhoria: melhoria === 'sim' ? true : false,
       incons_ader: melhoria === 'sim' ? descMelhoria : null,
-      imp: parseInt(impacto),
-      prob: parseInt(probabilidade),
-      crit: criticidade,
-      crit_label: getCriticidadeLabel(criticidade).label,
       dem_pa: resultado !== 'efetivo' && temPA === 'sim' ? paDesc : null,
       resp_pa: resultado !== 'efetivo' && temPA === 'sim' ? paResp : null,
       dt_pa: resultado !== 'efetivo' && temPA === 'sim' ? paPrazo : null,
@@ -514,114 +488,6 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
             </div>
           )}
 
-          {/* Criticidade */}
-          <div style={{ marginBottom: '2rem' }}>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              color: '#00203E',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              marginBottom: '1rem',
-              paddingBottom: '0.75rem',
-              borderBottom: '2px solid #CC915E'
-            }}>
-              2. Avaliação da Criticidade
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: '#00203E',
-                  marginBottom: '0.5rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.3px'
-                }}>
-                  Impacto
-                </label>
-                <select
-                  value={impacto}
-                  onChange={e => setImpacto(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.8rem',
-                    border: '1px solid #D0D0D0',
-                    borderRadius: '4px',
-                    fontFamily: 'Montserrat, sans-serif',
-                    fontSize: '14px'
-                  }}
-                >
-                  <option value="">Selecionar...</option>
-                  <option value="1">Baixo</option>
-                  <option value="2">Moderado</option>
-                  <option value="3">Alto</option>
-                  <option value="4">Crítico</option>
-                  <option value="0">N/A</option>
-                </select>
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: '#00203E',
-                  marginBottom: '0.5rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.3px'
-                }}>
-                  Probabilidade
-                </label>
-                <select
-                  value={probabilidade}
-                  onChange={e => setProbabilidade(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.8rem',
-                    border: '1px solid #D0D0D0',
-                    borderRadius: '4px',
-                    fontFamily: 'Montserrat, sans-serif',
-                    fontSize: '14px'
-                  }}
-                >
-                  <option value="">Selecionar...</option>
-                  <option value="1">Baixa</option>
-                  <option value="2">Média</option>
-                  <option value="3">Alta</option>
-                  <option value="4">Extrema</option>
-                  <option value="0">N/A</option>
-                </select>
-              </div>
-            </div>
-            {criticidade && (
-              <div style={{
-                background: '#F3EEE4',
-                border: '1px solid #E0D5C7',
-                padding: '1rem',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem'
-              }}>
-                <span style={{
-                  padding: '0.4rem 0.8rem',
-                  borderRadius: '4px',
-                  fontWeight: 600,
-                  fontSize: '12px',
-                  textTransform: 'uppercase',
-                  background: getCriticidadeLabel(criticidade).color,
-                  color: getCriticidadeLabel(criticidade).colorText
-                }}>
-                  {getCriticidadeLabel(criticidade).label}
-                </span>
-                <span style={{ fontSize: '13px', color: '#7A8B9C', fontWeight: 500 }}>
-                  Criticidade: {criticidade} (Impacto {impacto} × Prob {probabilidade}) / {getCriticidadeLabel(criticidade).label}
-                </span>
-              </div>
-            )}
-          </div>
-
           {/* Teste de Desenho (se Inefetivo/GAP) */}
           {showPA && (
             <div style={{
@@ -638,7 +504,7 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
                 marginBottom: '1rem',
                 letterSpacing: '0.5px'
               }}>
-                3. Teste de Desenho
+                2. Teste de Desenho
               </div>
               <label style={{
                 display: 'block',

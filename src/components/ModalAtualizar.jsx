@@ -6,6 +6,8 @@ import { logAtualizarControle, logBaixarFicha } from '../lib/auditLog'
 import { formatNomeEmpresa } from '../lib/formatNome'
 
 import ModalComentario from './ModalComentario'
+import PassosTesteList from './PassosTesteList'
+import { syncPassosESolicitacoes, loadPassosTeste, criarPassoVazio } from '../lib/passosTeste'
 import { useAuth } from '../contexts/AuthContext'
 
 const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
@@ -23,6 +25,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
   const [saving, setSaving] = useState(false)
   const [perfil, setPerfil] = useState(null)
   const [showHistorico, setShowHistorico] = useState(false)
+  // Solicitações v2: passos de teste com checkbox para gerar solicitação
+  const [passos, setPassos] = useState([])
 
   // Control fields (Step 2)
   const [editCat, setEditCat] = useState(row.cat || '')
@@ -48,6 +52,21 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
   useEffect(() => {
     loadPerfil()
   }, [])
+
+  // Carrega passos do controle (Solicitações v2)
+  useEffect(() => {
+    let cancelado = false
+    async function go() {
+      if (!row?.id) return
+      const lista = await loadPassosTeste(row.id)
+      if (cancelado) return
+      // Se controle não tinha nenhum passo cadastrado, seedar uma linha em branco
+      // (mas mantém os antigos com gerar_solicitacao desligado)
+      setPassos(lista.length ? lista : [criarPassoVazio()])
+    }
+    go()
+    return () => { cancelado = true }
+  }, [row?.id])
 
   async function loadPerfil() {
     const { data } = await supabase.auth.getUser()
@@ -109,8 +128,12 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     return true
   })()
 
+  // Validação Step 3 (Passos de Teste — Solicitações v2)
+  // Não trava — passos são opcionais; usuário pode avançar sem nenhum.
+  const canAdvanceStep3 = true
+
   function nextStep() {
-    if (step < 3) setStep(step + 1)
+    if (step < 4) setStep(step + 1)
   }
 
   function prevStep() {
@@ -200,6 +223,12 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         atualizado_por: perfil?.id,
       }
       await supabase.from('mrc').update(updates).eq('id', row.id)
+      // Solicitações v2: persiste passos editados e sincroniza solicitações
+      try {
+        await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id })
+      } catch (e) {
+        console.error('syncPassosESolicitacoes (ficha):', e)
+      }
       await gerarFichaExcel()
       logAtualizarControle(row, row.projeto_id)
       logBaixarFicha(row, row.projeto_id)
@@ -475,15 +504,78 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
 
 
     // ── Aba Teste ──
+    // Passos vêm da nova tabela controle_passos_teste (Solicitações v2). A ficha
+    // expande conforme o número de passos cadastrados — sem limite fixo.
+    const passosFicha = (passos || []).filter(pp => (pp.descricao || '').trim() !== '')
     const ws2 = workbook.addWorksheet('Teste', { views: [{ showGridLines: false }] })
-    ws2.columns = [{ width: 2.36 }, { width: 13 }]
-    ws2.mergeCells(2, 2, 2, 18)
+    ws2.columns = [
+      { width: 2.36 }, { width: 5 }, { width: 60 }, { width: 50 }, { width: 16 },
+    ]
+    ws2.mergeCells(2, 2, 2, 5)
     const t1 = ws2.getCell(2, 2)
     t1.value = '7. EXECUÇÃO DO TESTE E EVIDÊNCIAS'
     t1.font = fontBase({ bold: true, color: { argb: GOLD } })
     t1.fill = fillSolid(NAVY)
     t1.alignment = { horizontal: 'left', vertical: 'middle' }
     ws2.getRow(2).height = 15
+
+    // Cabeçalho da tabela de passos (linha 4)
+    const hdr = ['#', 'Passo do Teste', 'Evidência / Observação', 'Solicitação?']
+    hdr.forEach((h, idx) => {
+      const cell = ws2.getCell(4, 2 + idx)
+      cell.value = h
+      cell.font = fontBase({ bold: true, color: { argb: CREAM } })
+      cell.fill = fillSolid(NAVY)
+      cell.alignment = { horizontal: idx === 0 ? 'center' : 'left', vertical: 'middle', wrapText: true }
+      cell.border = allHair
+    })
+    ws2.getRow(4).height = 18
+
+    if (passosFicha.length === 0) {
+      // Mensagem se o controle não tem passos cadastrados
+      ws2.mergeCells(5, 2, 5, 5)
+      const v = ws2.getCell(5, 2)
+      v.value = 'Nenhum passo de teste cadastrado para este controle.'
+      v.font = fontBase({ color: { argb: GRAY99 }, italic: true })
+      v.alignment = { vertical: 'middle' }
+      v.border = allHair
+      ws2.getRow(5).height = 22
+    } else {
+      passosFicha.forEach((pp, idx) => {
+        const r = 5 + idx
+        const cellNum = ws2.getCell(r, 2)
+        cellNum.value = idx + 1
+        cellNum.font = fontBase({ bold: true, color: { argb: NAVY } })
+        cellNum.alignment = { horizontal: 'center', vertical: 'middle' }
+        cellNum.border = allHair
+        cellNum.fill = fillSolid(F8)
+
+        const cellDesc = ws2.getCell(r, 3)
+        cellDesc.value = pp.descricao || ''
+        cellDesc.font = fontBase({ color: { argb: GRAY33 } })
+        cellDesc.alignment = alignVCWrap
+        cellDesc.border = allHair
+        cellDesc.fill = fillSolid(F8)
+
+        const cellEv = ws2.getCell(r, 4)
+        cellEv.value = ''
+        cellEv.font = fontBase({ color: { argb: GRAY33 } })
+        cellEv.alignment = alignVCWrap
+        cellEv.border = { ...allHair, left: { style: 'thin', color: { argb: BGRAY } } }
+        cellEv.fill = fillSolid(WHITE)
+
+        const cellSol = ws2.getCell(r, 5)
+        cellSol.value = pp.gerar_solicitacao ? 'Sim' : 'Não'
+        cellSol.font = fontBase({ bold: !!pp.gerar_solicitacao, color: { argb: pp.gerar_solicitacao ? COPPER : GRAY99 } })
+        cellSol.alignment = { horizontal: 'center', vertical: 'middle' }
+        cellSol.border = allHair
+        cellSol.fill = fillSolid(F8)
+
+        // Altura proporcional ao tamanho da descrição (mínimo 38)
+        const linhas = Math.max(2, Math.ceil((pp.descricao || '').length / 70))
+        ws2.getRow(r).height = Math.max(38, linhas * 16)
+      })
+    }
 
     // ── Download ──
     const buffer = await workbook.xlsx.writeBuffer()
@@ -521,6 +613,11 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         atualizado_por: perfil?.id,
       }
       await supabase.from('mrc').update(updates).eq('id', row.id)
+      try {
+        await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id })
+      } catch (e) {
+        console.error('syncPassosESolicitacoes (semFicha):', e)
+      }
       logAtualizarControle(row, row.projeto_id)
       alert('✅ Salvo com sucesso! Status: TESTE PENDENTE')
       setComentarioFor({ controleId: row?.id, acao: 'Controle atualizado' })
@@ -1050,6 +1147,25 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     </div>
   )
 
+  // ═══ RENDER STEP PASSOS (Solicitações v2) ═══
+  const renderStepPassos = () => (
+    <div>
+      <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ borderRight: '1px solid #e5e7eb', paddingRight: 12 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Ref. Controle</div>
+            <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{row.rc}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Área</div>
+            <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{row.area}</div>
+          </div>
+        </div>
+      </div>
+      <PassosTesteList passos={passos} onChange={setPassos} disabled={saving} />
+    </div>
+  )
+
   // ═══ RENDER STEP 3 ═══
   const renderStep3 = () => (
     <div>
@@ -1140,7 +1256,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
 
         {/* STEPPER */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 24px', gap: 0 }}>
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <React.Fragment key={s}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flex: 1 }}>
                 <div
@@ -1160,10 +1276,10 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
                   {s < step ? '✓' : s}
                 </div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: s < step || s === step ? '#00203E' : '#999', textAlign: 'center' }}>
-                  {s === 1 ? 'Risco' : s === 2 ? 'Controle' : 'Executar Teste'}
+                  {s === 1 ? 'Risco' : s === 2 ? 'Controle' : s === 3 ? 'Passos de Teste' : 'Executar Teste'}
                 </div>
               </div>
-              {s < 3 && <div style={{ flex: 1, height: 1, background: '#e5e7eb', marginTop: -20 }}></div>}
+              {s < 4 && <div style={{ flex: 1, height: 1, background: '#e5e7eb', marginTop: -20 }}></div>}
             </React.Fragment>
           ))}
         </div>
@@ -1176,7 +1292,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
             <>
               {step === 1 && renderStep1()}
               {step === 2 && renderStep2()}
-              {step === 3 && renderStep3()}
+              {step === 3 && renderStepPassos()}
+              {step === 4 && renderStep3()}
             </>
           )}
         </div>
@@ -1210,11 +1327,11 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
               >
                 ← Voltar
               </button>
-              {step < 3 && (
+              {step < 4 && (
                 <button
                   onClick={nextStep}
-                  disabled={step === 1 ? !canAdvanceStep1 : step === 2 ? !canAdvanceStep2 : false}
-                  style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 0.5 : 1 }}
+                  disabled={step === 1 ? !canAdvanceStep1 : step === 2 ? !canAdvanceStep2 : step === 3 ? !canAdvanceStep3 : false}
+                  style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) || (step === 3 && !canAdvanceStep3) ? 0.5 : 1 }}
                 >
                   Próximo →
                 </button>

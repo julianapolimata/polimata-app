@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { getResultadoVitrine, getFaseLabel, getStatusComputado, getFaseDisplayOverride, normalizeFaseValue } from '../../lib/fases'
@@ -6,11 +6,14 @@ import { formatNomeEmpresa } from '../../lib/formatNome'
 import { getNivelMaturidade } from '../../lib/calculoMaturidade'
 import { getStatusConfig, getProximaAcao, PROXIMA_ACAO_OPCOES } from '../../lib/statusWorkflow'
 import { exportarMRCExcel } from '../../lib/exportMRC'
+import { exportarSolicitacoesExcel } from '../../lib/exportSolicitacoes'
+import { supabase } from '../../lib/supabase'
 import { gerarTemplateMRC } from '../../lib/templateMRC'
 import { ModalDetalhe } from '../../components/MRCCompleta'
 import ModalAtualizar from '../../components/ModalAtualizar'
 import ModalNovoRisco from '../../components/ModalNovoRisco'
 import ModalRegistrarResultado from '../../components/ModalRegistrarResultado'
+import ModalRegistrarCriticidade from '../../components/ModalRegistrarCriticidade'
 import ModalRevisar from '../../components/ModalRevisar'
 import NotificacoesPanel from '../../components/NotificacoesPanel'
 import {
@@ -46,6 +49,18 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
   const [atualizarRow, setAtualizarRow] = useState(null)
   const [modalNovoRisco, setModalNovoRisco] = useState(false)
   const [rowRegistrarResultado, setRowRegistrarResultado] = useState(null)
+  const [rowCriticidade, setRowCriticidade] = useState(null)
+  const [excelMenuAberto, setExcelMenuAberto] = useState(false)
+  const excelMenuRef = useRef(null)
+  useEffect(() => {
+    if (!excelMenuAberto) return
+    function onDocClick(e) {
+      if (excelMenuRef.current && !excelMenuRef.current.contains(e.target)) setExcelMenuAberto(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [excelMenuAberto])
+
   const [rowRevisar, setRowRevisar] = useState(null)
   const [dashCollapsed, setDashCollapsed] = useState(false)
   // topBarRef removido
@@ -97,10 +112,27 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
       // Criticidade pendente: só faz sentido após aprovação (antes, o gargalo é aprovar)
       alertas.push({
         label: 'Criticidade Pendente', color: '#EA580C', bg: 'rgba(234,88,12,0.08)',
-        onClick: canEdit ? () => setAtualizarRow(c) : null,
+        onClick: canEdit ? () => setRowCriticidade(c) : null,
       })
     }
     return alertas
+  }
+
+  // Exportar Lista de Solicitações filtrada pela área atual (Solicitações v2)
+  async function exportarSolicitacoesDaArea() {
+    if (!projeto?.id || !area?.id) return
+    const [solRes, ctrlRes, arRes] = await Promise.all([
+      supabase.from('solicitacoes').select('*').eq('projeto_id', projeto.id).eq('area_id', area.id).order('criado_em', { ascending: false }),
+      supabase.from('mrc').select('id, rr, rc, dr, dc, area_id').eq('projeto_id', projeto.id).eq('area_id', area.id),
+      supabase.from('areas').select('id, nome, prefixo').eq('id', area.id),
+    ])
+    await exportarSolicitacoesExcel({
+      solicitacoes: solRes.data || [],
+      controles: ctrlRes.data || [],
+      areas: arRes.data || [],
+      clienteNome: formatNomeEmpresa(projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome) || '',
+      projetoNome: `${projeto?.nome || ''} · ${area?.nome || ''}`,
+    })
   }
 
   if (loading) return <Spinner light />
@@ -435,10 +467,36 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
                 {canEdit && <button onClick={() => setModalNovoRisco(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#00203E', border: '1px solid #00203E', borderRadius: 999, padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'white', cursor: 'pointer', fontFamily: 'inherit' }} title="Criar novo risco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Risco</button>}
                 <button onClick={() => gerarTemplateMRC()} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--copper-text)', borderRadius: 999, padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'var(--copper-text)', cursor: 'pointer', fontFamily: 'inherit' }} title="Baixar template MRC em branco"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Template</button>
-                <button onClick={() => exportarMRCExcel(cf, `MRC_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`, nome, formatNomeEmpresa(projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome) || '', projeto?.nome || '')} style={PA.btnExport} title="Exportar Excel da área">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
-                  Excel
-                </button>
+                <div ref={excelMenuRef} style={{ position: 'relative', display: 'inline-block' }}>
+                  <button onClick={() => setExcelMenuAberto(o => !o)} style={PA.btnExport} title="Exportar Excel da área">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                    Excel
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 2 }}><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                  {excelMenuAberto && (
+                    <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', background: 'white', border: '1px solid var(--lt-border)', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', minWidth: 220, zIndex: 100, overflow: 'hidden' }}>
+                      <button
+                        onClick={() => { setExcelMenuAberto(false); exportarMRCExcel(cf, `MRC_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`, nome, formatNomeEmpresa(projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome) || '', projeto?.nome || '') }}
+                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', border: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: 'var(--lt-text)', cursor: 'pointer' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--lt-bg)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        MRC
+                        <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--lt-text3)', marginTop: 2 }}>Relatório executivo da área</div>
+                      </button>
+                      <div style={{ height: 1, background: 'var(--lt-border)' }} />
+                      <button
+                        onClick={() => { setExcelMenuAberto(false); exportarSolicitacoesDaArea() }}
+                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', border: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: 'var(--lt-text)', cursor: 'pointer' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--lt-bg)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        Lista de Solicitações
+                        <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--lt-text3)', marginTop: 2 }}>Solicitações dessa área (1 aba)</div>
+                      </button>
+                    </div>
+                  )}
+                </div>
                 {isRealAdmin && (
                   <button onClick={() => setSimularPerfil(prev => prev ? null : 'gestor_cliente')} style={{ background: simularPerfil ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 999, padding: '6px 14px', fontSize: 11, fontWeight: 600, color: '#1D4ED8', cursor: 'pointer', fontFamily: 'inherit' }} title="Simular visão do cliente">
                     {simularPerfil ? '← Voltar Admin' : 'Visão Cliente'}
@@ -542,6 +600,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
       {atualizarRow && <ModalAtualizar row={atualizarRow} onClose={() => setAtualizarRow(null)} onSaved={() => { setAtualizarRow(null); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} />}
       {modalNovoRisco && <ModalNovoRisco onClose={() => setModalNovoRisco(false)} onSaved={() => { setModalNovoRisco(false); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} areaFixa={area} />}
       {rowRegistrarResultado && <ModalRegistrarResultado row={rowRegistrarResultado} onClose={() => setRowRegistrarResultado(null)} onSaved={() => { setRowRegistrarResultado(null); if (projeto?.id) loadDados(projeto.id) }} responsaveis={[]} />}
+      {rowCriticidade && <ModalRegistrarCriticidade row={rowCriticidade} onClose={() => setRowCriticidade(null)} onSaved={() => { setRowCriticidade(null); if (projeto?.id) loadDados(projeto.id) }} />}
       {rowRevisar && <ModalRevisar row={rowRevisar} onClose={() => setRowRevisar(null)} onAction={() => { setRowRevisar(null); if (projeto?.id) loadDados(projeto.id) }} />}
     </div>
   )

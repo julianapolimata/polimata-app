@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import ExcelJS from 'exceljs'
 import ModalComentario from './ModalComentario'
+import PassosTesteList from './PassosTesteList'
+import { syncPassosESolicitacoes, criarPassoVazio, loadPassosTeste } from '../lib/passosTeste'
 
 const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
   // ═══ STATE ═══
@@ -37,20 +39,8 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
   const [onde, setOnde] = useState('')
   const [resultadoPremissa, setResultadoPremissa] = useState('')
   
-  // Resultado do Teste & Criticidade
-  const [resultado, setResultado] = useState('inefetivo')
-  const [inconsistencia, setInconsistencia] = useState('')
-  const [showInconsistenciaAlert, setShowInconsistenciaAlert] = useState(false)
-  const [melhoria, setMelhoria] = useState('sim')
-  const [descMelhoria, setDescMelhoria] = useState('')
-  const [impacto, setImpacto] = useState('')
-  const [probabilidade, setProbabilidade] = useState('')
-  const [temPA, setTemPA] = useState('sim')
-  const [paDesc, setPaDesc] = useState('')
-  const [paResp, setPaResp] = useState('')
-  const [paPrazo, setPaPrazo] = useState('')
-  const [paStatus, setPaStatus] = useState('pendente')
-  const [justificativaPA, setJustificativaPA] = useState('')
+  // PASSO 3: Passos de Teste (Solicitações v2)
+  const [passos, setPassos] = useState([criarPassoVazio()])
 
   useEffect(() => {
     loadPerfil()
@@ -98,55 +88,16 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
 
   // ═══ LÓGICA ═══
   const isAutomatic = car === 'Automatizado'
-  const showInconsistencia = resultado === 'inefetivo' || resultado === 'gap'
-  const showPA = resultado === 'inefetivo' || resultado === 'gap'
-  const showDescMelhoria = melhoria === 'sim'
-
-  // Cálculo de criticidade
-  const criticidade = impacto && probabilidade 
-    ? parseInt(impacto) * parseInt(probabilidade) 
-    : null
-
-  const getCriticidadeLabel = (crit) => {
-    if (!crit) return { label: '', color: '' }
-    const map = {
-      1: { label: 'Baixo', color: '#E8F5E9', colorText: '#1B5E20' },
-      2: { label: 'Moderado', color: '#FFCC80', colorText: '#E65100' },
-      3: { label: 'Significativo', color: '#FFCC80', colorText: '#E65100' },
-      4: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' },
-      6: { label: 'Significativo', color: '#FFCC80', colorText: '#E65100' },
-      8: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' },
-      9: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' },
-      12: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' },
-      16: { label: 'Crítico', color: '#FFEBEE', colorText: '#C62828' }
-    }
-    return map[crit] || { label: 'Moderado', color: '#FFCC80', colorText: '#E65100' }
-  }
 
   // ═══ VALIDAÇÕES ═══
   const canAdvanceStep1 = area && subprocesso && descRisco.trim()
-  
+
   const canAdvanceStep2 = descControle.trim() && cat && freq && nat && car && sis && chave &&
     (isAutomatic || quem.trim()) && quando.trim() && porque.trim() && como.trim() &&
     onde.trim() && resultadoPremissa.trim()
 
-  const canSaveStep3 = resultado &&
-    (resultado === 'efetivo' || inconsistencia.trim()) &&
-    (melhoria === 'nao' || descMelhoria.trim()) &&
-    impacto && probabilidade &&
-    (resultado === 'efetivo' || (temPA === 'sim' ? (paDesc.trim() && paResp && paPrazo && paStatus) : justificativaPA.trim()))
-
-  // ═══ MUDAR RESULTADO ═══
-  const handleResultadoChange = (novoResultado) => {
-    if (resultado !== 'efetivo' && novoResultado === 'efetivo' && inconsistencia.trim()) {
-      setShowInconsistenciaAlert(true)
-      setTimeout(() => setShowInconsistenciaAlert(false), 4000)
-    }
-    if ((resultado === 'efetivo') && (novoResultado === 'inefetivo' || novoResultado === 'gap')) {
-      setInconsistencia('')
-    }
-    setResultado(novoResultado)
-  }
+  // Passo 3: ao menos um passo com descrição preenchida
+  const canSaveStep3 = passos.some(p => (p.descricao || '').trim() !== '')
 
   // ═══ SALVAR NOVO RISCO (Passo 1) ═══
   async function saveStep1() {
@@ -201,6 +152,8 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
   }
 
   // ═══ SALVAR NO BANCO (chamado no Passo 3) ═══
+  // Solicitações v2: avaliação (resultado/imp/prob/PA) saiu deste modal.
+  // Resultado vai para ModalRegistrarResultado, criticidade para ModalRegistrarCriticidade.
   async function salvarNoBanco() {
     const payload = {
       ...novoRiscoData,
@@ -212,32 +165,30 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
       premissa_como: como,
       premissa_onde: onde,
       premissa_resultado: resultadoPremissa,
-      r1: resultado,
-      incons: resultado !== 'efetivo' ? inconsistencia : null,
-      melhoria: melhoria === 'sim' ? true : false,
-      incons_ader: melhoria === 'sim' ? descMelhoria : null,
-      imp: parseInt(impacto),
-      prob: parseInt(probabilidade),
-      crit: criticidade,
-      crit_label: getCriticidadeLabel(criticidade).label,
-      dem_pa: temPA === 'sim' ? paDesc : null,
-      resp_pa: temPA === 'sim' ? paResp : null,
-      dt_pa: temPA === 'sim' ? paPrazo : null,
-      st_pa: temPA === 'sim' ? paStatus : null,
       status_workflow: 'nao_iniciado',
-      ativo: true
+      ativo: true,
     }
 
+    let saved
     if (novoRiscoData?.id) {
       const { id, ...updatePayload } = payload
       const { data: updated, error } = await supabase.from('mrc').update(updatePayload).eq('id', novoRiscoData.id).select()
       if (error) throw error
-      return updated?.[0] || novoRiscoData
+      saved = updated?.[0] || novoRiscoData
     } else {
       const { data: inserted, error } = await supabase.from('mrc').insert([payload]).select()
       if (error) throw error
-      return inserted?.[0] || null
+      saved = inserted?.[0] || null
     }
+
+    if (saved?.id) {
+      try {
+        await syncPassosESolicitacoes({ controle: saved, passos, projetoId: projeto.id })
+      } catch (e) {
+        console.error('syncPassosESolicitacoes:', e)
+      }
+    }
+    return saved
   }
 
   // ═══ SALVAR RASCUNHO (em qualquer passo) ═══
@@ -284,13 +235,6 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
         if (onde) payload.premissa_onde = onde
         if (resultadoPremissa) payload.premissa_resultado = resultadoPremissa
       }
-      if (step >= 3) {
-        if (resultado) payload.r1 = resultado
-        if (resultado !== 'efetivo' && inconsistencia) payload.incons = inconsistencia
-        if (impacto) payload.imp = parseInt(impacto)
-        if (probabilidade) payload.prob = parseInt(probabilidade)
-        if (criticidade) { payload.crit = criticidade; payload.crit_label = getCriticidadeLabel(criticidade).label }
-      }
       let saved
       if (baseData?.id) {
         const { id, ...up } = payload
@@ -301,6 +245,14 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
         const { data, error } = await supabase.from('mrc').insert([payload]).select()
         if (error) throw error
         saved = data?.[0]
+      }
+      // Persiste passos+sincroniza solicitações se o usuário chegou no passo 3
+      if (step >= 3 && saved?.id) {
+        try {
+          await syncPassosESolicitacoes({ controle: saved, passos, projetoId: projeto.id })
+        } catch (e) {
+          console.error('syncPassosESolicitacoes (rascunho):', e)
+        }
       }
       setSaving(false)
       setComentarioFor({ controle: saved, acao: 'Rascunho salvo' })
@@ -386,7 +338,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
                   {s < step ? '✓' : s}
                 </div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: s < step || s === step ? '#00203E' : '#999', textAlign: 'center' }}>
-                  {s === 1 ? 'Identificação' : s === 2 ? 'Detalhamento' : 'Avaliação'}
+                  {s === 1 ? 'Identificação' : s === 2 ? 'Detalhamento' : 'Passos de Teste'}
                 </div>
               </div>
               {s < 3 && <div style={{ flex: 1, height: 1, background: '#e5e7eb', marginTop: -20 }}></div>}
@@ -691,11 +643,10 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
             </div>
           )}
 
-          {/* ─────────── PASSO 3: Avaliação ─────────── */}
+          {/* ─────────── PASSO 3: Passos de Teste (Solicitações v2) ─────────── */}
           {step === 3 && (
             <div>
-              {/* Context Card */}
-              <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginBottom: 24 }}>
+              <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginBottom: 20 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                   <div style={{ borderRight: '1px solid #e5e7eb', paddingRight: 12 }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--lt-text3)', textTransform: 'uppercase', marginBottom: 4, letterSpacing: 0.4 }}>Ref. Risco</div>
@@ -711,303 +662,10 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
                   </div>
                 </div>
               </div>
-
-              {/* Resultado do Teste */}
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#00203E', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '2px solid #CC915E' }}>
-                  1. Resultado da Análise
-                </div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#00203E', marginBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-                  Qual foi o resultado? <span style={{ color: '#E24B4A' }}>*</span>
-                </label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                  {[
-                    { value: 'efetivo', label: 'Efetivo', badge: '#E8F5E9', badgeText: '#1B5E20', badgeLabel: 'Testado' },
-                    { value: 'inefetivo', label: 'Inefetivo', badge: '#FFF3E0', badgeText: '#E65100', badgeLabel: 'Falhou' },
-                    { value: 'gap', label: 'GAP', badge: '#FFEBEE', badgeText: '#C62828', badgeLabel: 'Sem Controle' }
-                  ].map(opt => (
-                    <div key={opt.value} onClick={() => handleResultadoChange(opt.value)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.8rem', border: resultado === opt.value ? '2px solid #CC915E' : '1px solid #E0E0E0', borderRadius: '4px', background: resultado === opt.value ? '#F9F7F3' : 'white', cursor: 'pointer' }}>
-                      <input type="radio" name="resultado" value={opt.value} checked={resultado === opt.value} onChange={() => {}} style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#CC915E' }} />
-                      <span style={{ fontSize: '14px', fontWeight: 500 }}>{opt.label}</span>
-                      <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '3px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', background: opt.badge, color: opt.badgeText }}>{opt.badgeLabel}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {showInconsistenciaAlert && (
-                <div style={{ background: '#FFF3E0', borderLeft: '3px solid #F57C00', padding: '0.8rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '12px', color: '#E65100' }}>
-                  ⚠️ Ao mudar o resultado do teste, as informações do campo "Inconsistências" serão perdidas
-                </div>
-              )}
-
-              {showInconsistencia && (
-                <div style={{ background: '#F9F7F3', borderLeft: '3px solid #CC915E', padding: '1.5rem', borderRadius: '4px', marginBottom: '1.5rem' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#00203E', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.5px' }}>Inconsistência Identificada</div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#00203E', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-                    Qual inconsistência foi encontrada? <span style={{ color: '#E24B4A' }}>*</span>
-                  </label>
-                  <textarea value={inconsistencia} onChange={e => setInconsistencia(e.target.value)} style={{ width: '100%', padding: '0.8rem', border: '1px solid #D0D0D0', borderRadius: '4px', fontFamily: 'Montserrat, sans-serif', fontSize: '14px', minHeight: '80px', resize: 'vertical' }} placeholder="Descrever falha..." />
-                </div>
-              )}
-
-              {/* Melhoria */}
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#00203E', marginBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Melhoria identificada?</label>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  {[{ value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Não' }].map(opt => (
-                    <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
-                      <input type="radio" name="melhoria" value={opt.value} checked={melhoria === opt.value} onChange={e => setMelhoria(e.target.value)} style={{ accentColor: '#CC915E' }} />
-                      <span style={{ fontSize: '14px' }}>{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {showDescMelhoria && (
-                <div style={{ marginBottom: '2rem' }}>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#00203E', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-                    Descrição da melhoria <span style={{ color: '#E24B4A' }}>*</span>
-                  </label>
-                  <textarea value={descMelhoria} onChange={e => setDescMelhoria(e.target.value)} style={{ width: '100%', padding: '0.8rem', border: '1px solid #D0D0D0', borderRadius: '4px', fontFamily: 'Montserrat, sans-serif', fontSize: '14px', minHeight: '80px', resize: 'vertical' }} placeholder="Melhorias identificadas..." />
-                </div>
-              )}
-
-              {/* Criticidade */}
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#00203E', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '2px solid #CC915E' }}>
-                  2. Avaliação da Criticidade
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#00203E', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-                      Impacto <span style={{ color: '#E24B4A' }}>*</span>
-                    </label>
-                    <select value={impacto} onChange={e => setImpacto(e.target.value)} style={{ width: '100%', padding: '0.8rem', border: '1px solid #D0D0D0', borderRadius: '4px', fontFamily: 'Montserrat, sans-serif', fontSize: '14px' }}>
-                      <option value="">Selecionar...</option>
-                      <option value="1">Baixo</option><option value="2">Moderado</option><option value="3">Alto</option><option value="4">Crítico</option><option value="0">N/A</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#00203E', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-                      Probabilidade <span style={{ color: '#E24B4A' }}>*</span>
-                    </label>
-                    <select value={probabilidade} onChange={e => setProbabilidade(e.target.value)} style={{ width: '100%', padding: '0.8rem', border: '1px solid #D0D0D0', borderRadius: '4px', fontFamily: 'Montserrat, sans-serif', fontSize: '14px' }}>
-                      <option value="">Selecionar...</option>
-                      <option value="1">Baixa</option><option value="2">Média</option><option value="3">Alta</option><option value="4">Extrema</option><option value="0">N/A</option>
-                    </select>
-                  </div>
-                </div>
-                {criticidade && (
-                  <div style={{ background: '#F3EEE4', border: '1px solid #E0D5C7', padding: '1rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <span style={{ padding: '0.4rem 0.8rem', borderRadius: '4px', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', background: getCriticidadeLabel(criticidade).color, color: getCriticidadeLabel(criticidade).colorText }}>{getCriticidadeLabel(criticidade).label}</span>
-                    <span style={{ fontSize: '13px', color: '#7A8B9C', fontWeight: 500 }}>Criticidade: {criticidade} (Impacto {impacto} × Prob {probabilidade})</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Teste de Desenho (se Inefetivo/GAP) */}
-              {showPA && (
-                <div style={{
-                  background: '#F9F7F3',
-                  borderLeft: '3px solid #CC915E',
-                  padding: '1.5rem',
-                  borderRadius: '4px'
-                }}>
-                  <div style={{
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: '#00203E',
-                    textTransform: 'uppercase',
-                    marginBottom: '1rem',
-                    letterSpacing: '0.5px'
-                  }}>
-                    6. Teste de Desenho
-                  </div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    color: '#00203E',
-                    marginBottom: '0.8rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.3px'
-                  }}>
-                    Haverá plano de ação? <span style={{ color: '#E24B4A' }}>*</span>
-                  </label>
-                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                    {[
-                      { value: 'sim', label: 'Sim' },
-                      { value: 'nao', label: 'Não' }
-                    ].map(opt => (
-                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
-                        <input
-                          type="radio"
-                          name="temPA"
-                          value={opt.value}
-                          checked={temPA === opt.value}
-                          onChange={e => setTemPA(e.target.value)}
-                          style={{ accentColor: '#CC915E' }}
-                        />
-                        <span style={{ fontSize: '14px' }}>{opt.label}</span>
-                      </label>
-                    ))}
-                  </div>
-
-                  {temPA === 'sim' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <div>
-                        <label style={{
-                          display: 'block',
-                          fontSize: '13px',
-                          fontWeight: 500,
-                          color: '#00203E',
-                          marginBottom: '0.5rem',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.3px'
-                        }}>
-                          Descrição da ação <span style={{ color: '#E24B4A' }}>*</span>
-                        </label>
-                        <textarea
-                          value={paDesc}
-                          onChange={e => setPaDesc(e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '0.8rem',
-                            border: '1px solid #D0D0D0',
-                            borderRadius: '4px',
-                            fontFamily: 'Montserrat, sans-serif',
-                            fontSize: '14px',
-                            minHeight: '60px',
-                            resize: 'vertical'
-                          }}
-                          placeholder="O que será feito?"
-                        />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            color: '#00203E',
-                            marginBottom: '0.5rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.3px'
-                          }}>
-                            Responsável <span style={{ color: '#E24B4A' }}>*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={paResp}
-                            onChange={e => setPaResp(e.target.value)}
-                            placeholder="Nome do responsável..."
-                            style={{
-                              width: '100%',
-                              padding: '0.8rem',
-                              border: '1px solid #D0D0D0',
-                              borderRadius: '4px',
-                              fontFamily: 'Montserrat, sans-serif',
-                              fontSize: '14px',
-                              boxSizing: 'border-box'
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            color: '#00203E',
-                            marginBottom: '0.5rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.3px'
-                          }}>
-                            Prazo <span style={{ color: '#E24B4A' }}>*</span>
-                          </label>
-                          <input
-                            type="date"
-                            value={paPrazo}
-                            onChange={e => setPaPrazo(e.target.value)}
-                            style={{
-                              width: '100%',
-                              padding: '0.8rem',
-                              border: '1px solid #D0D0D0',
-                              borderRadius: '4px',
-                              fontFamily: 'Montserrat, sans-serif',
-                              fontSize: '14px'
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label style={{
-                          display: 'block',
-                          fontSize: '13px',
-                          fontWeight: 500,
-                          color: '#00203E',
-                          marginBottom: '0.5rem',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.3px'
-                        }}>
-                          Status <span style={{ color: '#E24B4A' }}>*</span>
-                        </label>
-                        <select
-                          value={paStatus}
-                          onChange={e => setPaStatus(e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '0.8rem',
-                            border: '1px solid #D0D0D0',
-                            borderRadius: '4px',
-                            fontFamily: 'Montserrat, sans-serif',
-                            fontSize: '14px'
-                          }}
-                        >
-                          <option value="pendente">Pendente</option>
-                          <option value="desenvolvimento">Em Desenvolvimento</option>
-                          <option value="efetivo">Efetivo</option>
-                        </select>
-                      </div>
-                    </div>
-                  )}
-
-                  {temPA === 'nao' && (
-                    <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: '13px',
-                        fontWeight: 500,
-                        color: '#00203E',
-                        marginBottom: '0.5rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.3px'
-                      }}>
-                        Por que não haverá plano de ação? <span style={{ color: '#E24B4A' }}>*</span>
-                      </label>
-                      <textarea
-                        value={justificativaPA}
-                        onChange={e => setJustificativaPA(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '0.8rem',
-                          border: '1px solid #D0D0D0',
-                          borderRadius: '4px',
-                          fontFamily: 'Montserrat, sans-serif',
-                          fontSize: '14px',
-                          minHeight: '60px',
-                          resize: 'vertical'
-                        }}
-                        placeholder="Justificar ausência de PA..."
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+              <PassosTesteList passos={passos} onChange={setPassos} disabled={saving} />
             </div>
           )}
 
-          {/* old step 3 removed — avaliação agora está no novo passo 3 acima */}
         </div>
 
         {/* FOOTER */}
