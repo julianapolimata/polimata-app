@@ -52,6 +52,15 @@ export default function Dashboard() {
       if (error) console.error('Erro ao carregar projetos:', error)
       if (data && data.length > 0) {
         setProjetos(data)
+        // Restaurar projeto ativo salvo (mantém usuária na mesma tela após F5)
+        try {
+          const savedId = localStorage.getItem('polimata_projeto_ativo_id')
+          if (savedId) {
+            const saved = data.find(p => p.id === savedId)
+            if (saved) setProjetoAtivo(saved)
+            else localStorage.removeItem('polimata_projeto_ativo_id') // projeto não existe mais
+          }
+        } catch (e) { /* localStorage indisponível — segue normal */ }
         // Carregar resumos em background (não bloqueia a tela)
         loadResumos(data).catch(err => console.error('Erro ao carregar resumos:', err))
       }
@@ -164,7 +173,7 @@ export default function Dashboard() {
   }
   // Seletor de projetos — exibido quando nenhum projeto está selecionado
   if (!projetoAtivo && projetos.length > 0) {
-    return <ProjectSelector projetos={projetos} resumos={projetoResumos} perfil={perfil} onSelect={p => { setProjetoAtivo(p); navigate('/') }} signOut={signOut} onAdmin={isAdmin ? () => navigate('/admin') : null} />
+    return <ProjectSelector projetos={projetos} resumos={projetoResumos} perfil={perfil} onSelect={p => { try { localStorage.setItem('polimata_projeto_ativo_id', p.id) } catch (e) {} ; setProjetoAtivo(p); navigate('/') }} signOut={signOut} onAdmin={isAdmin ? () => navigate('/admin') : null} />
   }
   if (!projetoAtivo && projetos.length === 0) {
     return <NoProjeto />
@@ -192,7 +201,7 @@ export default function Dashboard() {
                   </button>
                 )}
                 {projetos.length > 1 && (
-                  <button onClick={() => { setProjetoAtivo(null); navigate('/') }}
+                  <button onClick={() => { try { localStorage.removeItem('polimata_projeto_ativo_id') } catch (e) {} ; setProjetoAtivo(null); navigate('/') }}
                     style={{ background: 'none', border: 'none', color: 'var(--copper)', fontSize: 10, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
                     Trocar
                   </button>
