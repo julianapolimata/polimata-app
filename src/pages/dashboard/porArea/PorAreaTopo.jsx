@@ -3,7 +3,7 @@
 import React from 'react'
 
 export default function PorAreaTopo({ ctx }) {
-  const { PA, area, areaHeatmap, controles, dashCollapsed, efetivos, gaps, inefetivos, isDiagnostico, navigate, nome, pa_crit, pa_ex, pa_ix, pa_pc, pa_pct, pa_total, pesoEmpresa, planosAcao, setDashCollapsed } = ctx
+  const { PA, area, areaHeatmap, controles, dashCollapsed, efetivos, gaps, inefetivos, isDiagnostico, navigate, nome, nv, p, pa_crit, pa_ex, pa_ix, pa_pc, pa_pct, pa_total, pesoEmpresa, planosAcao, setDashCollapsed } = ctx
   return (
     <>
       {/* HEADER — padrão MRC Completa */}
