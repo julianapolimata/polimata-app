@@ -335,7 +335,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
     dashCollapsed, efetivos, excelMenuAberto, excelMenuRef, expandirFiltros, exportarMRCExcel,
     exportarSolicitacoesExcel, faseLabel, faseThS, faseVal, fasesDisponiveis, filtAcao,
     filtCrit, filtFase, filtImp, filtRes, filtSit, filtStatus,
-    gaps, gerarRelatorioExcel, gerarTemplateMRC, getAlertas, getFaseCodigo, getResultadoGeral,
+    gaps, gerarTemplateMRC, getAlertas, getFaseCodigo, getResultadoGeral,
     getStatusBadge, idxFases, inefetivos, isAdmin, isCliente, isDiagnostico,
     isRealAdmin, loadDados, loading, modalNovoRisco, modalRow, navigate,
     nome, numFases, paSortVal, pa_crit, pa_ex, pa_ix,
