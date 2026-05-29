@@ -9,6 +9,7 @@ import { exportarMRCExcel } from '../../lib/exportMRC'
 import { exportarSolicitacoesExcel } from '../../lib/exportSolicitacoes'
 import { supabase } from '../../lib/supabase'
 import { gerarTemplateMRC } from '../../lib/templateMRC'
+import { gerarRelatorioExcel } from '../../lib/gerarRelatorio'
 import { ModalDetalhe } from '../../components/MRCCompleta'
 import ModalAtualizar from '../../components/ModalAtualizar'
 import ModalNovoRisco from '../../components/ModalNovoRisco'
@@ -327,7 +328,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
 
   // ctx — state, refs, computed e helpers para os 3 blocos extraídos
   const ctx = {
-    CRT_C, F1_HDR, FASE_HDR, FASE_HDR_FULL, FASE_KEYS_VISIVEIS, FASE_W,
+    CRT_C, F1_HDR, FASE_HDR, FASE_HDR_FULL, FASE_KEYS_VISIVEIS, FASE_W, cf, cfSorted, crits, exportarSolicitacoesDaArea, ress,
     FASE_W_PARA, IMP_C, PA, PA_DATA_COLS, PA_FASE_KEYS, PRB_C,
     RegressaoBadge, Td, area, areaHeatmap, areasCalc, atualizarRow,
     badgeCrit, badgeExistencia, badgeFase, badgeImp, badgeProb, badgeR,
@@ -335,7 +336,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
     dashCollapsed, efetivos, excelMenuAberto, excelMenuRef, expandirFiltros, exportarMRCExcel,
     exportarSolicitacoesExcel, faseLabel, faseThS, faseVal, fasesDisponiveis, filtAcao,
     filtCrit, filtFase, filtImp, filtRes, filtSit, filtStatus,
-    gaps, gerarTemplateMRC, getAlertas, getFaseCodigo, getResultadoGeral,
+    gaps, gerarRelatorioExcel, gerarTemplateMRC, getAlertas, getFaseCodigo, getResultadoGeral,
     getStatusBadge, idxFases, inefetivos, isAdmin, isCliente, isDiagnostico,
     isRealAdmin, loadDados, loading, modalNovoRisco, modalRow, navigate,
     nome, numFases, paSortVal, pa_crit, pa_ex, pa_ix,
