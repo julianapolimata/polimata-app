@@ -338,7 +338,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
     FASE_W_PARA, IMP_C, PA, PA_DATA_COLS, PA_FASE_KEYS, PRB_C,
     RegressaoBadge, Td, area, areaHeatmap, areasCalc, atualizarRow,
     badgeCrit, badgeExistencia, badgeFase, badgeImp, badgeProb, badgeR,
-    bdgS, busca, canEdit, controles, controlesVisiveis,
+    bdgS, busca, canEdit, canEditControle, canRevisar, controles, controlesVisiveis,
     dashCollapsed, efetivos, excelMenuAberto, excelMenuRef, expandirFiltros, exportarMRCExcel,
     exportarSolicitacoesExcel, faseLabel, faseThS, faseVal, fasesDisponiveis, filtAcao,
     filtCrit, filtFase, filtImp, filtRes, filtSit, filtStatus,
