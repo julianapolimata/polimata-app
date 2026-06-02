@@ -244,12 +244,17 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         atualizado_em: new Date().toISOString(),
         atualizado_por: perfil?.id,
       }
-      await supabase.from('mrc').update(updates).eq('id', row.id)
+      {
+        const { data: _upd, error: _updErr } = await supabase.from('mrc').update(updates).eq('id', row.id).select('id')
+        if (_updErr) throw _updErr
+        if (!_upd || _upd.length === 0) throw new Error('Não foi possível gravar as alterações (0 registros atualizados — verifique permissões/conexão e tente de novo).')
+      }
       // Solicitações v2: persiste passos editados e sincroniza solicitações
       try {
         await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id })
       } catch (e) {
         console.error('syncPassosESolicitacoes (ficha):', e)
+        throw new Error('O controle foi salvo, mas houve erro ao gravar os passos de teste: ' + (e.message || e))
       }
       await gerarFichaRiscoExcel({
         row,
@@ -301,11 +306,16 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         atualizado_em: new Date().toISOString(),
         atualizado_por: perfil?.id,
       }
-      await supabase.from('mrc').update(updates).eq('id', row.id)
+      {
+        const { data: _upd, error: _updErr } = await supabase.from('mrc').update(updates).eq('id', row.id).select('id')
+        if (_updErr) throw _updErr
+        if (!_upd || _upd.length === 0) throw new Error('Não foi possível gravar as alterações (0 registros atualizados — verifique permissões/conexão e tente de novo).')
+      }
       try {
         await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id })
       } catch (e) {
         console.error('syncPassosESolicitacoes (semFicha):', e)
+        throw new Error('O controle foi salvo, mas houve erro ao gravar os passos de teste: ' + (e.message || e))
       }
       logAtualizarControle(row, row.projeto_id)
       alert('✅ Salvo com sucesso! Status: TESTE PENDENTE')
