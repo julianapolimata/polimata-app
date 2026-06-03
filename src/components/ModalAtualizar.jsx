@@ -347,6 +347,42 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     }
   }
 
+  // ═══ SALVAR E ENVIAR PARA REVISÃO (edição de seção; sem ficha; exige nova ficha após aprovação) ═══
+  async function handleSalvarEnviarRevisao() {
+    setSaving(true)
+    try {
+      const updates = {
+        dr: novaDescRisco || row.dr,
+        dc: novaDescControle || row.dc,
+        cat: editCat, freq: editFreq, nat: editNat, car: editCar, sis: editSis, chave: editChave,
+        premissa_porque: pq, premissa_quando: quando, premissa_onde: onde,
+        premissa_quem: isAutomatic ? 'N/A' : quem, premissa_como: como, premissa_resultado: resultado,
+        cenario_atual: cenarioAtual.trim() || null,
+        status_workflow: 'em_revisao',
+        edicao_pendente: true,
+        submetido_por: perfil?.id,
+        submetido_em: new Date().toISOString(),
+        atualizado_em: new Date().toISOString(),
+        atualizado_por: perfil?.id,
+      }
+      const { data: _u, error } = await supabase.from('mrc').update(updates).eq('id', row.id).select('id')
+      if (error) throw error
+      if (!_u || _u.length === 0) throw new Error('Não foi possível gravar (0 registros — verifique permissões/conexão).')
+      try { await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id }) } catch (e) { console.error('syncPassos:', e) }
+      for (const b of blocosReabrir) {
+        try { await reabrirBloco({ mrcId: row.id, bloco: b, fase: faseDoBloco(b, row) }) } catch (e) { console.error('reabrirBloco:', e) }
+      }
+      logAtualizarControle(row, row.projeto_id)
+      alert('✅ Alterações salvas e enviadas para revisão. Após a aprovação, será necessário baixar uma nova ficha (Ficha Pendente).')
+      onSaved?.()
+      onClose?.()
+    } catch (err) {
+      alert('Erro: ' + err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   // ═══ MAIN RENDER ═══
   return (
     <>
@@ -520,6 +556,11 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
                   style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) || (step === 3 && !canAdvanceStep3) ? 0.5 : 1 }}
                 >
                   Próximo →
+                </button>
+              )}
+              {blocosReabrir.length > 0 && (
+                <button onClick={handleSalvarEnviarRevisao} disabled={saving} style={{ flex: 1.5, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#15803D', color: 'white', opacity: saving ? 0.5 : 1 }}>
+                  {saving ? 'Salvando...' : '✓ Salvar e enviar para revisão'}
                 </button>
               )}
             </>

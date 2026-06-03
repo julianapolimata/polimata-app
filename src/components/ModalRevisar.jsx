@@ -153,8 +153,13 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
     setProcessing(true)
     try {
       const geral = deriveStatusGeral(aprovacoes, row, projeto)
-      const updates = { status_workflow: geral }
-      if (geral === 'aprovado') { updates.aprovado_por = user?.id; updates.aprovado_em = new Date().toISOString() }
+      const ehEdicaoAprovada = geral === 'aprovado' && row.edicao_pendente
+      const statusFinal = ehEdicaoAprovada ? 'teste_pendente' : geral
+      const updates = { status_workflow: statusFinal }
+      if (geral === 'aprovado') {
+        if (ehEdicaoAprovada) { updates.edicao_pendente = false }
+        else { updates.aprovado_por = user?.id; updates.aprovado_em = new Date().toISOString() }
+      }
       await supabase.from('mrc').update(updates).eq('id', row.id)
       const destinatarioId = row.consultor_id || row.submetido_por
 
@@ -181,18 +186,20 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
       } else {
         await supabase.from('revisoes').insert({
           mrc_id: row.id, autor_id: user?.id, tipo: 'aprovacao',
-          nota: 'Todos os blocos aprovados.',
-          status_antes: 'em_revisao', status_depois: 'aprovado', fase: faseAtual,
+          nota: ehEdicaoAprovada ? 'Edição aprovada — controle vai para Ficha Pendente (exige nova ficha).' : 'Todos os blocos aprovados.',
+          status_antes: 'em_revisao', status_depois: statusFinal, fase: faseAtual,
         })
         if (destinatarioId) {
           await supabase.from('notificacoes').insert({
             para_id: destinatarioId, de_id: user?.id, tipo: 'aprovacao',
-            titulo: `Análise aprovada — ${row.rc || row.rr}`,
-            mensagem: `${row.rc} (${row.area}) foi aprovado na fase ${faseAtual}. Todos os blocos foram aprovados.`,
+            titulo: ehEdicaoAprovada ? `Edição aprovada — gere nova ficha (${row.rc || row.rr})` : `Análise aprovada — ${row.rc || row.rr}`,
+            mensagem: ehEdicaoAprovada
+              ? `${row.rc} (${row.area}): a edição foi aprovada. O controle está em FICHA PENDENTE — baixe a nova ficha para refletir a alteração.`
+              : `${row.rc} (${row.area}) foi aprovado na fase ${faseAtual}. Todos os blocos foram aprovados.`,
             lida: false, mrc_id: row.id,
           })
           supabase.functions.invoke('send-email', {
-            body: { type: 'review_completed', data: { autor_id: destinatarioId, revisor_id: user?.id, ref: row.rc || row.rr, resultado: 'aprovado', nota: '', area_id: row.area_id } }
+            body: { type: 'review_completed', data: { autor_id: destinatarioId, revisor_id: user?.id, ref: row.rc || row.rr, resultado: 'aprovado', nota: ehEdicaoAprovada ? 'Edição aprovada — baixe a nova ficha (Ficha Pendente).' : '', area_id: row.area_id } }
           }).catch(err => console.error('Erro ao enviar email:', err))
         }
         logAprovar(row, row.projeto_id)
