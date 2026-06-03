@@ -9,7 +9,6 @@ import {
 } from './mrc/badges'
 import TabelaMRC from './mrc/TabelaMRC'
 import { ModalDetalhe } from './mrc/ModalDetalhe'
-import ModalAtualizar from './ModalAtualizar'
 
 export { ModalDetalhe }
 
@@ -26,10 +25,6 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
   const [filtroStatus, setFiltroStatus] = useState('')
   const [filtroAcao, setFiltroAcao] = useState('')
   const [modalRow, setModalRow] = useState(null)
-  const [atualizarRow, setAtualizarRow] = useState(null)
-  const [areasObj, setAreasObj] = useState([])
-  const [reloadKey, setReloadKey] = useState(0)
-  const podeFicha = (r) => papel === 'consultor_polimata' || (['admin_polimata', 'gerente_polimata'].includes(papel) && !r?.consultor_id)
   const [dashCollapsed, setDashCollapsed] = useState(false)
 
   useEffect(() => {
@@ -43,10 +38,10 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
       if (mrcRes.error) { setErro(mrcRes.error.message); setLoading(false); return }
       const areasMap = Object.fromEntries((areasRes.data || []).map(a => [a.id, a.nome]))
       const rows = (mrcRes.data || []).map(r => ({ ...r, area: areasMap[r.area_id] || r.area || '' }))
-      setMrc(rows); setAreas([...new Set(rows.map(r=>r.area))].filter(Boolean).sort()); setAreasObj(areasRes.data || []); setLoading(false)
+      setMrc(rows); setAreas([...new Set(rows.map(r=>r.area))].filter(Boolean).sort()); setLoading(false)
     }
     load()
-  }, [projetoId, reloadKey])
+  }, [projetoId])
 
   // KPIs — iguala padrão PorArea
   const kpis = useMemo(() => {
@@ -250,11 +245,10 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
       {/* TABELA */}
       <div style={{ flex: 1, minHeight: 0, background: 'var(--lt-card)', borderRadius: 12, border: '1px solid var(--lt-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
         {isLimited && <div style={{ background: 'rgba(234,179,8,0.1)', color: '#92400E', fontSize: 10, padding: '4px 14px', borderBottom: '1px solid var(--lt-border)', fontWeight: 500 }}>Exibindo {MAX_ROWS} de {filtered.length} — refine os filtros</div>}
-        <TabelaMRC rows={visibleRows} onOpenModal={setModalRow} isDiagnostico={isDiagnostico} projeto={projeto} onBaixarFicha={setAtualizarRow} podeFicha={podeFicha} />
+        <TabelaMRC rows={visibleRows} onOpenModal={setModalRow} isDiagnostico={isDiagnostico} projeto={projeto} />
       </div>
 
       {modalRow && <ModalDetalhe row={modalRow} projeto={projeto} onClose={() => setModalRow(null)} />}
-      {atualizarRow && <ModalAtualizar row={atualizarRow} irParaFicha onClose={() => setAtualizarRow(null)} onSaved={() => { setAtualizarRow(null); setReloadKey(k => k + 1) }} areas={areasObj} projeto={projeto} />}
     </div>
   )
 }
