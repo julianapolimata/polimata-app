@@ -6,6 +6,7 @@ import { logAprovar, logDevolver } from '../lib/auditLog'
 import { CRIT_MAP } from './modalRevisar/_consts'
 import { S } from './modalRevisar/styles'
 import MotivoReprovacao from './mrc/MotivoReprovacao'
+import { FASE_DESTINO_LABEL } from '../lib/amostragem'
 import { BLOCO_LABEL, blocosAplicaveis, faseDoBloco, loadAprovacoes, setBlocoStatus, deriveStatusGeral, ensureBlocos, reabrirBloco } from '../lib/aprovacoesBloco'
 import { useConfirm } from './ConfirmDialog'
 
@@ -153,11 +154,19 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
     setProcessing(true)
     try {
       const geral = deriveStatusGeral(aprovacoes, row, projeto)
-      const ehEdicaoAprovada = geral === 'aprovado' && row.edicao_pendente
-      const statusFinal = ehEdicaoAprovada ? 'teste_pendente' : geral
+      const ehRegressaoAprovada = geral === 'aprovado' && !!row.regressao_destino
+      const ehEdicaoAprovada = geral === 'aprovado' && row.edicao_pendente && !ehRegressaoAprovada
+      const statusFinal = (ehRegressaoAprovada || ehEdicaoAprovada) ? 'teste_pendente' : geral
       const updates = { status_workflow: statusFinal }
       if (geral === 'aprovado') {
-        if (ehEdicaoAprovada) { updates.edicao_pendente = false }
+        if (ehRegressaoAprovada) {
+          // Roteamento da regressão (item 29): limpa os campos das fases a refazer.
+          // 2/1 (desenho) → refaz F2-E1 + F2-E2; 2/2 (aderência) → refaz só F2-E2.
+          updates.r_ader = null; updates.r3 = null; updates.r_f4c1 = null; updates.r_f4c2 = null; updates.r_f5 = null
+          if (row.regressao_destino === '2/1') updates.st_pa = null
+          updates.regressao_destino = null // consumido — histórico permanece em causa_raiz/justificativa/revisões
+          updates.edicao_pendente = false
+        } else if (ehEdicaoAprovada) { updates.edicao_pendente = false }
         else { updates.aprovado_por = user?.id; updates.aprovado_em = new Date().toISOString() }
       }
       await supabase.from('mrc').update(updates).eq('id', row.id)
@@ -186,14 +195,16 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
       } else {
         await supabase.from('revisoes').insert({
           mrc_id: row.id, autor_id: user?.id, tipo: 'aprovacao',
-          nota: ehEdicaoAprovada ? 'Edição aprovada — controle vai para Ficha Pendente (exige nova ficha).' : 'Todos os blocos aprovados.',
+          nota: ehRegressaoAprovada ? `Regressão aprovada — controle volta para ${FASE_DESTINO_LABEL[row.regressao_destino] || 'Fase 2'} (Ficha Pendente).` : ehEdicaoAprovada ? 'Edição aprovada — controle vai para Ficha Pendente (exige nova ficha).' : 'Todos os blocos aprovados.',
           status_antes: 'em_revisao', status_depois: statusFinal, fase: faseAtual,
         })
         if (destinatarioId) {
           await supabase.from('notificacoes').insert({
             para_id: destinatarioId, de_id: user?.id, tipo: 'aprovacao',
-            titulo: ehEdicaoAprovada ? `Edição aprovada — gere nova ficha (${row.rc || row.rr})` : `Análise aprovada — ${row.rc || row.rr}`,
-            mensagem: ehEdicaoAprovada
+            titulo: ehRegressaoAprovada ? `Regressão aprovada — ${row.rc || row.rr}` : ehEdicaoAprovada ? `Edição aprovada — gere nova ficha (${row.rc || row.rr})` : `Análise aprovada — ${row.rc || row.rr}`,
+            mensagem: ehRegressaoAprovada
+              ? `${row.rc} (${row.area}): regressão aprovada. O controle volta para ${FASE_DESTINO_LABEL[row.regressao_destino] || 'Fase 2'} e está em FICHA PENDENTE — baixe a nova ficha.`
+              : ehEdicaoAprovada
               ? `${row.rc} (${row.area}): a edição foi aprovada. O controle está em FICHA PENDENTE — baixe a nova ficha para refletir a alteração.`
               : `${row.rc} (${row.area}) foi aprovado na fase ${faseAtual}. Todos os blocos foram aprovados.`,
             lida: false, mrc_id: row.id,
