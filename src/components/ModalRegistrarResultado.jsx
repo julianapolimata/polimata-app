@@ -13,6 +13,7 @@ import SecaoInconsistencia from './modalRegistrarResultado/SecaoInconsistencia'
 import SecaoCenarioAtual from './modalRegistrarResultado/SecaoCenarioAtual'
 import SecaoMelhoria from './modalRegistrarResultado/SecaoMelhoria'
 import SecaoPA from './modalRegistrarResultado/SecaoPA'
+import ModalClassificacaoCausa from './ModalClassificacaoCausa'
 const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
   // ═══ STATE ═══
   const { user } = useAuth()
@@ -63,6 +64,8 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
   const [paPrazo, setPaPrazo] = useState(row?.dt_pa || '')
   const [paStatus, setPaStatus] = useState(row?.st_pa || 'pendente')
   const [justificativaPA, setJustificativaPA] = useState('')
+  const [classificacao, setClassificacao] = useState(row?.causa_raiz ? { causaRaiz: row.causa_raiz, destino: row.regressao_destino, nFalhas: row.n_falhas, nTestado: row.n_amostra, justificativa: row.regressao_justificativa || '' } : null)
+  const [showClassif, setShowClassif] = useState(false)
 
   // ═══ LÓGICA ═══
   const showInconsistencia = resultado === 'inefetivo' || resultado === 'gap'
@@ -73,7 +76,8 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
   // ═══ VALIDAÇÃO ═══
   const canSave = resultado &&
     (resultado === 'efetivo' || inconsistencia.trim()) &&
-    (melhoria === 'nao' || descMelhoria.trim())
+    (melhoria === 'nao' || descMelhoria.trim()) &&
+    (!((resultado === 'inefetivo' || resultado === 'gap') && fasePermiteRegressao) || !!classificacao)
 
   // ═══ MUDAR RESULTADO ═══
   const handleResultadoChange = (novoResultado) => {
@@ -106,6 +110,13 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
     // Se é regressão, incrementar contador
     if (isRegressao) {
       payload.num_regressoes = (row?.num_regressoes || 0) + 1
+      if (classificacao) {
+        payload.n_amostra = classificacao.nTestado ?? null
+        payload.n_falhas = classificacao.nFalhas ?? null
+        payload.causa_raiz = classificacao.causaRaiz || null
+        payload.regressao_destino = classificacao.destino || null
+        payload.regressao_justificativa = classificacao.justificativa || null
+      }
     }
     return payload
   }
@@ -259,6 +270,19 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
         }}>
           <BannerReprovacao isReprovado={isReprovado} notaReprovacao={notaReprovacao} faseAtual={faseAtual} />
           <BannerRegressao isRegressao={isRegressao} resultado={resultado} faseAtual={faseAtual} row={row} />
+          {isRegressao && (
+            <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#C62828', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>Classificação de causa-raiz (obrigatória)</div>
+              {classificacao ? (
+                <div style={{ fontSize: 12, color: '#00203E', lineHeight: 1.5 }}>
+                  <strong>{classificacao.causaRaiz === 'desenho' ? 'Falha de desenho' : 'Falha de execução/aderência (erro humano)'}</strong> → Fase {classificacao.destino} · {classificacao.nFalhas}/{classificacao.nTestado} falhas
+                  <button type="button" onClick={() => setShowClassif(true)} style={{ marginLeft: 10, fontSize: 11, fontWeight: 700, color: 'var(--copper-text, #A6512F)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>Refazer</button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setShowClassif(true)} style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: '#C62828', border: 'none', borderRadius: 6, padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Classificar causa-raiz →</button>
+              )}
+            </div>
+          )}
           <SecaoResultado resultado={resultado} handleResultadoChange={handleResultadoChange} />
           <SecaoCenarioAtual cenarioAtual={cenarioAtual} setCenarioAtual={setCenarioAtual} />
           <SecaoInconsistencia showInconsistencia={showInconsistencia} showInconsistenciaAlert={showInconsistenciaAlert} inconsistencia={inconsistencia} setInconsistencia={setInconsistencia} resultado={resultado} />
@@ -298,6 +322,9 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
           </button>
         </div>
       </div>
+      {showClassif && (
+        <ModalClassificacaoCausa row={row} inicial={classificacao} onClose={() => setShowClassif(false)} onConfirmar={(c) => { setClassificacao(c); setDirty(true); setShowClassif(false) }} />
+      )}
     </div>
   )
 }
