@@ -27,7 +27,7 @@ import StepFicha from './modalAtualizar/StepFicha'
 const SECAO_STEP = { cenario: 2, risco: 1, controle: 2, teste: 3 }
 const SECAO_LABEL = { cenario: 'Cenário Atual', risco: 'Descrição do Risco', controle: 'Descrição e Atributos do Controle', teste: 'Passos de Teste' }
 
-const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
+const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) => {
   const { perfil: perfilAuth } = useAuth()
   const [comentarioFor, setComentarioFor] = useState(null)
   const [blocosReabrir, setBlocosReabrir] = useState([])
@@ -43,7 +43,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
     onClose?.()
   }
   // ═══ STATE ═══
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(irParaFicha ? 4 : 1)
   const [statusChoice, setStatusChoice] = useState(null)
   const [newStatus, setNewStatus] = useState(null)
   const [descChoice, setDescChoice] = useState(null)
