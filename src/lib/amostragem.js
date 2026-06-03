@@ -142,7 +142,7 @@ export function decidirRegressao(nErros, nAmostra, { taxaTolerada = 0.05, sistem
 
 // ─── Textos do pop-up de classificação de causa-raiz (item 29) ──────────────
 export const CETICISMO_PROFISSIONAL =
-  'Ceticismo profissional é avaliar com uma postura questionadora, sem dar como certo que o controle funciona só porque "sempre funcionou". Na prática: peça evidências, não aceite explicações sem confirmar, e investigue o que não fizer sentido antes de concluir. (Base metodológica: ISA 200, PCAOB, IIA.)'
+  'O ceticismo profissional é uma postura de mente questionadora e avaliação crítica. Significa não aceitar informações de forma cega ou presumir que tudo está correto. O profissional adota um estado de alerta para inconsistências, erros ou fraudes, buscando evidências sólidas antes de formar uma conclusão. (Fonte: Conselho Federal de Contabilidade — CFC.)'
 
 // Opções da lista suspensa (causa-raiz → fase de retorno)
 export const CAUSAS_RAIZ = [
