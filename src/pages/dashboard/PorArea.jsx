@@ -363,7 +363,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
     if (canRevisar && st === 'em_revisao') return { primary: { label: 'Revisar', color: '#1D4ED8', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.30)', onClick: () => { setRowRevisar(c); setModalRow(null) } } }
     if (isDiagnostico && podeEditarEste) return { primary: { label: '✏ Editar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
     if (podeEditarEste && st === 'rascunho') return { primary: { label: '▶ Continuar', color: '#92400E', bg: 'rgba(234,179,8,0.15)', border: 'rgba(234,179,8,0.40)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
-    if (podeEditarEste && st === 'em_analise') return { primary: { label: 'Registrar Resultado', color: '#15803D', bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.35)', onClick: () => { setRowRegistrarResultado(c); setModalRow(null) } }, secondary: { label: '✏ Editar premissas', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
+    if (podeEditarEste && st === 'em_analise') return { primary: { label: 'Registrar Resultado', color: '#15803D', bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.35)', onClick: () => { setRowRegistrarResultado(c); setModalRow(null) } }, secondary: { label: '✏ Editar', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
     if (podeEditarEste && (st === 'nao_iniciado' || st === 'teste_pendente' || st === 'reprovado')) return { primary: { label: 'Atualizar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
     return {}
   }

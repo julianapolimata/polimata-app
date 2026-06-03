@@ -22,6 +22,9 @@ import StepControle from './modalAtualizar/StepControle'
 import StepPassos from './modalAtualizar/StepPassos'
 import StepFicha from './modalAtualizar/StepFicha'
 
+const SECAO_STEP = { cenario: 2, risco: 1, controle: 2, teste: 3 }
+const SECAO_LABEL = { cenario: 'Cenário Atual', risco: 'Descrição do Risco', controle: 'Descrição e Atributos do Controle', teste: 'Passos de Teste' }
+
 const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
   const { perfil: perfilAuth } = useAuth()
   const [comentarioFor, setComentarioFor] = useState(null)
@@ -372,21 +375,17 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
           </div>
         </div>
 
-        {/* Reabrir seções para revisão (item 11) */}
+        {/* Editar seção — navega direto e reabre para aprovação (item 11) */}
         <div style={{ padding: '12px 24px', background: '#FFF8E1', borderBottom: '1px solid #F0E0A8' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#7A5C00', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>Reabrir para revisão <span style={{ fontWeight: 400, textTransform: 'none' }}>(opcional)</span></div>
-          <div style={{ fontSize: 11, color: '#7A5C00', marginBottom: 8, lineHeight: 1.4 }}>Marque as seções que você alterou e que precisam ser aprovadas de novo. Só elas voltam para a revisão; as demais mantêm a aprovação.</div>
-          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-            {blocosAplicaveis(projeto).map(b => (
-              <label key={b} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#00203E', cursor: 'pointer' }}>
-                <input type="checkbox" checked={blocosReabrir.includes(b)} onChange={e => setBlocosReabrir(prev => e.target.checked ? [...prev, b] : prev.filter(x => x !== b))} style={{ accentColor: '#CC915E' }} />
-                {BLOCO_LABEL[b]}
-              </label>
-            ))}
-          </div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#7A5C00', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>Editar seção</div>
+          <div style={{ fontSize: 11, color: '#7A5C00', marginBottom: 8, lineHeight: 1.4 }}>Escolha a seção que vai alterar — o formulário vai direto para ela. A seção editada volta para aprovação ao salvar; as demais mantêm a aprovação.</div>
+          <select value="" onChange={e => { const b = e.target.value; if (!b) return; setStep(SECAO_STEP[b] || 1); setBlocosReabrir(prev => prev.includes(b) ? prev : [...prev, b]) }} style={{ width: '100%', maxWidth: 380, padding: '8px 10px', border: '1px solid #E0C98A', borderRadius: 6, fontFamily: 'inherit', fontSize: 13, background: '#fff', color: '#00203E', cursor: 'pointer' }}>
+            <option value="">— Selecione a seção que vai editar —</option>
+            {blocosAplicaveis(projeto).map(b => <option key={b} value={b}>{SECAO_LABEL[b] || b}</option>)}
+          </select>
           {blocosReabrir.length > 0 && (
             <div style={{ marginTop: 8, fontSize: 11, fontWeight: 600, color: '#7A5C00', background: 'rgba(204,145,94,0.14)', border: '1px solid #E0C98A', borderRadius: 6, padding: '6px 10px', lineHeight: 1.45 }}>
-              ✓ Ao salvar, {blocosReabrir.map(b => BLOCO_LABEL[b]).join(', ')} volta{blocosReabrir.length > 1 ? 'm' : ''} para "A aprovar" e o controle retorna para revisão. Os demais blocos mantêm a aprovação.
+              ✓ Ao salvar, {blocosReabrir.map(b => SECAO_LABEL[b] || b).join(', ')} volta{blocosReabrir.length > 1 ? 'm' : ''} para "A aprovar". Os demais blocos mantêm a aprovação.
             </div>
           )}
         </div>

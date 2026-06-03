@@ -46,7 +46,7 @@ export default function PorAreaTabela({ ctx }) {
                         primary = { label: '▶ Continuar', color: '#92400E', bg: 'rgba(234,179,8,0.15)', border: 'rgba(234,179,8,0.40)', onClick: () => setAtualizarRow(c) }
                       } else if (podeEditarEste && st === 'em_analise') {
                         primary = { label: 'Registrar Resultado', color: '#15803D', bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.35)', onClick: () => setRowRegistrarResultado(c) }
-                        secondary = { label: '✏ Editar premissas', onClick: () => setAtualizarRow(c) }
+                        secondary = { label: '✏ Editar', onClick: () => setAtualizarRow(c) }
                       } else if (podeEditarEste && (st === 'nao_iniciado' || st === 'teste_pendente' || st === 'reprovado')) {
                         primary = { label: 'Atualizar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => setAtualizarRow(c) }
                       }
