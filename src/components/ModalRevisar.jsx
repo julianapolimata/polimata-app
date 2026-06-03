@@ -155,7 +155,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
     try {
       const geral = deriveStatusGeral(aprovacoes, row, projeto)
       const ehRegressaoAprovada = geral === 'aprovado' && !!row.regressao_destino
-      const ehEdicaoAprovada = geral === 'aprovado' && row.edicao_pendente && !ehRegressaoAprovada
+      const ehEdicaoAprovada = geral === 'aprovado' && row.edicao_pendente && !ehRegressaoAprovada && projeto?.f1_tem_teste !== false
       const statusFinal = (ehRegressaoAprovada || ehEdicaoAprovada) ? 'teste_pendente' : geral
       const updates = { status_workflow: statusFinal }
       if (geral === 'aprovado') {
@@ -167,7 +167,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
           updates.regressao_destino = null // consumido — histórico permanece em causa_raiz/justificativa/revisões
           updates.edicao_pendente = false
         } else if (ehEdicaoAprovada) { updates.edicao_pendente = false }
-        else { updates.aprovado_por = user?.id; updates.aprovado_em = new Date().toISOString() }
+        else { updates.aprovado_por = user?.id; updates.aprovado_em = new Date().toISOString(); if (row.edicao_pendente) updates.edicao_pendente = false }
       }
       await supabase.from('mrc').update(updates).eq('id', row.id)
       const destinatarioId = row.consultor_id || row.submetido_por

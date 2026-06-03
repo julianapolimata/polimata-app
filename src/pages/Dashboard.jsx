@@ -235,7 +235,7 @@ export default function Dashboard() {
           <SideNavItem icon="📋" label="MRC Completa" active={location.pathname === '/mrc'} onClick={() => navigate('/mrc')} open={sidebarOpen}
             badge={todosControles.length > 0 ? todosControles.length : null} />
           <SideNavItem icon="📄" label="Relatórios" active={location.pathname === '/relatorios'} onClick={() => navigate('/relatorios')} open={sidebarOpen} />
-          <SideNavItem icon="📝" label="Solicitações" active={location.pathname === '/solicitacoes'} onClick={() => navigate('/solicitacoes')} open={sidebarOpen} />
+          {projetoAtivo?.f1_tem_teste !== false && <SideNavItem icon="📝" label="Solicitações" active={location.pathname === '/solicitacoes'} onClick={() => navigate('/solicitacoes')} open={sidebarOpen} />}
           {isAdmin && (<>{sidebarOpen && <div className="sb-sep">Administração</div>}
             <SideNavItem icon="📥" label="Manutenção MRC" active={location.pathname === '/importar-mrc'} onClick={() => navigate('/importar-mrc')} open={sidebarOpen} /></>)}
         </nav>

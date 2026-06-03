@@ -8,6 +8,7 @@ import StepPassos from './modalNovoRisco/StepPassos'
 import { useConfirm } from './ConfirmDialog'
 
 const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
+  const isDiag = projeto?.f1_tem_teste === false
   // ═══ STATE ═══
   const [step, setStep] = useState(1)
   const { confirm } = useConfirm()
@@ -160,6 +161,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
 
   // ═══ AVANÇAR DO PASSO 2 ═══
   function saveStep2() {
+    if (isDiag) { alert('\u2705 Risco e controle salvos!'); onSaved?.(); onClose?.(); return }
     setStep(3)
   }
 
@@ -337,14 +339,14 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
         <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: '#00203E', color: 'white' }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Novo Risco</div>
-            <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.8 }}>Fase 1: Avaliação Inicial — Passo {step} de 3</div>
+            <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.8 }}>Fase 1: Avaliação Inicial — Passo {step} de {isDiag ? 2 : 3}</div>
           </div>
           <button onClick={requestClose} style={{ background: 'none', border: 'none', fontSize: 28, color: 'white', cursor: 'pointer' }}>×</button>
         </div>
 
         {/* STEPPER */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 24px', gap: 0 }}>
-          {[1, 2, 3].map((s) => (
+          {(isDiag ? [1, 2] : [1, 2, 3]).map((s) => (
             <React.Fragment key={s}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flex: 1 }}>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: s < step ? '#1B5E20' : s === step ? '#00203E' : '#e5e7eb', color: s < step || s === step ? 'white' : '#999', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 14 }}>
@@ -384,7 +386,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
           )}
           {step < 3 && (
             <button onClick={step === 1 ? saveStep1 : saveStep2} disabled={!canAdvanceStep1 || (step === 2 && !canAdvanceStep2) || saving} style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white', opacity: saving || (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) ? 0.5 : 1 }}>
-              {saving ? 'Salvando...' : 'Próximo →'}
+              {saving ? 'Salvando...' : (isDiag && step === 2) ? '\u2713 Salvar' : 'Próximo →'}
             </button>
           )}
           {step === 3 && (

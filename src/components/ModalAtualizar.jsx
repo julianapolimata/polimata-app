@@ -30,6 +30,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
   const [comentarioFor, setComentarioFor] = useState(null)
   const [blocosReabrir, setBlocosReabrir] = useState([])
   const [mostrarLista, setMostrarLista] = useState(true)
+  const isDiag = projeto?.f1_tem_teste === false
   const { confirm } = useConfirm()
   const [dirty, setDirty] = useState(false)
   const requestClose = async () => {
@@ -165,7 +166,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
   const canAdvanceStep3 = true
 
   function nextStep() {
-    if (step < 4) setStep(step + 1)
+    if (step < (isDiag ? 2 : 4)) setStep(step + 1)
   }
 
   function prevStep() {
@@ -263,7 +264,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
       }
       // Solicitações v2: persiste passos editados e sincroniza solicitações
       try {
-        await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id })
+        if (!isDiag) await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id })
       } catch (e) {
         console.error('syncPassosESolicitacoes (ficha):', e)
         throw new Error('O controle foi salvo, mas houve erro ao gravar os passos de teste: ' + (e.message || e))
@@ -332,7 +333,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         if (!_upd || _upd.length === 0) throw new Error('Não foi possível gravar as alterações (0 registros atualizados — verifique permissões/conexão e tente de novo).')
       }
       try {
-        await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id })
+        if (!isDiag) await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id })
       } catch (e) {
         console.error('syncPassosESolicitacoes (semFicha):', e)
         throw new Error('O controle foi salvo, mas houve erro ao gravar os passos de teste: ' + (e.message || e))
@@ -369,7 +370,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         cenario_atual: cenarioAtual.trim() || null,
         dt_implementacao: dtImplementacao || null,
         status_workflow: 'em_revisao',
-        edicao_pendente: true,
+        edicao_pendente: !isDiag,
         submetido_por: perfil?.id,
         submetido_em: new Date().toISOString(),
         atualizado_em: new Date().toISOString(),
@@ -378,7 +379,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
       const { data: _u, error } = await supabase.from('mrc').update(updates).eq('id', row.id).select('id')
       if (error) throw error
       if (!_u || _u.length === 0) throw new Error('Não foi possível gravar (0 registros — verifique permissões/conexão).')
-      try { await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id }) } catch (e) { console.error('syncPassos:', e) }
+      if (!isDiag) { try { await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id }) } catch (e) { console.error('syncPassos:', e) } }
       for (const b of blocosReabrir) {
         try { await reabrirBloco({ mrcId: row.id, bloco: b, fase: faseDoBloco(b, row) }) } catch (e) { console.error('reabrirBloco:', e) }
       }
@@ -439,7 +440,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         {/* STEPPER (oculto ao editar uma seção direto) */}
         {blocosReabrir.length === 0 && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 24px', gap: 0 }}>
-          {[1, 2, 3, 4].map((s) => (
+          {(isDiag ? [1, 2] : [1, 2, 3, 4]).map((s) => (
             <React.Fragment key={s}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flex: 1 }}>
                 <div
@@ -559,12 +560,12 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
               {blocosReabrir.length === 0 && (
                 <>
                   <button onClick={prevStep} disabled={step === 1} style={{ flex: 1, padding: '10px 14px', border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'white', color: '#00203E', opacity: step === 1 ? 0.5 : 1 }}>← Voltar</button>
-                  {step < 4 && (
+                  {step < (isDiag ? 2 : 4) && (
                     <button onClick={nextStep} disabled={step === 1 ? !canAdvanceStep1 : step === 2 ? !canAdvanceStep2 : step === 3 ? !canAdvanceStep3 : false} style={{ flex: 1, padding: '10px 14px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) || (step === 3 && !canAdvanceStep3) ? 0.5 : 1 }}>Próximo →</button>
                   )}
                 </>
               )}
-              {blocosReabrir.length > 0 && (
+              {(blocosReabrir.length > 0 || (isDiag && step === 2)) && (
                 <button onClick={handleSalvarEnviarRevisao} disabled={saving || !canAdvanceStep1 || !canAdvanceStep2} title={(!canAdvanceStep1 || !canAdvanceStep2) ? 'Preencha os campos obrigatórios (Risco, Controle e Premissas) antes de enviar.' : ''} style={{ flex: 2, padding: '10px 14px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, cursor: (saving || !canAdvanceStep1 || !canAdvanceStep2) ? 'not-allowed' : 'pointer', background: '#15803D', color: 'white', opacity: (saving || !canAdvanceStep1 || !canAdvanceStep2) ? 0.5 : 1 }}>
                   {saving ? 'Salvando...' : '✓ Salvar e enviar para revisão'}
                 </button>
