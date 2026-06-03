@@ -29,6 +29,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
   const { perfil: perfilAuth } = useAuth()
   const [comentarioFor, setComentarioFor] = useState(null)
   const [blocosReabrir, setBlocosReabrir] = useState([])
+  const [mostrarLista, setMostrarLista] = useState(true)
   const { confirm } = useConfirm()
   const [dirty, setDirty] = useState(false)
   const requestClose = async () => {
@@ -413,13 +414,16 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
 
         {/* Editar seção — navega direto e reabre para aprovação (item 11) */}
         <div style={{ padding: '8px 24px', background: '#FFF8E1', borderBottom: '1px solid #F0E0A8', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#7A5C00', textTransform: 'uppercase', letterSpacing: 0.4, whiteSpace: 'nowrap' }}>Editar seção:</span>
-          <select value="" onChange={e => { const b = e.target.value; if (!b) return; setStep(SECAO_STEP[b] || 1); setBlocosReabrir(prev => prev.includes(b) ? prev : [...prev, b]) }} style={{ flex: 1, minWidth: 220, maxWidth: 320, padding: '6px 8px', border: '1px solid #E0C98A', borderRadius: 6, fontFamily: 'inherit', fontSize: 13, background: '#fff', color: '#00203E', cursor: 'pointer' }}>
-            <option value="">— pular direto para a seção —</option>
-            {blocosAplicaveis(projeto).map(b => <option key={b} value={b}>{SECAO_LABEL[b] || b}</option>)}
-          </select>
-          {blocosReabrir.length > 0 && (
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#7A5C00', flexBasis: '100%' }}>✓ Ao salvar, {blocosReabrir.map(b => SECAO_LABEL[b] || b).join(', ')} volta{blocosReabrir.length > 1 ? 'm' : ''} para "A aprovar". Os demais mantêm a aprovação.</span>
+          {(blocosReabrir.length === 0 || mostrarLista) ? (
+            <>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#7A5C00', textTransform: 'uppercase', letterSpacing: 0.4, whiteSpace: 'nowrap' }}>Editar seção:</span>
+              <select value="" onChange={e => { const b = e.target.value; if (!b) return; setStep(SECAO_STEP[b] || 1); setBlocosReabrir(prev => prev.includes(b) ? prev : [...prev, b]); setMostrarLista(false) }} style={{ flex: 1, minWidth: 220, maxWidth: 320, padding: '6px 8px', border: '1px solid #E0C98A', borderRadius: 6, fontFamily: 'inherit', fontSize: 13, background: '#fff', color: '#00203E', cursor: 'pointer' }}>
+                <option value="">— pular direto para a seção —</option>
+                {blocosAplicaveis(projeto).map(b => <option key={b} value={b}>{SECAO_LABEL[b] || b}</option>)}
+              </select>
+            </>
+          ) : (
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#7A5C00', flex: 1 }}>✓ Ao salvar, {blocosReabrir.map(b => SECAO_LABEL[b] || b).join(', ')} volta{blocosReabrir.length > 1 ? 'm' : ''} para "A aprovar". Os demais mantêm a aprovação.<button type="button" onClick={() => setMostrarLista(true)} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--copper-text, #A6512F)', fontWeight: 700, fontSize: 11, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>editar outra seção</button></span>
           )}
         </div>
 
@@ -521,10 +525,10 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
         </div>
 
         {/* FOOTER */}
-        <div style={{ display: 'flex', gap: 8, padding: 24, borderTop: '1px solid #e5e7eb', background: '#fafbfc' }}>
+        <div style={{ display: 'flex', gap: 8, padding: '12px 24px', borderTop: '1px solid #e5e7eb', background: '#fafbfc' }}>
           <button
             onClick={requestClose}
-            style={{ flex: 1, padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: 'white', color: '#00203E' }}
+            style={{ flex: 1, padding: '10px 14px', border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'white', color: '#00203E' }}
           >
             Cancelar
           </button>
@@ -542,24 +546,16 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
             </button>
           ) : (
             <>
-              <button
-                onClick={prevStep}
-                disabled={step === 1}
-                style={{ flex: 1, padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: 'white', color: '#00203E', opacity: step === 1 ? 0.5 : 1 }}
-              >
-                ← Voltar
-              </button>
-              {step < 4 && (
-                <button
-                  onClick={nextStep}
-                  disabled={step === 1 ? !canAdvanceStep1 : step === 2 ? !canAdvanceStep2 : step === 3 ? !canAdvanceStep3 : false}
-                  style={{ flex: 1, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) || (step === 3 && !canAdvanceStep3) ? 0.5 : 1 }}
-                >
-                  Próximo →
-                </button>
+              {blocosReabrir.length === 0 && (
+                <>
+                  <button onClick={prevStep} disabled={step === 1} style={{ flex: 1, padding: '10px 14px', border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'white', color: '#00203E', opacity: step === 1 ? 0.5 : 1 }}>← Voltar</button>
+                  {step < 4 && (
+                    <button onClick={nextStep} disabled={step === 1 ? !canAdvanceStep1 : step === 2 ? !canAdvanceStep2 : step === 3 ? !canAdvanceStep3 : false} style={{ flex: 1, padding: '10px 14px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: '#CC915E', color: 'white', opacity: (step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2) || (step === 3 && !canAdvanceStep3) ? 0.5 : 1 }}>Próximo →</button>
+                  )}
+                </>
               )}
               {blocosReabrir.length > 0 && (
-                <button onClick={handleSalvarEnviarRevisao} disabled={saving} style={{ flex: 1.5, padding: '12px 16px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: '#15803D', color: 'white', opacity: saving ? 0.5 : 1 }}>
+                <button onClick={handleSalvarEnviarRevisao} disabled={saving} style={{ flex: 2, padding: '10px 14px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: '#15803D', color: 'white', opacity: saving ? 0.5 : 1 }}>
                   {saving ? 'Salvando...' : '✓ Salvar e enviar para revisão'}
                 </button>
               )}
