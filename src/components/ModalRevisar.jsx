@@ -54,6 +54,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
         <div style={S.sectionTitle}>{titleNode}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 9, fontWeight: 700, color: cfg.c, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.3 }}>{cfg.t}</span>
+          {ap?.data_acao && <span style={{ fontSize: 9, color: '#7A8B9C', marginLeft: 2 }}>{new Date(ap.data_acao).toLocaleDateString('pt-BR')}</span>}
           {!bloqueado && (st === 'a_aprovar' ? (
             <>
               <button onClick={() => { setBlocoAlvo(blocoKey); setNota(''); setView('reject') }} style={{ fontSize: 10, fontWeight: 700, color: '#EF4444', background: 'white', border: '1px solid #EF4444', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit' }}>↩ Reprovar</button>
