@@ -413,7 +413,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--copper-soft)', marginBottom: 4 }}>Matriz de Riscos · Controle</div>
             <div style={{ fontSize: 20, fontWeight: 300, fontFamily: "'Raleway', sans-serif", letterSpacing: 0.3, lineHeight: 1.2 }}>Atualizar Controle</div>
-            <div title={row.dr || row.area || ''} style={{ fontSize: 12, fontWeight: 500, opacity: 0.72, marginTop: 4, maxWidth: 480, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.rc}{row.dr ? ` · ${row.dr}` : (row.area ? ` · ${row.area}` : '')}</div>
+            <div style={{ fontSize: 11.5, fontWeight: 500, opacity: 0.72, marginTop: 4, maxWidth: 560, whiteSpace: 'normal', overflowWrap: 'break-word', lineHeight: 1.35 }}>{row.rc}{row.dr ? ` · ${row.dr}` : (row.area ? ` · ${row.area}` : '')}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button

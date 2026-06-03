@@ -344,7 +344,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
     exportarSolicitacoesExcel, faseLabel, faseThS, faseVal, fasesDisponiveis, filtAcao,
     filtCrit, filtFase, filtImp, filtRes, filtSit, filtStatus,
     gaps, gerarRelatorioExcel, gerarTemplateMRC, getAlertas, getFaseCodigo, getResultadoGeral,
-    getStatusBadge, idxFases, inefetivos, isAdmin, isCliente, isDiagnostico,
+    getStatusBadge, idxFases, inefetivos, isAdmin, isCliente, isDiagnostico, setAtualizarFicha,
     isRealAdmin, loadDados, loading, modalNovoRisco, modalRow, navigate,
     nome, numFases, paSortVal, pa_crit, pa_ex, pa_ix,
     p, nv, pa_pc, pa_pct, pa_total, papelAtivo, pesoEmpresa, planosAcao,
@@ -365,8 +365,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
     if (isDiagnostico && podeEditarEste) return { primary: { label: '✏ Editar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
     if (podeEditarEste && st === 'rascunho') return { primary: { label: '▶ Continuar', color: '#92400E', bg: 'rgba(234,179,8,0.15)', border: 'rgba(234,179,8,0.40)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
     if (podeEditarEste && st === 'em_analise') return { primary: { label: 'Registrar Resultado', color: '#15803D', bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.35)', onClick: () => { setRowRegistrarResultado(c); setModalRow(null) } }, secondary: { label: '✏ Editar', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
-    if (podeEditarEste && st === 'teste_pendente') return { primary: { label: '📄 Baixar Ficha', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => { setAtualizarFicha(true); setAtualizarRow(c); setModalRow(null) } }, secondary: { label: '✏ Editar', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
-    if (podeEditarEste && (st === 'nao_iniciado' || st === 'reprovado')) return { primary: { label: 'Atualizar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
+    if (podeEditarEste && (st === 'nao_iniciado' || st === 'teste_pendente' || st === 'reprovado')) return { primary: { label: 'Atualizar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
     return {}
   }
 
