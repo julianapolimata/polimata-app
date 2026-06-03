@@ -384,6 +384,11 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto }) => {
               </label>
             ))}
           </div>
+          {blocosReabrir.length > 0 && (
+            <div style={{ marginTop: 8, fontSize: 11, fontWeight: 600, color: '#7A5C00', background: 'rgba(204,145,94,0.14)', border: '1px solid #E0C98A', borderRadius: 6, padding: '6px 10px', lineHeight: 1.45 }}>
+              ✓ Ao salvar, {blocosReabrir.map(b => BLOCO_LABEL[b]).join(', ')} volta{blocosReabrir.length > 1 ? 'm' : ''} para "A aprovar" e o controle retorna para revisão. Os demais blocos mantêm a aprovação.
+            </div>
+          )}
         </div>
 
         {/* STEPPER */}
