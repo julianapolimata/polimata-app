@@ -40,6 +40,30 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
   const faseAtual = getFaseAtual(row || {})
   const isDiag = projeto?.f1_tem_teste === false
   const faseDisplay = isDiag ? `${faseAtual} — Indagação` : faseAtual
+
+  // Cabeçalho de um card de bloco: título à esquerda; status + Aprovar/Reprovar à direita.
+  const renderBlocoHeader = (blocoKey, titleNode) => {
+    const f = faseDoBloco(blocoKey, row)
+    const ap = aprovacoes.find(e => e.bloco === blocoKey && (e.fase || null) === (f || null))
+    const st = ap?.status || 'a_aprovar'
+    const cfg = st === 'aprovado' ? { t: 'Aprovado', c: '#1B5E20', bg: '#E8F5E9' }
+              : st === 'reprovado' ? { t: 'Reprovado', c: '#C62828', bg: '#FFEBEE' }
+              : { t: 'A aprovar', c: '#92400E', bg: 'rgba(234,179,8,0.18)' }
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+        <div style={S.sectionTitle}>{titleNode}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: cfg.c, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.3 }}>{cfg.t}</span>
+          {!bloqueado && (
+            <>
+              <button onClick={() => { setBlocoAlvo(blocoKey); setNota(''); setView('reject') }} style={{ fontSize: 10, fontWeight: 700, color: '#EF4444', background: 'white', border: '1px solid #EF4444', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit' }}>↩ Reprovar</button>
+              <button onClick={() => { setBlocoAlvo(blocoKey); setNotaAprovar(''); setView('approve') }} style={{ fontSize: 10, fontWeight: 700, color: 'white', background: '#22C55E', border: '1px solid #22C55E', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit' }}>✅ Aprovar</button>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
   const crit = CRIT_MAP[row?.crit] || { label: '—', bg: '#EEE', color: '#7A8B9C' }
 
   // Carregar histórico
@@ -320,34 +344,6 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
             </div>
           </div>
 
-          {/* Aprovação por bloco (itens 10/13) */}
-          <div style={S.section}>
-            <div style={S.sectionTitle}>Aprovação por bloco</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {blocosAplicaveis(projeto).map(b => {
-                const f = faseDoBloco(b, row)
-                const ap = aprovacoes.find(e => e.bloco === b && (e.fase || null) === (f || null))
-                const st = ap?.status || 'a_aprovar'
-                const cfg = st === 'aprovado' ? { t: 'Aprovado', c: '#1B5E20', bg: '#E8F5E9' }
-                          : st === 'reprovado' ? { t: 'Reprovado', c: '#C62828', bg: '#FFEBEE' }
-                          : { t: 'A aprovar', c: '#92400E', bg: 'rgba(234,179,8,0.18)' }
-                return (
-                  <div key={b} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: '1px solid #ECECEC', borderRadius: 6, background: '#FAFAFA' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#00203E', minWidth: 90 }}>{BLOCO_LABEL[b]}{b === 'teste' && f ? ` (${f})` : ''}</div>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: cfg.c, background: cfg.bg, padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{cfg.t}</span>
-                    {ap?.data_acao && <span style={{ fontSize: 10, color: '#7A8B9C' }}>{new Date(ap.data_acao).toLocaleDateString('pt-BR')}</span>}
-                    {!bloqueado && (
-                      <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-                        <button onClick={() => { setBlocoAlvo(b); setNota(''); setView('reject') }} style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', background: 'white', border: '1px solid #EF4444', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>↩ Reprovar</button>
-                        <button onClick={() => { setBlocoAlvo(b); setNotaAprovar(''); setView('approve') }} style={{ fontSize: 11, fontWeight: 700, color: 'white', background: '#22C55E', border: '1px solid #22C55E', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>✅ Aprovar</button>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
           {/* Submissão */}
           <div style={S.section}>
             <div style={S.sectionTitle}>Submissão</div>
@@ -375,7 +371,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
               quando vazio, destaca em vermelho pra admin/gerente reprovar
               e devolver pra consultora preencher. */}
           <div style={S.section}>
-            <div style={S.sectionTitle}>Cenário Atual <span style={{ fontSize: 9, color: '#7A8B9C', fontWeight: 500, marginLeft: 6 }}>(como o processo é feito hoje)</span></div>
+            {renderBlocoHeader('cenario', <>Cenário Atual <span style={{ fontSize: 9, color: '#7A8B9C', fontWeight: 500, marginLeft: 6 }}>(como o processo é feito hoje)</span></>)}
             {row?.cenario_atual && row.cenario_atual.trim() ? (
               <div style={{ ...S.value, whiteSpace: 'pre-wrap' }}>{row.cenario_atual}</div>
             ) : (
@@ -392,13 +388,13 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
 
           {/* Descrição do Risco */}
           <div style={S.section}>
-            <div style={S.sectionTitle}>Descrição do Risco</div>
+            {renderBlocoHeader('risco', 'Descrição do Risco')}
             <div style={{ ...S.value, whiteSpace: 'pre-wrap' }}>{row?.dr || '—'}</div>
           </div>
 
           {/* Descrição do Controle */}
           <div style={S.section}>
-            <div style={S.sectionTitle}>Descrição do Controle</div>
+            {renderBlocoHeader('controle', 'Descrição do Controle')}
             <div style={{ ...S.value, whiteSpace: 'pre-wrap' }}>{row?.dc || '—'}</div>
           </div>
 
@@ -423,7 +419,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
             </div>
           ) : (
             <div style={S.section}>
-              <div style={S.sectionTitle}>Resultado da Análise</div>
+              {renderBlocoHeader('teste', 'Resultado da Análise')}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div><div style={S.label}>Inconsistência</div><div style={{ ...S.value, whiteSpace: 'pre-wrap' }}>{row?.incons || '—'}</div></div>
                 <div><div style={S.label}>Recomendação / Melhoria</div><div style={{ ...S.value, whiteSpace: 'pre-wrap' }}>{row?.incons_ader || row?.rec || '—'}</div></div>
