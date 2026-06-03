@@ -41,6 +41,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
   const [car, setCar] = useState('')
   const [sis, setSis] = useState('')
   const [chave, setChave] = useState('')
+  const [dtImplementacao, setDtImplementacao] = useState('')
   
   // Premissas
   const [quem, setQuem] = useState('')
@@ -176,6 +177,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
       premissa_como: como,
       premissa_onde: onde,
       premissa_resultado: resultadoPremissa,
+      dt_implementacao: dtImplementacao || null,
       status_workflow: 'nao_iniciado',
       ativo: true,
     }
@@ -361,7 +363,7 @@ const ModalNovoRisco = ({ onClose, onSaved, areas, projeto, areaFixa }) => {
         <div style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
           <StepIdentificacao step={step} area={area} setArea={setArea} subprocesso={subprocesso} setSubprocesso={setSubprocesso} descRisco={descRisco} setDescRisco={setDescRisco} areas={areas} areaFixa={areaFixa} subprocessos={subprocessos} />
 
-          <StepCaracteristicas isAutomatic={isAutomatic} step={step} descControle={descControle} setDescControle={setDescControle} cat={cat} setCat={setCat} freq={freq} setFreq={setFreq} nat={nat} setNat={setNat} car={car} setCar={setCar} sis={sis} setSis={setSis} chave={chave} setChave={setChave} quem={quem} setQuem={setQuem} quando={quando} setQuando={setQuando} porque={porque} setPorque={setPorque} como={como} setComo={setComo} onde={onde} setOnde={setOnde} resultadoPremissa={resultadoPremissa} setResultadoPremissa={setResultadoPremissa} sistemas={sistemas} />
+          <StepCaracteristicas isAutomatic={isAutomatic} step={step} descControle={descControle} setDescControle={setDescControle} cat={cat} setCat={setCat} freq={freq} setFreq={setFreq} nat={nat} setNat={setNat} car={car} setCar={setCar} sis={sis} setSis={setSis} chave={chave} setChave={setChave} quem={quem} setQuem={setQuem} quando={quando} setQuando={setQuando} porque={porque} setPorque={setPorque} como={como} setComo={setComo} onde={onde} setOnde={setOnde} resultadoPremissa={resultadoPremissa} setResultadoPremissa={setResultadoPremissa} dtImplementacao={dtImplementacao} setDtImplementacao={setDtImplementacao} sistemas={sistemas} />
 
           <StepPassos step={step} passos={passos} setPassos={setPassos} saving={saving} novoRiscoData={novoRiscoData} subprocesso={subprocesso} />
 

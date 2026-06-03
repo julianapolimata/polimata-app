@@ -17,7 +17,7 @@ const COL_MAP = {
   0: 'dt_ult', 1: 'ger', 2: 'resp_sub', 4: 'sub', 5: 'rr', 6: 'dr',
   7: 'rc', 8: 'dc', 9: 'cat', 10: 'freq', 11: 'nat', 12: 'car',
   13: 'sis', 14: 'chave', 15: 'passos_f1', 16: 'r1', 17: 'incons',
-  18: 'rec', 19: 'imp', 20: 'prob', 21: 'crit_label',
+  18: 'rec', 19: 'imp', 20: 'prob', 21: 'crit_label', 22: 'dt_implementacao',
 }
 
 // Mapeamento para template diagnóstico (TEMPLATE_COLS_DIAG em templateMRC.js)
@@ -27,7 +27,7 @@ const COL_MAP_DIAG = {
   0: 'dt_ult', 1: 'ger', 2: 'resp_sub', 4: 'sub', 5: 'rr', 6: 'dr',
   7: 'rc', 8: 'dc', 9: 'cat', 10: 'freq', 11: 'nat', 12: 'car',
   13: 'sis', 14: 'chave', 15: 'existencia', 16: 'incons', 17: 'rec',
-  18: 'imp', 19: 'prob', 20: 'crit_label',
+  18: 'imp', 19: 'prob', 20: 'crit_label', 21: 'dt_implementacao',
 }
 
 function parseCrit(val) {

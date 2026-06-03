@@ -45,6 +45,7 @@ const TEMPLATE_COLS = [
   { header: 'Impacto', width: 14, key: 'imp', hint: 'Crítico / Alto / Moderado / Baixo' },
   { header: 'Probabilidade', width: 16, key: 'prob', hint: 'Extrema / Alta / Média / Baixa' },
   { header: 'Criticidade', width: 22, key: 'crit', hint: '1. Baixo / 2. Moderado / 3. Significativo / 4. Crítico / Sem Avaliação' },
+  { header: 'Data de Implementação', width: 22, key: 'dt_implementacao', hint: 'DD/MM/AAAA — quando o controle (desenho atual) passou a operar' },
 ]
 
 // Template para projetos com f1_tem_teste=false (Diagnóstico Apenas)
@@ -72,6 +73,7 @@ const TEMPLATE_COLS_DIAG = [
   { header: 'Impacto', width: 14, key: 'imp', hint: 'Crítico / Alto / Moderado / Baixo' },
   { header: 'Probabilidade', width: 16, key: 'prob', hint: 'Extrema / Alta / Média / Baixa' },
   { header: 'Criticidade', width: 22, key: 'crit', hint: '1. Baixo / 2. Moderado / 3. Significativo / 4. Crítico / Sem Avaliação' },
+  { header: 'Data de Implementação', width: 22, key: 'dt_implementacao', hint: 'DD/MM/AAAA — quando o controle (desenho atual) passou a operar' },
 ]
 
 export async function gerarTemplateMRC(clienteNome, projeto) {
