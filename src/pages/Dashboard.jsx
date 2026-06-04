@@ -11,6 +11,7 @@ import ImportarMRC from '../components/ImportarMRC'
 import Relatorios from './Relatorios'
 import Solicitacoes from './Solicitacoes'
 import Documentos from './Documentos'
+import Mapeamentos from './Mapeamentos'
 import { formatNomeEmpresa } from '../lib/formatNome'
 import { getNivelMaturidade, getTipoEntrega } from '../lib/calculoMaturidade'
 import { carregarConstantes } from '../lib/constantesLoader'
@@ -238,6 +239,7 @@ export default function Dashboard() {
           <SideNavItem icon="📄" label="Relatórios" active={location.pathname === '/relatorios'} onClick={() => navigate('/relatorios')} open={sidebarOpen} />
           {projetoAtivo?.f1_tem_teste !== false && <SideNavItem icon="📝" label="Solicitações" active={location.pathname === '/solicitacoes'} onClick={() => navigate('/solicitacoes')} open={sidebarOpen} />}
           {['admin_polimata', 'consultor_polimata'].includes(perfil?.papel) && <SideNavItem icon="📁" label="Documentos" active={location.pathname === '/documentos'} onClick={() => navigate('/documentos')} open={sidebarOpen} />}
+          {['admin_polimata', 'consultor_polimata'].includes(perfil?.papel) && <SideNavItem icon="🎙" label="Mapeamentos" active={location.pathname === '/mapeamentos'} onClick={() => navigate('/mapeamentos')} open={sidebarOpen} />}
           {isAdmin && (<>{sidebarOpen && <div className="sb-sep">Administração</div>}
             <SideNavItem icon="📥" label="Manutenção MRC" active={location.pathname === '/importar-mrc'} onClick={() => navigate('/importar-mrc')} open={sidebarOpen} /></>)}
         </nav>
@@ -286,6 +288,7 @@ export default function Dashboard() {
           <Route path="/relatorios" element={<Relatorios projeto={projetoAtivo} areasCalc={areasCalc} todosControles={todosControles} clienteNome={formatNomeEmpresa(projetoAtivo?.clientes?.nome_fantasia || projetoAtivo?.clientes?.nome) || ''} projetoNome={projetoAtivo?.nome || ''} />} />
           <Route path="/solicitacoes" element={<Solicitacoes projeto={projetoAtivo} />} />
           <Route path="/documentos" element={<Documentos projeto={projetoAtivo} />} />
+          <Route path="/mapeamentos" element={<Mapeamentos projeto={projetoAtivo} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
           <Route path="/importar-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} projeto={projetoAtivo} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
           <Route path="/perfil" element={<Perfil />} />
