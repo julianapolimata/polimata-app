@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { formatNomeEmpresa } from '../lib/formatNome'
 import { useAuth } from '../contexts/AuthContext'
 import { gerarTemplateMRC } from '../lib/templateMRC'
 import ExcelJS from 'exceljs'
@@ -263,7 +264,8 @@ export default function ImportarMRC({ projetoId, projeto, areas, onImported, all
   }
 
   // ── Limpar Base ──
-  const nomeProjetoAtivo = projeto?.nome || ''
+  const clienteAtivo = formatNomeEmpresa(projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome) || ''
+  const nomeProjetoAtivo = projeto?.nome ? `${clienteAtivo ? clienteAtivo + ' — ' : ''}${projeto.nome}` : ''
   const canLimpar = projetoId && lbConfirm === 'LIMPAR'
 
   async function handleLimparBase() {
