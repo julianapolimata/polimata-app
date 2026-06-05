@@ -536,6 +536,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
               {step === 1 && (
                 <StepRisco
                   row={row}
+                  projeto={projeto}
                   areas={areas}
                   statusChoice={statusChoice} setStatusChoice={setStatusChoice}
                   newStatus={newStatus} setNewStatus={setNewStatus}

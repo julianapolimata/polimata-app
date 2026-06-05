@@ -1,9 +1,11 @@
 // Step 1 do ModalAtualizar — escolha da situação do risco.
 // Extraído em 22/mai/2026 (fatiamento Etapa 3). Diff-zero: visual idêntico, apenas em arquivo próprio.
 import React from 'react'
+import { getFaseLabel, getResultadoVitrine } from '../../lib/fases'
 
 export default function StepRisco({
   row,
+  projeto,
   areas,
   statusChoice, setStatusChoice,
   newStatus, setNewStatus,
@@ -30,11 +32,11 @@ export default function StepRisco({
           </div>
           <div style={{ borderRight: '1px solid #e5e7eb', paddingRight: 12 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Fase Atual</div>
-            <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>F1 · Diagnóstico</div>
+            <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{getFaseLabel(row) || '—'}</div>
           </div>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Resultado</div>
-            <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>Efetivo</div>
+            <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{getResultadoVitrine(row, projeto) || row.existencia || '—'}</div>
           </div>
         </div>
         <div>
