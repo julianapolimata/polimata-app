@@ -420,6 +420,16 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
           <div style={S.section}>
             {renderBlocoHeader('controle', 'Descrição do Controle')}
             <div style={{ ...S.value, whiteSpace: 'pre-wrap' }}>{row?.dc || '—'}</div>
+            {isDiag && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #EAE4D8', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ ...S.label, marginBottom: 0 }}>Resultado indicado</span>
+                <span style={{
+                  display: 'inline-block', padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                  color: row?.existencia === 'Existente' ? '#1B5E20' : row?.existencia === 'Parcial' ? '#92400E' : row?.existencia === 'Inexistente' ? '#C62828' : '#5D6E80',
+                  background: row?.existencia === 'Existente' ? 'rgba(27,94,32,0.10)' : row?.existencia === 'Parcial' ? 'rgba(234,179,8,0.15)' : row?.existencia === 'Inexistente' ? 'rgba(198,40,40,0.10)' : 'rgba(93,110,128,0.10)',
+                }}>{row?.existencia || 'Sem classificação'}</span>
+              </div>
+            )}
           </div>
 
           {/* Características do Controle */}
