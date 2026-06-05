@@ -550,9 +550,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
               )}
               {step === 2 && (
                 <>
-                  {(blocosReabrir.length === 0 || blocosReabrir.includes('cenario')) && (
-                    <SecaoCenarioAtual cenarioAtual={cenarioAtual} setCenarioAtual={setCenarioAtual} />
-                  )}
+                  <SecaoCenarioAtual cenarioAtual={cenarioAtual} setCenarioAtual={setCenarioAtual}
+                    readOnly={blocosReabrir.length > 0 && !blocosReabrir.includes('cenario')} />
                   {(blocosReabrir.length === 0 || blocosReabrir.includes('controle')) && (
                   <StepControle
                   row={row}

@@ -4,7 +4,7 @@
 // "diagnostico apenas" quanto projetos com teste de efetividade.
 import React from 'react'
 
-export default function SecaoCenarioAtual({ cenarioAtual, setCenarioAtual }) {
+export default function SecaoCenarioAtual({ cenarioAtual, setCenarioAtual, readOnly = false }) {
   return (
     <div style={{
       background: '#F4F6F9',
@@ -23,6 +23,7 @@ export default function SecaoCenarioAtual({ cenarioAtual, setCenarioAtual }) {
       }}>
         Cenário Atual
       </div>
+      {!readOnly && (
       <div style={{
         fontSize: '11px',
         color: '#5A6A7A',
@@ -33,6 +34,21 @@ export default function SecaoCenarioAtual({ cenarioAtual, setCenarioAtual }) {
         Esse contexto justifica a classificação acima e serve de baseline caso o projeto
         avance para Fase 2 (remediação).
       </div>
+      )}
+      {readOnly ? (
+        <div style={{
+          width: '100%',
+          padding: '0.8rem',
+          border: '1px solid #E2E6EB',
+          borderRadius: '4px',
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: '14px',
+          background: '#FFFFFF',
+          color: cenarioAtual ? '#00203E' : '#9AA7B4',
+          whiteSpace: 'pre-wrap',
+          lineHeight: 1.5,
+        }}>{cenarioAtual || 'Não preenchido.'}</div>
+      ) : (
       <textarea
         value={cenarioAtual}
         onChange={e => setCenarioAtual(e.target.value)}
@@ -48,6 +64,7 @@ export default function SecaoCenarioAtual({ cenarioAtual, setCenarioAtual }) {
         }}
         placeholder="Descreva como o processo é executado hoje."
       />
+      )}
     </div>
   )
 }
