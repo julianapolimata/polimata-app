@@ -40,6 +40,8 @@ export default function PorAreaTabela({ ctx }) {
                       const podeEditarEste = canEditControle ? canEditControle(c) : canEdit
                       if (canRevisar && st === 'em_revisao') {
                         primary = { label: 'Revisar', color: '#1D4ED8', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.30)', onClick: () => setRowRevisar(c) }
+                      } else if (st === 'em_revisao') {
+                        // Em revisão: edição bloqueada até a revisora concluir
                       } else if (isDiagnostico && podeEditarEste) {
                         primary = { label: '✏ Editar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => setAtualizarRow(c) }
                       } else if (podeEditarEste && st === 'rascunho') {

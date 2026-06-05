@@ -366,6 +366,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
     const st = c.status_workflow
     const podeEditarEste = canEditControle(c)
     if (canRevisar && st === 'em_revisao') return { primary: { label: 'Revisar', color: '#1D4ED8', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.30)', onClick: () => { setRowRevisar(c); setModalRow(null) } } }
+    if (st === 'em_revisao') return { bloqueado: true } // em revisão: edição travada p/ quem não revisa
     if (isDiagnostico && podeEditarEste) return { primary: { label: '✏ Editar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
     if (podeEditarEste && st === 'rascunho') return { primary: { label: '▶ Continuar', color: '#92400E', bg: 'rgba(234,179,8,0.15)', border: 'rgba(234,179,8,0.40)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
     if (podeEditarEste && st === 'em_analise') return { primary: { label: 'Registrar Resultado', color: '#15803D', bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.35)', onClick: () => { setRowRegistrarResultado(c); setModalRow(null) } }, secondary: { label: '✏ Editar', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }
@@ -379,7 +380,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
 
       <PorAreaFiltros ctx={ctx} />
       <PorAreaTabela ctx={ctx} />
-      {modalRow && (() => { const acts = getModalActions(modalRow); return <ModalDetalhe row={modalRow} projeto={projeto} onClose={() => setModalRow(null)} onEditar={canEdit && !acts.primary ? () => { setAtualizarRow(modalRow); setModalRow(null) } : undefined} primaryAction={acts.primary} secondaryAction={acts.secondary} onAnalisarCriticidade={canEdit ? () => { setRowCriticidade(modalRow); setModalRow(null) } : undefined} verAprovacoes={!isCliente} /> })()}
+      {modalRow && (() => { const acts = getModalActions(modalRow); return <ModalDetalhe row={modalRow} projeto={projeto} onClose={() => setModalRow(null)} onEditar={canEdit && !acts.primary && !acts.bloqueado ? () => { setAtualizarRow(modalRow); setModalRow(null) } : undefined} primaryAction={acts.primary} secondaryAction={acts.secondary} onAnalisarCriticidade={canEdit ? () => { setRowCriticidade(modalRow); setModalRow(null) } : undefined} verAprovacoes={!isCliente} /> })()}
       {atualizarRow && <ModalAtualizar row={atualizarRow} irParaFicha={atualizarFicha} onClose={() => { setAtualizarRow(null); setAtualizarFicha(false) }} onSaved={() => { setAtualizarRow(null); setAtualizarFicha(false); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} />}
       {modalNovoRisco && <ModalNovoRisco onClose={() => setModalNovoRisco(false)} onSaved={() => { setModalNovoRisco(false); if (projeto?.id) loadDados(projeto.id) }} areas={areasCalc} projeto={projeto} areaFixa={area} />}
       {rowRegistrarResultado && <ModalRegistrarResultado row={rowRegistrarResultado} onClose={() => setRowRegistrarResultado(null)} onSaved={() => { setRowRegistrarResultado(null); if (projeto?.id) loadDados(projeto.id) }} responsaveis={[]} />}

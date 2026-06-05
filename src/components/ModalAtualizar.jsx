@@ -33,6 +33,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
   const [blocosReabrir, setBlocosReabrir] = useState([])
   const [mostrarLista, setMostrarLista] = useState(true)
   const isDiag = projeto?.f1_tem_teste === false
+  // Rascunho/não iniciado = primeira revisão: exige conjunto completo (não vale envio por bloco)
+  const ehPrimeiraRevisao = ['rascunho', 'nao_iniciado'].includes(row?.status_workflow || '')
   const { confirm } = useConfirm()
   const [dirty, setDirty] = useState(false)
   const requestClose = async () => {
@@ -188,7 +190,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
   })()
 
   // Validação por bloco (item 11): só valida os blocos efetivamente reabertos
-  const canEnviarRevisao = blocosReabrir.length > 0
+  const canEnviarRevisao = (blocosReabrir.length > 0 && !ehPrimeiraRevisao)
     ? blocosReabrir.every(b =>
         b === 'risco' ? canAdvanceStep1 :
         b === 'controle' ? canAdvanceStep2 :
@@ -476,7 +478,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
           </div>
         </div>
 
-        {/* Editar seção — navega direto e reabre para aprovação (item 11) */}
+        {/* Editar seção — navega direto e reabre para aprovação (item 11). Oculto na 1ª revisão (rascunho): tudo será aprovado pela primeira vez */}
+        {!ehPrimeiraRevisao && (
         <div style={{ padding: '8px 24px', background: '#FFF8E1', borderBottom: '1px solid #F0E0A8', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {(blocosReabrir.length === 0 || mostrarLista) ? (
             <>
@@ -490,6 +493,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
             <span style={{ fontSize: 11, fontWeight: 600, color: '#7A5C00', flex: 1 }}>✓ Ao salvar, {blocosReabrir.map(b => SECAO_LABEL[b] || b).join(', ')} volta{blocosReabrir.length > 1 ? 'm' : ''} para "A aprovar". Os demais mantêm a aprovação.<button type="button" onClick={() => setMostrarLista(true)} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--copper-text, #A6512F)', fontWeight: 700, fontSize: 11, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>editar outra seção</button></span>
           )}
         </div>
+        )}
 
         {/* STEPPER (oculto ao editar uma seção direto) */}
         {blocosReabrir.length === 0 && (
