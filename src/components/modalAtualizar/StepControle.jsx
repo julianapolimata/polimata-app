@@ -120,6 +120,7 @@ export default function StepControle({
           <textarea
             value={novaDescControle}
             onChange={(e) => setNovaDescControle(e.target.value)}
+            disabled={isDiag && existencia === 'Inexistente'}
             placeholder="Descreva o novo controle..."
             style={{
               width: '100%',
@@ -130,6 +131,7 @@ export default function StepControle({
               fontFamily: 'Montserrat, sans-serif',
               fontSize: 12,
               marginBottom: 16,
+              background: (isDiag && existencia === 'Inexistente') ? '#F5F5F5' : 'white',
             }}
           />
 
