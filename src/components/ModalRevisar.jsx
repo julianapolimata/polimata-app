@@ -41,7 +41,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
 
   const faseAtual = getFaseAtual(row || {})
   const isDiag = projeto?.f1_tem_teste === false
-  const faseDisplay = isDiag ? `${faseAtual} — Indagação` : faseAtual
+  const faseDisplay = isDiag ? 'Diagnóstico — Indagação' : faseAtual
 
   // Cabeçalho de um card de bloco: título à esquerda; status + Aprovar/Reprovar à direita.
   const renderBlocoHeader = (blocoKey, titleNode) => {
@@ -83,7 +83,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
   }, [row?.id])
 
   useEffect(() => {
-    const autorId = row?.submetido_por || row?.criado_por
+    const autorId = row?.criado_por || row?.submetido_por
     if (!autorId) { setSubmetidoPorNome(null); return }
     supabase.from('perfis').select('nome').eq('id', autorId).maybeSingle()
       .then(({ data }) => setSubmetidoPorNome(data?.nome || null))
@@ -368,12 +368,12 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
             </div>
           </div>
 
-          {/* Submissão / Criação */}
+          {/* Criação */}
           <div style={S.section}>
-            <div style={S.sectionTitle}>{row?.submetido_por ? 'Submissão' : 'Criação'}</div>
+            <div style={S.sectionTitle}>Criação</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-              <div><div style={S.label}>{row?.submetido_por ? 'Submetido por' : 'Criado por'}</div><div style={S.value}>{submetidoPorNome || '—'}</div></div>
-              <div><div style={S.label}>{row?.submetido_por ? 'Submetido em' : 'Criado em'}</div><div style={S.value}>{(row?.submetido_em || row?.criado_em) ? new Date(row.submetido_em || row.criado_em).toLocaleString('pt-BR') : '—'}</div></div>
+              <div><div style={S.label}>Criado por</div><div style={S.value}>{submetidoPorNome || '—'}</div></div>
+              <div><div style={S.label}>Criado em</div><div style={S.value}>{(row?.criado_em || row?.submetido_em) ? new Date(row.criado_em || row.submetido_em).toLocaleString('pt-BR') : '—'}</div></div>
               <div><div style={S.label}>Consultor responsável</div><div style={S.value}>{consultorResponsavelNome || '—'}</div></div>
             </div>
           </div>

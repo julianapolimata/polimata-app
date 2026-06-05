@@ -427,24 +427,16 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
       for (const b of blocosReabrir) {
         try { await reabrirBloco({ mrcId: row.id, bloco: b, fase: faseDoBloco(b, row) }) } catch (e) { console.error('reabrirBloco:', e) }
       }
-      // Notificar revisores (admins): notificação interna + e-mail
-      try {
-        const { data: admins } = await supabase.from('perfis').select('id').eq('papel', 'admin_polimata').eq('ativo', true)
-        if (admins && admins.length > 0) {
-          await supabase.from('notificacoes').insert(admins.map(a => ({
-            para_id: a.id, de_id: perfil?.id, tipo: 'submissao',
-            titulo: `Edição submetida — ${row.rc || row.rr}`,
-            mensagem: `${row.rc} (${row.area}) foi enviado para revisão após edição${blocosReabrir.length ? ` (${blocosReabrir.map(b => SECAO_LABEL[b] || b).join(', ')})` : ''}.`,
-            lida: false, mrc_id: row.id,
-          })))
-          admins.forEach(a => {
-            if (a.id === perfil?.id) return
-            supabase.functions.invoke('send-email', {
-              body: { type: 'review_submitted', data: { revisor_id: a.id, autor_id: perfil?.id, ref: row.rc || row.rr, descricao: row.dc || '', area_id: row.area_id } }
-            }).catch(err => console.error('Erro ao enviar email de revisão:', err))
-          })
-        }
-      } catch (e) { console.error('Notificação de revisão:', e) }
+      // Notificar revisores (admins) via edge function — consultor não enxerga
+      // a lista de admins pela RLS, então a resolução é feita no servidor.
+      supabase.functions.invoke('send-email', {
+        body: { type: 'review_submitted_admins', data: {
+          autor_id: perfil?.id, ref: row.rc || row.rr, descricao: row.dc || '',
+          area_id: row.area_id, mrc_id: row.id,
+          titulo: `Edição submetida — ${row.rc || row.rr}`,
+          mensagem: `${row.rc} (${row.area}) foi enviado para revisão após edição${blocosReabrir.length ? ` (${blocosReabrir.map(b => SECAO_LABEL[b] || b).join(', ')})` : ''}.`,
+        } }
+      }).catch(err => console.error('Erro ao notificar revisão:', err))
       logAtualizarControle(row, row.projeto_id)
       alert('✅ Alterações salvas e enviadas para revisão. Após a aprovação, será necessário baixar uma nova ficha (Ficha Pendente).')
       onSaved?.()

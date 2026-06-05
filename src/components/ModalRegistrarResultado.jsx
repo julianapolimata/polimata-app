@@ -185,32 +185,15 @@ const ModalRegistrarResultado = ({ row, onClose, onSaved, responsaveis }) => {
       if (revErr) console.error('Erro ao registrar revisão:', revErr)
 
       // Criar notificação para todos os admins
-      const { data: admins } = await supabase
-        .from('perfis')
-        .select('id')
-        .eq('papel', 'admin_polimata')
-
-      if (admins && admins.length > 0) {
-        const notifs = admins.map(a => ({
-          para_id: a.id,
-          de_id: user?.id,
-          tipo: 'submissao',
+      const faseLbl = faseAtual
+      supabase.functions.invoke('send-email', {
+        body: { type: 'review_submitted_admins', data: {
+          autor_id: user?.id, ref: row.rc || row.rr, descricao: row.dc || '',
+          area_id: row.area_id, mrc_id: row.id,
           titulo: `Análise submetida — ${row.rc || row.rr}`,
-          mensagem: `${row.rc} (${row.area}) foi submetido para revisão na fase ${faseAtual}.`,
-          lida: false,
-          mrc_id: row.id,
-        }))
-        const { error: notErr } = await supabase
-          .from('notificacoes')
-          .insert(notifs)
-        if (notErr) console.error('Erro ao criar notificação:', notErr)
-        // Enviar email para cada revisor (admin)
-        admins.forEach(a => {
-          supabase.functions.invoke('send-email', {
-            body: { type: 'review_submitted', data: { revisor_id: a.id, autor_id: user?.id, ref: row.rc || row.rr, descricao: row.dc || '', area_id: row.area_id } }
-          }).catch(err => console.error('Erro ao enviar email de revisão:', err))
-        })
-      }
+          mensagem: `${row.rc} (${row.area}) foi submetido para revisão na fase ${faseLbl}.`,
+        } }
+      }).catch(err => console.error('Erro ao notificar revisão:', err))
 
       // Audit log
       logRegistrarResultado(row, faseAtual, 'Submetido para revisão', row.projeto_id)
