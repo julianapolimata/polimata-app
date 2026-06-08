@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { formatNomeEmpresa } from '../../lib/formatNome'
 import { FASES_LABEL } from './projetos/_consts'
-import NovoProjetoForm from './projetos/NovoProjetoForm'
+import NovoProjetoWizard from './projetos/NovoProjetoWizard'
 import DetalheProjeto from './projetos/DetalheProjeto'
 
 export default function ProjetosConfig({ projetoIdInicial }) {
@@ -12,6 +12,7 @@ export default function ProjetosConfig({ projetoIdInicial }) {
   const [perfisPolimata, setPerfisPolimata] = useState([])
   const [projetos, setProjetos] = useState([])
   const [projetoSel, setProjetoSel] = useState(null)
+  const [abaInicial, setAbaInicial] = useState(null)
   const [modo, setModo] = useState(projetoIdInicial ? 'detalhe' : null)
   const [loading, setLoading] = useState(true)
 
@@ -34,7 +35,15 @@ export default function ProjetosConfig({ projetoIdInicial }) {
     setLoading(false)
   }
 
-  function fechar() { setModo(null); setProjetoSel(null); loadProjetos() }
+  function fechar() { setModo(null); setProjetoSel(null); setAbaInicial(null); loadProjetos() }
+
+  async function aoCriarProjeto(novoId) {
+    const { data: projs } = await supabase.from('projetos').select('*, clientes(id, nome, nome_fantasia)').order('nome')
+    setProjetos(projs || [])
+    const novo = (projs || []).find(x => x.id === novoId)
+    if (novo) { setProjetoSel(novo); setAbaInicial('estrutura'); setModo('detalhe') }
+    else { fechar() }
+  }
 
   if (loading) return <div className="cfg-loading"><div className="spinner" /></div>
 
@@ -72,8 +81,8 @@ export default function ProjetosConfig({ projetoIdInicial }) {
           </div>
         </>
       )}
-      {modo === 'novo' && <NovoProjetoForm clientes={clientes} perfisPolimata={perfisPolimata} onSave={fechar} onCancel={fechar} />}
-      {modo === 'detalhe' && projetoSel && <DetalheProjeto projeto={projetoSel} perfisPolimata={perfisPolimata} onBack={fechar} />}
+      {modo === 'novo' && <NovoProjetoWizard clientes={clientes} perfisPolimata={perfisPolimata} onCreated={aoCriarProjeto} onCancel={fechar} />}
+      {modo === 'detalhe' && projetoSel && <DetalheProjeto projeto={projetoSel} perfisPolimata={perfisPolimata} abaInicial={abaInicial} onBack={fechar} />}
     </div>
   )
 }

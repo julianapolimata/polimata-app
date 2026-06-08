@@ -5,13 +5,14 @@ import { formatNomeEmpresa } from '../../../lib/formatNome'
 import AbaCaracteristicas from './AbaCaracteristicas'
 import AbaEstrutura from './AbaEstrutura'
 
-function DetalheProjeto({ projeto, perfisPolimata = [], onBack }) {
+function DetalheProjeto({ projeto, perfisPolimata = [], abaInicial = null, onBack }) {
   const [dados, setDados] = useState(null)
   const [areas, setAreas] = useState([])
   const [subprocessos, setSubprocessos] = useState([])
   // responsaveis removido — gerência e resp. área já estão na Estrutura Organizacional
   const [loading, setLoading] = useState(true)
-  const [aba, setAba] = useState('caract')
+  const [aba, setAba] = useState(abaInicial || 'caract')
+  const [recemCriado] = useState(abaInicial === 'estrutura')
   const [editandoCaract, setEditandoCaract] = useState(false)
 
   const loadDados = useCallback(async () => {
@@ -46,6 +47,11 @@ function DetalheProjeto({ projeto, perfisPolimata = [], onBack }) {
         </div>
       </div>
 
+      {recemCriado && aba === 'estrutura' && (
+        <div style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.25)', borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: 12.5, color: 'var(--lt-text2)', lineHeight: 1.5 }}>
+          <strong style={{ color: '#0F766E' }}>Projeto criado!</strong> Agora cadastre as áreas (processos), seus responsáveis e subprocessos. Cada área pode ter Gerência e Responsável com e-mail para o report mensal.
+        </div>
+      )}
       <div className="cfg-tabs" style={{marginBottom:20,marginTop:16}}>
         {[
           {id:'caract', label:'Características'},
