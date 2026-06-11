@@ -42,7 +42,7 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
                 style={{
                   background: 'rgba(0,32,62,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
                   border: '1px solid rgba(204,145,94,0.18)', borderRadius: 12,
-                  padding: '11px 20px', cursor: 'pointer', transition: 'all .2s ease',
+                  padding: '8px 20px', cursor: 'pointer', transition: 'all .2s ease',
                   opacity: isAtivo ? 1 : 0.55, position: 'relative', overflow: 'hidden',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(204,145,94,0.5)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,17,44,0.45)' }}
@@ -54,9 +54,10 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {/* Eyebrow: nome do projeto */}
-                    <div style={{ fontSize: 9.5, color: 'var(--copper-soft)', textTransform: 'uppercase', letterSpacing: '1.6px', fontWeight: 600, marginBottom: 3 }}>{p.nome}</div>
+                    <div style={{ fontSize: 9.5, color: 'var(--copper-soft)', textTransform: 'uppercase', letterSpacing: '1.6px', fontWeight: 600, marginBottom: 1 }}>{p.nome}</div>
                     {/* Título: nome do cliente */}
-                    <div style={{ fontSize: 17, fontWeight: 300, color: 'var(--cream)', fontFamily: "'Raleway', sans-serif", letterSpacing: '.3px', lineHeight: 1.2 }}>{clienteNome}</div>
+                    <div style={{ fontSize: 15, fontWeight: 300, color: 'var(--cream)', fontFamily: "'Raleway', sans-serif", letterSpacing: '.3px', lineHeight: 1.15 }}>{clienteNome}</div>
+                    {r.ultimaAtividade && <div style={{ fontSize: 10.5, color: 'rgba(247,243,238,0.45)', marginTop: 2 }}>Últ. atividade: {r.ultimaAtividade}</div>}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
                     <span style={{
