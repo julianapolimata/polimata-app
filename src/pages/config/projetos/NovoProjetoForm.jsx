@@ -77,6 +77,7 @@ function NovoProjetoForm({ clientes, perfisPolimata, onSave, onCancel }) {
             <option value="ci">Controles Internos</option>
             <option value="mapeamento">Mapeamento de Processos</option>
             <option value="orcamento">Gestão Orçamentária</option>
+            <option value="planejamento">Planejamento Estratégico</option>
           </select>
         </div>
         <div className="cfg-field"><label>Descrição</label>

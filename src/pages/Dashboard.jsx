@@ -13,6 +13,7 @@ import Solicitacoes from './Solicitacoes'
 import Documentos from './Documentos'
 import Mapeamentos from './Mapeamentos'
 import Orcamento from './Orcamento'
+import Planejamento from './Planejamento'
 import Hub from './Hub'
 import { formatNomeEmpresa } from '../lib/formatNome'
 import { moduloDaRota } from '../lib/modulos'
@@ -183,15 +184,15 @@ export default function Dashboard() {
   }
   // Seletor de projetos — exibido quando nenhum projeto está selecionado
   if (!projetoAtivo && projetos.length > 0) {
-    return <ProjectSelector projetos={projetos} resumos={projetoResumos} perfil={perfil} produtoAlvo={['mapeamento', 'orcamento'].includes(modulo) ? modulo : null} onProjetoCriado={async (novoId) => {
+    return <ProjectSelector projetos={projetos} resumos={projetoResumos} perfil={perfil} produtoAlvo={['mapeamento', 'orcamento', 'planejamento'].includes(modulo) ? modulo : null} onProjetoCriado={async (novoId) => {
       const { data } = await supabase.from('projetos').select('*, clientes(nome, nome_fantasia, slug)').eq('id', novoId).single()
       if (data) {
         setProjetos(prev => [data, ...prev])
         try { localStorage.setItem('polimata_projeto_ativo_id', data.id) } catch (e) { /* segue */ }
         setProjetoAtivo(data)
-        navigate(data.produto === 'mapeamento' ? '/mapeamentos' : data.produto === 'orcamento' ? '/orcamento' : '/ci')
+        navigate(data.produto === 'mapeamento' ? '/mapeamentos' : data.produto === 'orcamento' ? '/orcamento' : data.produto === 'planejamento' ? '/planejamento' : '/ci')
       }
-    }} onSelect={p => { try { localStorage.setItem('polimata_projeto_ativo_id', p.id) } catch (e) {} ; setProjetoAtivo(p); navigate(p.produto === 'mapeamento' ? '/mapeamentos' : p.produto === 'orcamento' ? '/orcamento' : '/ci') }} signOut={signOut} onAdmin={isAdmin ? () => navigate('/admin') : null} onHub={isAdmin ? () => navigate('/') : null} />
+    }} onSelect={p => { try { localStorage.setItem('polimata_projeto_ativo_id', p.id) } catch (e) {} ; setProjetoAtivo(p); navigate(p.produto === 'mapeamento' ? '/mapeamentos' : p.produto === 'orcamento' ? '/orcamento' : p.produto === 'planejamento' ? '/planejamento' : '/ci') }} signOut={signOut} onAdmin={isAdmin ? () => navigate('/admin') : null} onHub={isAdmin ? () => navigate('/') : null} />
   }
   if (!projetoAtivo && projetos.length === 0) {
     return <NoProjeto />
@@ -268,6 +269,10 @@ export default function Dashboard() {
           {sidebarOpen && <div className="sb-sep">Gestão Orçamentária</div>}
           <SideNavItem icon="💰" label="Orçamento" active={location.pathname === '/orcamento'} onClick={() => navigate('/orcamento')} open={sidebarOpen} />
           </>)}
+          {modulo === 'planejamento' && (<>
+          {sidebarOpen && <div className="sb-sep">Planejamento Estratégico</div>}
+          <SideNavItem icon="🧭" label="Planejamento" active={location.pathname === '/planejamento'} onClick={() => navigate('/planejamento')} open={sidebarOpen} />
+          </>)}
         </nav>
         <button onClick={() => setSidebarOpen(o => !o)} style={{ background: 'transparent', border: 'none', borderTop: '1px solid var(--brd)', color: 'var(--txt3)', padding: '10px', cursor: 'pointer', fontSize: 14, textAlign: 'center' }}>
           {sidebarOpen ? '◂' : '▸'}
@@ -316,6 +321,7 @@ export default function Dashboard() {
           <Route path="/documentos" element={<Documentos projeto={projetoAtivo} />} />
           <Route path="/mapeamentos" element={<Mapeamentos projeto={projetoAtivo} />} />
           <Route path="/orcamento" element={<Orcamento projeto={projetoAtivo} />} />
+          <Route path="/planejamento" element={<Planejamento projeto={projetoAtivo} />} />
           <Route path="/configuracoes/*" element={<Configuracoes />} />
           <Route path="/importar-mrc" element={<ImportarMRC projetoId={projetoAtivo?.id} projeto={projetoAtivo} areas={areasCalc} onImported={() => { if (projetoAtivo?.id) loadDados(projetoAtivo.id) }} />} />
           <Route path="/perfil" element={<Perfil />} />

@@ -37,9 +37,9 @@ export const MODULOS = [
     nome: 'Planejamento Estratégico',
     descricao: 'Construção e monitoramento do plano estratégico.',
     icone: '🧭',
-    rota: null,
+    rota: '/planejamento',
     cor: 'var(--prod-planejamento)',
-    ativo: false, // em desenvolvimento
+    ativo: true,
   },
 ]
 
@@ -56,5 +56,6 @@ export function moduloDaRota(pathname) {
   if (pathname === '/' || pathname === '') return 'hub'
   if (pathname.startsWith('/mapeamentos')) return 'mapeamento'
   if (pathname.startsWith('/orcamento')) return 'orcamento'
+  if (pathname.startsWith('/planejamento')) return 'planejamento'
   return 'ci'
 }
