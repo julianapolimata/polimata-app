@@ -1,6 +1,7 @@
 // EditarUsuarioForm — extraído de UsuariosConfig.jsx em 22/mai/2026 (fatiamento Etapa 8).
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { MODULOS } from '../../../lib/modulos'
 import { formatNomeEmpresa } from '../../../lib/formatNome'
 import { PAPEIS } from './_consts'
 import { notificarVinculoConsultor } from '../../../lib/vinculoConsultor'
@@ -20,6 +21,7 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
   const [erro, setErro] = useState('')
 
   const u = (f, v) => setForm(p => ({ ...p, [f]: v }))
+  const [modulosSel, setModulosSel] = useState(usuario.modulos || ['ci'])
   const isConsultor = form.papel === 'consultor_polimata'
   const precisaCliente = ['gestor_cliente', 'usuario_cliente'].includes(form.papel)
   const projetosDoCliente = projetos.filter(p => p.cliente_id === clienteId)
@@ -63,6 +65,11 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
       if (isConsultor) {
         const novos = projetosSel.filter(id => !projetosOrig.includes(id))
         if (novos.length > 0) notificarVinculoConsultor(usuario.id, novos)
+      }
+      // Acesso por módulo (Sistema Polímata)
+      if (form.papel !== 'admin_polimata') {
+        const { error: errMod } = await supabase.from('perfis').update({ modulos: modulosSel }).eq('id', usuario.id)
+        if (errMod) throw new Error('Usuário salvo, mas falhou ao gravar módulos: ' + errMod.message)
       }
       onSave()
     } catch (e) { setErro(e.message); setSaving(false) }
@@ -113,6 +120,22 @@ function EditarUsuarioForm({ usuario, clientes, areas, projetos, onSave, onCance
             </div>
           )}
         </div>
+
+        {form.papel !== 'admin_polimata' && (
+          <div className="cfg-field">
+            <label>Módulos do Sistema Polímata</label>
+            <div className="areas-check-grid">
+              {MODULOS.filter(m => m.ativo).map(m => (
+                <label key={m.id} className="area-check">
+                  <input type="checkbox" checked={modulosSel.includes(m.id)}
+                    onChange={() => setModulosSel(prev => prev.includes(m.id) ? prev.filter(x => x !== m.id) : [...prev, m.id])} />
+                  <span>{m.icone} {m.nome}</span>
+                </label>
+              ))}
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 4 }}>Administradores Polímata têm acesso a todos os módulos.</div>
+          </div>
+        )}
 
         {isConsultor && (
           <>

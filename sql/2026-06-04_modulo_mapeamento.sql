@@ -1,0 +1,4 @@
+-- Módulo Mapeamento de Processos — aplicado via Supabase MCP em 04/06/2026
+-- Tabela mapeamentos + RLS (Polímata only) + bucket 'mapeamentos' (privado)
+-- Registro para histórico; já aplicado no projeto iqtkpyrpwxypwcwrhulx.
+-- Conteúdo idêntico à migration 'modulo_mapeamento_processos'.

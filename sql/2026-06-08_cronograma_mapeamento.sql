@@ -1,0 +1,8 @@
+-- Cronograma do Mapeamento de Processos — aplicado via Supabase MCP em 08/06/2026
+-- Migration: cronograma_mapeamento_etapas_aprovacoes (projeto iqtkpyrpwxypwcwrhulx)
+--  · mapeamentos.etapa (text, default 'producao') + mapeamentos.marcos (jsonb)
+--  · tabela mapeamento_aprovacoes (log) + RLS de SELECT por projeto
+--  · SELECT de mapeamentos liberado ao cliente do projeto (padrão areas/mrc/projetos)
+--  · função SECURITY DEFINER mapeamento_registrar_aprovacao(id, acao, comentario)
+--    acoes: enviar_aprovacao | aprovar | solicitar_ajustes | voltar_producao
+-- Conteúdo idêntico ao aplicado no banco; registrado aqui para histórico.
