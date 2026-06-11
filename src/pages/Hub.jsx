@@ -22,7 +22,7 @@ function IconeModulo({ id }) {
   )
 }
 
-export default function Hub() {
+export default function Hub({ onProjetos }) {
   const { perfil, signOut } = useAuth()
   const navigate = useNavigate()
   const meus = modulosDoPerfil(perfil)
@@ -34,7 +34,15 @@ export default function Hub() {
     <div style={{ height: '100vh', overflowY: 'auto', background: 'var(--bg0, #00112C)', fontFamily: 'Montserrat', display: 'flex', flexDirection: 'column' }}>
       {/* Topo */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 36px', borderBottom: '1px solid rgba(243,238,228,0.08)' }}>
-        <img src="/logotipo-2cores.png" alt="Polímata" style={{ height: 40, objectFit: 'contain' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+          <img src="/logotipo-2cores.png" alt="Polímata" style={{ height: 40, objectFit: 'contain' }} />
+          {onProjetos && (
+            <button onClick={onProjetos} title="Voltar para projetos" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(204,145,94,0.10)', border: '1px solid rgba(204,145,94,0.3)', color: '#CC915E', borderRadius: 8, padding: '8px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Montserrat' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              Projetos
+            </button>
+          )}
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 12, color: 'var(--cream, #F3EEE4)', fontWeight: 500 }}>{perfil?.nome}</div>

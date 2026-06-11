@@ -178,7 +178,7 @@ export default function Dashboard() {
   }
   // Hub de produtos — porta de entrada do Sistema Polímata
   if (modulo === 'hub') {
-    return <Hub />
+    return <Hub onProjetos={() => { try { localStorage.removeItem('polimata_projeto_ativo_id') } catch (e) {} ; setProjetoAtivo(null); navigate('/ci') }} />
   }
   // Seletor de projetos — exibido quando nenhum projeto está selecionado
   if (!projetoAtivo && projetos.length > 0) {
