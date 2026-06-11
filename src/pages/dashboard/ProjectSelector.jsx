@@ -16,9 +16,9 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
       <div style={{ flex: 1, width: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 20px', position: 'relative', zIndex: 1 }}>
 
       <div style={{ width: '100%', maxWidth: 720, margin: 'auto 0' }}>
-        <div style={{ textAlign: 'center', marginBottom: 44 }}>
-          <img src="/logotipo-2cores.png" alt="Polímata GRC" style={{ height: 64, marginBottom: 28, objectFit: 'contain' }} />
-          <h1 style={{ fontSize: 26, fontWeight: 200, color: 'var(--cream)', fontFamily: "'Raleway', sans-serif", letterSpacing: '.5px', margin: '0 0 8px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <img src="/logotipo-2cores.png" alt="Polímata GRC" style={{ height: 46, marginBottom: 14, objectFit: 'contain' }} />
+          <h1 style={{ fontSize: 21, fontWeight: 200, color: 'var(--cream)', fontFamily: "'Raleway', sans-serif", letterSpacing: '.5px', margin: '0 0 6px' }}>
             Selecione um projeto
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(247,243,238,0.55)', margin: 0 }}>
@@ -26,7 +26,7 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {projetos.map(p => {
             const r = resumos[p.id] || {}
             const clienteNome = formatNomeEmpresa(p.clientes?.nome_fantasia || p.clientes?.nome) || '—'
@@ -40,8 +40,8 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
                 onClick={() => onSelect(p)}
                 style={{
                   background: 'rgba(0,32,62,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(204,145,94,0.18)', borderRadius: 14,
-                  padding: '22px 26px', cursor: 'pointer', transition: 'all .2s ease',
+                  border: '1px solid rgba(204,145,94,0.18)', borderRadius: 12,
+                  padding: '13px 22px', cursor: 'pointer', transition: 'all .2s ease',
                   opacity: isAtivo ? 1 : 0.55, position: 'relative', overflow: 'hidden',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(204,145,94,0.5)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,17,44,0.45)' }}
@@ -50,12 +50,12 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
                 {/* Linha de cor da maturidade no topo */}
                 {matColor && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${matColor} 0%, ${matColor}88 60%, transparent 100%)` }} />}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 6 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {/* Eyebrow: nome do projeto */}
-                    <div style={{ fontSize: 10, color: 'var(--copper-soft)', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 600, marginBottom: 6 }}>{p.nome}</div>
+                    <div style={{ fontSize: 9.5, color: 'var(--copper-soft)', textTransform: 'uppercase', letterSpacing: '1.6px', fontWeight: 600, marginBottom: 3 }}>{p.nome}</div>
                     {/* Título: nome do cliente */}
-                    <div style={{ fontSize: 22, fontWeight: 200, color: 'var(--cream)', fontFamily: "'Raleway', sans-serif", letterSpacing: '.3px', lineHeight: 1.2 }}>{clienteNome}</div>
+                    <div style={{ fontSize: 17, fontWeight: 300, color: 'var(--cream)', fontFamily: "'Raleway', sans-serif", letterSpacing: '.3px', lineHeight: 1.2 }}>{clienteNome}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
                     <span style={{
@@ -85,7 +85,7 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 22, fontSize: 11, color: 'rgba(247,243,238,0.55)', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'rgba(247,243,238,0.55)', flexWrap: 'wrap', alignItems: 'center' }}>
                   <span><strong style={{ color: 'var(--cream)', fontWeight: 500 }}>{r.totalControles ?? '—'}</strong> controles</span>
                   <span><strong style={{ color: 'var(--cream)', fontWeight: 500 }}>{r.totalAreas ?? '—'}</strong> áreas</span>
                   {mat && !isDiagP && <span>Maturidade <strong style={{ color: matColor, fontWeight: 600 }}>{mat.nome}</strong></span>}
