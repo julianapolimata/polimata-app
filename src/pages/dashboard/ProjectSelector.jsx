@@ -42,7 +42,7 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
                 style={{
                   background: 'rgba(0,32,62,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
                   border: '1px solid rgba(204,145,94,0.18)', borderRadius: 12,
-                  padding: '13px 22px', cursor: 'pointer', transition: 'all .2s ease',
+                  padding: '11px 20px', cursor: 'pointer', transition: 'all .2s ease',
                   opacity: isAtivo ? 1 : 0.55, position: 'relative', overflow: 'hidden',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(204,145,94,0.5)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,17,44,0.45)' }}
@@ -51,7 +51,7 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
                 {/* Linha de cor da maturidade no topo */}
                 {matColor && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${matColor} 0%, ${matColor}88 60%, transparent 100%)` }} />}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {/* Eyebrow: nome do projeto */}
                     <div style={{ fontSize: 9.5, color: 'var(--copper-soft)', textTransform: 'uppercase', letterSpacing: '1.6px', fontWeight: 600, marginBottom: 3 }}>{p.nome}</div>
@@ -94,23 +94,6 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'rgba(247,243,238,0.55)', flexWrap: 'wrap', alignItems: 'center' }}>
-                  {isMap ? (
-                  <span>Entrevistas gravadas → POP, fluxograma BPMN e matriz de riscos</span>
-                  ) : (<>
-                  <span><strong style={{ color: 'var(--cream)', fontWeight: 500 }}>{r.totalControles ?? '—'}</strong> controles</span>
-                  <span><strong style={{ color: 'var(--cream)', fontWeight: 500 }}>{r.totalAreas ?? '—'}</strong> áreas</span>
-                  {mat && !isDiagP && <span>Maturidade <strong style={{ color: matColor, fontWeight: 600 }}>{mat.nome}</strong></span>}
-                  {isDiagP && r.diagnostico && (
-                    <>
-                      <span><strong style={{ color: '#22C55E', fontWeight: 600 }}>{r.diagnostico.existentes}</strong> Existentes</span>
-                      <span><strong style={{ color: '#FACC15', fontWeight: 600 }}>{r.diagnostico.parciais}</strong> Parciais</span>
-                      <span><strong style={{ color: '#EF4444', fontWeight: 600 }}>{r.diagnostico.inexistentes}</strong> Inexistentes</span>
-                    </>
-                  )}
-                  {r.ultimaAtividade && <span>Últ. atividade: <strong style={{ color: 'var(--cream)', fontWeight: 500 }}>{r.ultimaAtividade}</strong></span>}
-                  </>)}
-                </div>
               </div>
             )
           })}
