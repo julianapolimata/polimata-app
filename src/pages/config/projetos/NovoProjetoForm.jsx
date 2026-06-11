@@ -76,6 +76,7 @@ function NovoProjetoForm({ clientes, perfisPolimata, onSave, onCancel }) {
           <select className="input-light" value={form.produto} onChange={e=>u('produto',e.target.value)}>
             <option value="ci">Controles Internos</option>
             <option value="mapeamento">Mapeamento de Processos</option>
+            <option value="orcamento">Gestão Orçamentária</option>
           </select>
         </div>
         <div className="cfg-field"><label>Descrição</label>

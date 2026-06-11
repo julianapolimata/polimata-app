@@ -25,12 +25,12 @@ export const MODULOS = [
   },
   {
     id: 'orcamento',
-    nome: 'Orçamento',
-    descricao: 'Planejamento e acompanhamento orçamentário.',
+    nome: 'Gestão Orçamentária',
+    descricao: 'Histórico, orçado, realizado e análise de desvios por categoria.',
     icone: '💰',
-    rota: null,
+    rota: '/orcamento',
     cor: 'var(--prod-orcamento)',
-    ativo: false, // em desenvolvimento
+    ativo: true,
   },
   {
     id: 'planejamento',
@@ -55,5 +55,6 @@ export function modulosDoPerfil(perfil) {
 export function moduloDaRota(pathname) {
   if (pathname === '/' || pathname === '') return 'hub'
   if (pathname.startsWith('/mapeamentos')) return 'mapeamento'
+  if (pathname.startsWith('/orcamento')) return 'orcamento'
   return 'ci'
 }
