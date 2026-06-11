@@ -8,12 +8,14 @@ import { papelLabel } from './_shared'
 export default function ProjectSelector({ projetos, resumos, perfil, onSelect, signOut, onAdmin }) {
   const nome = perfil?.nome?.split(' ')[0] || ''
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(145deg, #00112C 0%, #00203E 60%, #1D3B5C 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ height: '100vh', background: 'linear-gradient(145deg, #00112C 0%, #00203E 60%, #1D3B5C 100%)', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
       {/* Accent radial sutil — eco do login */}
       <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '60%', height: '140%', background: 'radial-gradient(ellipse at center, rgba(204,145,94,0.10) 0%, transparent 55%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '-30%', left: '-10%', width: '50%', height: '100%', background: 'radial-gradient(ellipse at center, rgba(91,143,249,0.06) 0%, transparent 55%)', pointerEvents: 'none' }} />
 
-      <div style={{ width: '100%', maxWidth: 720, position: 'relative', zIndex: 1 }}>
+      <div style={{ flex: 1, width: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 20px', position: 'relative', zIndex: 1 }}>
+
+      <div style={{ width: '100%', maxWidth: 720, margin: 'auto 0' }}>
         <div style={{ textAlign: 'center', marginBottom: 44 }}>
           <img src="/logotipo-2cores.png" alt="Polímata GRC" style={{ height: 64, marginBottom: 28, objectFit: 'contain' }} />
           <h1 style={{ fontSize: 26, fontWeight: 200, color: 'var(--cream)', fontFamily: "'Raleway', sans-serif", letterSpacing: '.5px', margin: '0 0 8px' }}>
@@ -124,6 +126,7 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
