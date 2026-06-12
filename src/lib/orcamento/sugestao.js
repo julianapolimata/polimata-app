@@ -7,7 +7,7 @@
 
 export const METODOS = [
   { id: 'repeticao',    nome: 'Repetição',         desc: 'Repete mês a mês o realizado do ano anterior.' },
-  { id: 'media_movel',  nome: 'Média móvel',        desc: 'Média dos últimos 3 meses com dado, aplicada a todos os meses.' },
+  { id: 'media_movel',  nome: 'Média móvel',        desc: 'Média dos últimos 3, 6 ou 12 meses com dado, aplicada a todos os meses.' },
   { id: 'tendencia',    nome: 'Tendência linear',   desc: 'Regressão linear sobre o histórico, projetada para 12 meses.' },
   { id: 'sazonalidade', nome: 'Sazonalidade',       desc: 'Média por mês dos últimos 2 anos, preservando o padrão sazonal.' },
   { id: 'indice',       nome: 'Inflação/índice',    desc: 'Ano anterior corrigido por um índice percentual (ex.: IPCA).' },
@@ -27,9 +27,10 @@ export function sugerir(metodo, serieAnoAnterior, serieDoisAnosAtras, opts = {})
     case 'repeticao':
       return s1.map(v => r2(v || 0))
     case 'media_movel': {
-      const dados = mesesComDado(s1)
-      const ult3 = dados.slice(-3).map(x => x.v)
-      const media = ult3.length ? ult3.reduce((a, b) => a + b, 0) / ult3.length : 0
+      const janela = Number(opts.janela) || 3
+      const dados = [...mesesComDado(s2), ...mesesComDado(s1)]
+      const ult = dados.slice(-janela).map(x => x.v)
+      const media = ult.length ? ult.reduce((a, b) => a + b, 0) / ult.length : 0
       return Array(12).fill(r2(media))
     }
     case 'tendencia': {

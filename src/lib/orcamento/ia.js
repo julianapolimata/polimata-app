@@ -1,0 +1,27 @@
+// ia.js — chamadas à Edge Function orcamento-ia (Claude)
+import { supabase } from '../supabase'
+
+async function chamar(payload) {
+  const { data, error } = await supabase.functions.invoke('orcamento-ia', { body: payload })
+  if (error) throw new Error('IA indisponível: ' + error.message)
+  if (data?.erro) throw new Error(data.erro)
+  return data
+}
+
+/** Sugere categoria gerencial para contas do ERP. contas: [{conta_erp, descricao_erp, total}] */
+export async function iaCategorizar(contas, categorias) {
+  const r = await chamar({ acao: 'categorizar', contas, categorias })
+  return r.mapeamentos || []
+}
+
+/** Sugestão orçamentária híbrida. series: [{categoria, tipo, serie_ano_anterior, serie_2_anos, contexto}] */
+export async function iaSugerir(series, ano, indices, observacoes) {
+  const r = await chamar({ acao: 'sugerir', series, ano, indices, observacoes })
+  return r.sugestoes || []
+}
+
+/** Insight executivo curto. tipo: 'desvios' | 'cenarios' */
+export async function iaInsight(tipo, dados) {
+  const r = await chamar({ acao: 'insight', tipo, dados })
+  return r.insight || ''
+}

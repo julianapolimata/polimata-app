@@ -1,0 +1,6 @@
+-- Orçamento v2 — aplicado via Supabase MCP em 11/06/2026
+-- Migrations 'modulo_orcamento_v2_cc_cenarios_ia' e 'orcamento_status_em_aprovacao'.
+-- orc_centros_custo (hierárquico) + RLS; centro_custo_id/conta_erp em orc_realizado;
+-- sugerido/justificativa_ia/confianca/status_revisao em orc_orcamento_itens;
+-- grupo/subcategoria/em_escopo/confianca_ia em orc_contas_mapa;
+-- status 'em_aprovacao' em orc_orcamentos; escrita de orc_indices p/ consultor.
