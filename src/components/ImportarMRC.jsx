@@ -21,12 +21,13 @@ const COL_MAP = {
 }
 
 // Mapeamento para template diagnóstico (TEMPLATE_COLS_DIAG em templateMRC.js)
-// Sem colunas de teste: tem Cenário Atual (15) + Existência (16) no lugar de
-// passos_f1/r1. Com isso imp/prob/crit (19/20/21) ficam alinhados ao template padrão.
+// Sem colunas de teste. Cenário Atual (5) fica entre Subprocesso e Ref. Risco,
+// então rr..chave deslocam +1; existencia(16)/imp(19)/prob(20)/crit(21) seguem
+// alinhados ao template padrão.
 const COL_MAP_DIAG = {
-  0: 'dt_ult', 1: 'ger', 2: 'resp_sub', 4: 'sub', 5: 'rr', 6: 'dr',
-  7: 'rc', 8: 'dc', 9: 'cat', 10: 'freq', 11: 'nat', 12: 'car',
-  13: 'sis', 14: 'chave', 15: 'cenario_atual', 16: 'existencia', 17: 'incons', 18: 'rec',
+  0: 'dt_ult', 1: 'ger', 2: 'resp_sub', 4: 'sub', 5: 'cenario_atual', 6: 'rr', 7: 'dr',
+  8: 'rc', 9: 'dc', 10: 'cat', 11: 'freq', 12: 'nat', 13: 'car',
+  14: 'sis', 15: 'chave', 16: 'existencia', 17: 'incons', 18: 'rec',
   19: 'imp', 20: 'prob', 21: 'crit_label', 22: 'dt_implementacao',
 }
 
@@ -302,6 +303,7 @@ export default function ImportarMRC({ projetoId, projeto, areas, onImported, all
   const label = { fontSize: 11, fontWeight: 600, color: 'var(--lt-text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }
   const selectS = { width: '100%', maxWidth: 400, padding: '8px 12px', borderRadius: 6, border: '1px solid var(--lt-border)', fontFamily: 'inherit', fontSize: 12, color: 'var(--lt-text)', background: 'var(--lt-bg)', cursor: 'pointer' }
   const inputS = { ...selectS, maxWidth: 200 }
+  const isDiagPrev = projeto?.f1_tem_teste === false
 
   return (
     <div style={{ padding: '20px 28px', maxWidth: 1100, fontFamily: "'Montserrat', sans-serif" }}>
@@ -429,8 +431,8 @@ export default function ImportarMRC({ projetoId, projeto, areas, onImported, all
                   {preview.rows.slice(0, 20).map((row, i) => (
                     <tr key={i} style={{ background: i % 2 ? 'rgba(0,32,62,0.02)' : 'transparent' }}>
                       <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--lt-border)', color: 'var(--lt-text3)', fontSize: 11 }}>{i + 1}</td>
-                      <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--lt-border)', color: 'var(--copper)', fontWeight: 600, fontSize: 11 }}>{row[5] || '—'}</td>
-                      <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--lt-border)', color: 'var(--copper)', fontWeight: 600, fontSize: 11 }}>{row[7] || '—'}</td>
+                      <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--lt-border)', color: 'var(--copper)', fontWeight: 600, fontSize: 11 }}>{row[isDiagPrev ? 6 : 5] || '—'}</td>
+                      <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--lt-border)', color: 'var(--copper)', fontWeight: 600, fontSize: 11 }}>{row[isDiagPrev ? 8 : 7] || '—'}</td>
                       <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--lt-border)', color: 'var(--lt-text2)', fontSize: 11 }}>{row[PREVIEW_COL_PROCESSO] || '—'}</td>
                       <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--lt-border)', color: 'var(--lt-text2)', fontSize: 11 }}>{row[4] || '—'}</td>
                       <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--lt-border)', color: 'var(--lt-text2)', fontSize: 11 }}>{row[16] || row[15] || '—'}</td>
