@@ -63,19 +63,23 @@ export function montarWorkbookPlanoContas({ linhas = null } = {}) {
     ws.getCell(`F${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`"${TIPO_OPCOES.join(',')}"`] }
   }
 
-  // ---- aba instruções ----
+  // ---- aba instruções (mesma identidade visual: Montserrat) ----
   const wi = wb.addWorksheet('Instruções')
   wi.getColumn(1).width = 26; wi.getColumn(2).width = 95
   const t = wi.getCell('A1'); t.value = 'Template — Plano de Contas (Gestão Orçamentária · Sistema Polímata)'
   t.font = { name: 'Montserrat', bold: true, size: 13, color: { argb: 'FF' + NAVY } }
   wi.addRow([])
-  wi.addRow(['Como usar', 'Preencha a aba "Plano de Contas" adaptando o plano do seu cliente a estas colunas fixas. Não altere os nomes das colunas. Depois importe este arquivo no sistema: Gestão Orçamentária → Plano de Contas → Importar Plano de Contas.'])
+  const cu = wi.addRow(['Como usar', 'Preencha a aba "Plano de Contas" adaptando o plano do seu cliente a estas colunas fixas. Não altere os nomes das colunas. Depois importe este arquivo no sistema: Gestão Orçamentária → Plano de Contas → Importar Plano de Contas.'])
+  cu.getCell(1).font = { name: 'Montserrat', bold: true, size: 10, color: { argb: 'FF' + NAVY } }
+  cu.getCell(2).font = BODY_FONT
+  cu.getCell(2).alignment = { wrapText: true, vertical: 'top' }
   wi.addRow([])
   const hc = wi.addRow(['Coluna', 'Regra'])
-  hc.eachCell(cell => { cell.font = { bold: true, color: { argb: 'FF' + NAVY } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CREME } } })
+  hc.eachCell(cell => { cell.font = { name: 'Montserrat', bold: true, size: 10, color: { argb: 'FF' + NAVY } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CREME } } })
   COLS_PLANO.forEach(c => {
     const r = wi.addRow([c.header, c.hint])
-    r.getCell(1).font = { bold: true }
+    r.getCell(1).font = { name: 'Montserrat', bold: true, size: 10, color: { argb: 'FF333333' } }
+    r.getCell(2).font = BODY_FONT
     r.getCell(2).alignment = { wrapText: true, vertical: 'top' }
   })
   return wb
