@@ -29,15 +29,6 @@ export default function Importar({ projeto }) {
       const { data: mapa } = await supabase.from('orc_contas_mapa').select('conta_erp, categoria_id, em_escopo').eq('projeto_id', projeto.id)
       const byConta = new Map((mapa || []).map(m => [String(m.conta_erp), m]))
 
-      // agrega por (conta, competência)
-      const aggMap = new Map()
-      parse.linhas.forEach(l => {
-        const k = l.codigo + '|' + l.competencia
-        const a = aggMap.get(k) || { codigo: l.codigo, competencia: l.competencia, valor: 0, n: 0, detalhe: l.descricao }
-        a.valor += l.valor; a.n++; aggMap.set(k, a)
-      })
-      const aggs = [...aggMap.values()]
-
       // classifica cada conta distinta
       const naoEnc = new Set(), semCat = new Set(), foraEsc = new Set(), ok = new Set()
       for (const codigo of new Set(parse.linhas.map(l => l.codigo))) {
@@ -47,9 +38,10 @@ export default function Importar({ projeto }) {
         else if (!m.categoria_id) semCat.add(codigo)
         else ok.add(codigo)
       }
-      const gravaveis = aggs.filter(a => ok.has(a.codigo)).map(a => ({ ...a, categoria_id: byConta.get(a.codigo).categoria_id }))
+      // grava 1 registro por lançamento (preserva tipo/parceiro/documento)
+      const gravaveis = parse.linhas.filter(l => ok.has(l.codigo)).map(l => ({ ...l, categoria_id: byConta.get(l.codigo).categoria_id }))
       setPrev({ parse, gravaveis, naoEnc: [...naoEnc], semCat: [...semCat], foraEsc: [...foraEsc],
-        somaGrava: gravaveis.reduce((s, a) => s + a.valor, 0) })
+        somaGrava: gravaveis.reduce((s, l) => s + l.valor, 0) })
       setArquivo(file.name)
     } catch (e) { d.setErro(e.message) } finally { setProcessando(false) }
   }
@@ -66,10 +58,11 @@ export default function Importar({ projeto }) {
       if (e1) throw e1
       // substitui realizado importado dos meses afetados
       await supabase.from('orc_realizado').delete().eq('projeto_id', projeto.id).eq('origem', 'import').in('competencia', comps)
-      const rows = prev.gravaveis.map(a => ({
-        projeto_id: projeto.id, categoria_id: a.categoria_id, competencia: a.competencia,
-        valor: Math.round(a.valor * 100) / 100, origem: 'import', importacao_id: imp.id,
-        conta_erp: a.codigo, detalhe: a.detalhe,
+      const rows = prev.gravaveis.map(l => ({
+        projeto_id: projeto.id, categoria_id: l.categoria_id, competencia: l.competencia,
+        valor: Math.round(l.valor * 100) / 100, origem: 'import', importacao_id: imp.id,
+        conta_erp: l.codigo, detalhe: l.descricao,
+        tipo_mov: l.tipo || null, parceiro: l.parceiro || null, documento: l.documento || null,
       }))
       const { error: e2 } = await supabase.from('orc_realizado').insert(rows)
       if (e2) throw e2
@@ -126,7 +119,7 @@ export default function Importar({ projeto }) {
       {prev && (
         <>
           <KPIGrid>
-            <KPICard label="Vão gravar" value={fmtBRL(prev.somaGrava)} tone="success" delta={`${prev.gravaveis.length} conta×mês`} />
+            <KPICard label="Vão gravar" value={fmtBRL(prev.somaGrava)} tone="success" delta={`${prev.gravaveis.length} lançamentos`} />
             <KPICard label="Meses no arquivo" value={meses.length} delta={meses.map(([c]) => compLabel(c)).join(' · ')} />
             <KPICard label="Sem categoria" value={prev.semCat.length + ' ⚠'} tone={prev.semCat.length ? 'warning' : null} delta="categorize no Plano de Contas" />
             <KPICard label="Fora do plano" value={prev.naoEnc.length + ' ✗'} tone={prev.naoEnc.length ? 'danger' : null} delta="contas ausentes no plano" />

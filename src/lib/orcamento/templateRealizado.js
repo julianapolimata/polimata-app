@@ -22,14 +22,22 @@ export const COLS_REALIZADO = [
     hint: 'OBRIGATÓRIO. Data de competência do lançamento (DD/MM/AAAA). Define o mês do realizado. Cada linha pode ser de um mês diferente.' },
   { header: 'Valor', key: 'valor', width: 16, obrig: true,
     hint: 'OBRIGATÓRIO. Valor JÁ RATEADO na conta (não o valor cheio do título quando ele é dividido entre contas). Use ponto/vírgula conforme o Excel.' },
+  { header: 'Tipo', key: 'tipo', width: 12, obrig: false,
+    hint: 'Opcional. Direção do lançamento: Pagar ou Receber.' },
+  { header: 'Nome', key: 'parceiro', width: 30, obrig: false,
+    hint: 'Opcional. Nome do cliente ou fornecedor (parceiro de negócio).' },
+  { header: 'Número do Documento', key: 'documento', width: 22, obrig: false,
+    hint: 'Opcional. Número do documento (NF, título, boleto).' },
   { header: 'Descrição', key: 'descricao', width: 50, obrig: false,
     hint: 'Opcional. Histórico/descrição do lançamento — ajuda a rastrear.' },
 ]
 
+export const TIPO_MOV_OPCOES = ['Pagar', 'Receber']
+
 const EXEMPLOS = [
-  ['11.01.003.001.008', '12/02/2026', 888.67, 'NFE 33130 - Vidros e espelhos (parc. 1/3)'],
-  ['44.01.001.001.003', '03/02/2026', 2619.44, 'NF 17531 - Materiais para lustração'],
-  ['51.01.002', '05/02/2026', 12500.00, 'Folha de salários - Fevereiro'],
+  ['11.01.003.001.008', '12/02/2026', 888.67, 'Pagar', 'JRMAC', 'NFE 33130', 'Vidros e espelhos (parc. 1/3)'],
+  ['44.01.001.001.003', '03/02/2026', 2619.44, 'Pagar', 'MILESI', 'NF 17531', 'Materiais para lustração'],
+  ['41.01.001', '20/02/2026', 38000.00, 'Receber', 'Cliente Exemplo Ltda', 'NF 1234', 'Venda de mobília sob medida'],
 ]
 
 const canon = (s) => String(s ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -49,6 +57,10 @@ export function montarWorkbookRealizado({ linhas = null } = {}) {
     r.eachCell(cell => { cell.font = BODY_FONT; cell.border = BORDER; cell.alignment = { vertical: 'middle' } })
     r.getCell(3).numFmt = '#,##0.00'
   })
+  // dropdown de Tipo (coluna D) até 2000 linhas
+  for (let i = 2; i <= 2000; i++) {
+    ws.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: ['"Pagar,Receber"'] }
+  }
 
   // aba instruções (identidade Polímata: Montserrat)
   const wi = wb.addWorksheet('Instruções')
@@ -135,7 +147,11 @@ export async function parseRealizado(file) {
     if (probs.length) { erros.push({ linha: n, msg: 'inválido/ausente: ' + probs.join(', ') }); return }
     const comp = competenciaDe(dt)
     const abs = Math.round(Math.abs(valor) * 100) / 100
-    linhas.push({ linha: n, codigo, competencia: comp, valor: abs, descricao: txt(cellVal(row, 'descricao')) || null })
+    const tipoRaw = canon(txt(cellVal(row, 'tipo')))
+    const tipo = tipoRaw.startsWith('receb') ? 'Receber' : tipoRaw.startsWith('pag') ? 'Pagar' : null
+    linhas.push({ linha: n, codigo, competencia: comp, valor: abs,
+      tipo, parceiro: txt(cellVal(row, 'parceiro')) || null, documento: txt(cellVal(row, 'documento')) || null,
+      descricao: txt(cellVal(row, 'descricao')) || null })
     contas.add(codigo)
     meses[comp] = meses[comp] || { qtd: 0, soma: 0 }
     meses[comp].qtd++; meses[comp].soma += abs
