@@ -122,12 +122,16 @@ const FASE_TERMINAL = {
 
 // Fase atual respeitando o escopo do projeto (num_fases). A última fase do escopo
 // é terminal: um controle não avança para fora do que foi contratado.
-export function getFaseInfo(c, numFases) {
-  const info = faseInfoRaw(c)
+export function getFaseInfo(c, numFases, comTeste) {
+  let info = faseInfoRaw(c)
   const nf = Number(numFases)
   if (c && nf >= 1 && nf < 5 && info.numero > nf) {
     const t = FASE_TERMINAL[nf]
-    return { codigo: t.codigo, numero: t.numero, nome: t.nome, label: t.label, cor: t.cor, resultado: c[t.campo] || '—', concluida: true }
+    info = { codigo: t.codigo, numero: t.numero, nome: t.nome, label: t.label, cor: t.cor, resultado: c[t.campo] || '—', concluida: true }
+  }
+  // Projeto com teste na F1: a fase F1 é o Teste de Efetividade (não só Diagnóstico).
+  if (comTeste === true && info.codigo === 'F1') {
+    info = { ...info, nome: 'Teste de Efetividade', label: 'F1 — Teste de Efetividade' }
   }
   return info
 }
@@ -167,8 +171,8 @@ export function getCategoriaRecomendacao(c, projeto) {
  * @param {Object} c - registro da MRC
  * @returns {string} nome da fase
  */
-export function getFaseAtual(c, numFases) {
-  return getFaseInfo(c, numFases).nome
+export function getFaseAtual(c, numFases, comTeste) {
+  return getFaseInfo(c, numFases, comTeste).nome
 }
 
 /**
@@ -176,8 +180,8 @@ export function getFaseAtual(c, numFases) {
  * @param {Object} c - registro da MRC
  * @returns {string} label da fase (ex: "F3 — Revisão Integral")
  */
-export function getFaseLabel(c, numFases) {
-  return getFaseInfo(c, numFases).label
+export function getFaseLabel(c, numFases, comTeste) {
+  return getFaseInfo(c, numFases, comTeste).label
 }
 
 /**
@@ -185,8 +189,8 @@ export function getFaseLabel(c, numFases) {
  * @param {Object} c - registro da MRC
  * @returns {number} número da fase
  */
-export function getFaseNumero(c, numFases) {
-  return getFaseInfo(c, numFases).numero
+export function getFaseNumero(c, numFases, comTeste) {
+  return getFaseInfo(c, numFases, comTeste).numero
 }
 
 /**
