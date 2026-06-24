@@ -62,16 +62,22 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
         </div>
 
         {moduloAlvo && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, padding: '4px 14px', borderRadius: 999, background: `color-mix(in srgb, ${moduloAlvo.cor} 18%, transparent)`, color: moduloAlvo.cor, border: `1px solid color-mix(in srgb, ${moduloAlvo.cor} 45%, transparent)` }}>
-              {moduloAlvo.icone} {moduloAlvo.nome}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 30, boxSizing: 'border-box', padding: '0 14px', borderRadius: 999, background: 'rgba(255,255,255,0.04)', color: 'var(--cream)', fontSize: 11, fontWeight: 600, letterSpacing: 0.2, border: '1px solid rgba(204,145,94,0.28)' }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: moduloAlvo.cor, flexShrink: 0 }} />
+              {moduloAlvo.nome}
             </span>
-            <button onClick={() => setVerTodos(v => !v)} style={{ background: 'none', border: 'none', color: 'rgba(247,243,238,0.55)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>
-              {verTodos ? `Só ${moduloAlvo.nome}` : 'Ver todos os projetos'}
+            <button onClick={() => setVerTodos(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', height: 30, boxSizing: 'border-box', padding: '0 14px', borderRadius: 999, background: 'transparent', border: '1px solid rgba(204,145,94,0.25)', color: 'rgba(247,243,238,0.7)', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color .15s, color .15s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(204,145,94,0.55)'; e.currentTarget.style.color = 'var(--cream)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(204,145,94,0.25)'; e.currentTarget.style.color = 'rgba(247,243,238,0.7)' }}>
+              {verTodos ? `Só ${moduloAlvo.nome}` : 'Ver todos'}
             </button>
             {isAdmin && onProjetoCriado && (
-              <button onClick={() => setNovoOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `color-mix(in srgb, ${moduloAlvo.cor} 14%, transparent)`, border: `1px solid color-mix(in srgb, ${moduloAlvo.cor} 45%, transparent)`, color: moduloAlvo.cor, borderRadius: 8, padding: '5px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                + Novo projeto de {moduloAlvo.nome}
+              <button onClick={() => setNovoOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, boxSizing: 'border-box', padding: '0 14px', borderRadius: 999, background: 'rgba(204,145,94,0.12)', border: '1px solid rgba(204,145,94,0.4)', color: 'var(--copper)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(204,145,94,0.2)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(204,145,94,0.12)' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Novo projeto
               </button>
             )}
           </div>

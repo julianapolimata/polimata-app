@@ -63,7 +63,8 @@ export default function Hub({ onProjetos }) {
       </div>
 
       {/* Cards */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, justifyContent: 'center', padding: '48px 36px', maxWidth: larguraHub, margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 36px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, justifyContent: 'center', width: larguraHub, maxWidth: '100%' }}>
         {visiveis.map(m => (
           <button key={m.id} onClick={() => m.ativo && navigate(m.rota)} disabled={!m.ativo}
             style={{
@@ -84,6 +85,7 @@ export default function Hub({ onProjetos }) {
             </div>
           </button>
         ))}
+        </div>
       </div>
 
       <div style={{ marginTop: 'auto', textAlign: 'center', padding: 22, fontSize: 10, color: 'rgba(243,238,228,0.3)' }}>
