@@ -59,6 +59,7 @@ export default function Dashboard() {
   const [todosControles, setTodosControles] = useState([])
   const [loading, setLoading] = useState(true)
   const [areaExpanded, setAreaExpanded] = useState(true)
+  const [simularCliente, setSimularCliente] = useState(false)  // admin pré-visualiza a visão do cliente
 
   useEffect(() => {
     if (!perfil) return
@@ -177,13 +178,13 @@ export default function Dashboard() {
       navigate(ROTA_BASE_MODULO[modProjeto], { replace: true })
       return
     }
-    // Cliente de orçamento: acesso só às telas de consulta
-    const isCli = ['usuario_cliente', 'gestor_cliente'].includes(perfil?.papel)
+    // Cliente de orçamento (ou admin simulando): acesso só às telas de consulta
+    const isCli = ['usuario_cliente', 'gestor_cliente'].includes(perfil?.papel) || (perfil?.papel === 'admin_polimata' && simularCliente)
     if (isCli && modProjeto === 'orcamento') {
       const permitido = ['/orcamento', '/orcamento/comparativo', '/orcamento/sobre', '/perfil']
       if (!permitido.includes(path)) navigate('/orcamento', { replace: true })
     }
-  }, [projetoAtivo, location.pathname, perfil?.papel])
+  }, [projetoAtivo, location.pathname, perfil?.papel, simularCliente])
 
   async function loadDados(pid) {
     setLoading(true)
@@ -217,7 +218,8 @@ export default function Dashboard() {
   }
 
   const isAdmin = perfil?.papel === 'admin_polimata'
-  const isCliente = ['usuario_cliente', 'gestor_cliente'].includes(perfil?.papel)
+  const isClienteReal = ['usuario_cliente', 'gestor_cliente'].includes(perfil?.papel)
+  const isCliente = isClienteReal || (isAdmin && simularCliente)
   const sw = sidebarOpen ? 260 : 56
   const modulo = moduloDaRota(location.pathname)
   // sidebar/telas seguem o PRODUTO do projeto ativo (não a URL) — evita vazar GRC no orçamento
@@ -322,6 +324,12 @@ export default function Dashboard() {
           <SideNavItem icon="🎙" label="Mapeamentos" active={location.pathname === '/mapeamentos'} onClick={() => navigate('/mapeamentos')} open={sidebarOpen} />
           </>)}
           {moduloView === 'orcamento' && (<>
+          {isAdmin && sidebarOpen && (
+            <button onClick={() => setSimularCliente(v => !v)} title="Pré-visualizar a visão do cliente"
+              style={{ margin: '6px 12px 4px', background: simularCliente ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 999, padding: '7px 12px', fontSize: 11, fontWeight: 600, color: '#1D4ED8', cursor: 'pointer', fontFamily: 'inherit', width: 'calc(100% - 24px)' }}>
+              {simularCliente ? '← Voltar à visão Admin' : '👁 Visão do Cliente'}
+            </button>
+          )}
           {sidebarOpen && <div className="sb-sep">Gestão Orçamentária</div>}
           <SideNavItem icon="📊" label="Dashboard Executivo" active={location.pathname === '/orcamento'} onClick={() => navigate('/orcamento')} open={sidebarOpen} />
           <SideNavItem icon="⚖️" label="Orçado vs Realizado" active={location.pathname === '/orcamento/comparativo'} onClick={() => navigate('/orcamento/comparativo')} open={sidebarOpen} />
