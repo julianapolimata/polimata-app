@@ -7,19 +7,20 @@ import * as S from './_shared'
 const {
   NAVY, GOLD, CREME, NAVY_FILL, CREME_FILL, WHITE_FILL, COL_HEADER_FILL,
   COL_HEADER_FONT, BODY_FONT, GOLD_FONT, THIN_BORDER, CREME_BORDER,
-  MRC_COLUMNS, CRIT_LABEL_MAP,
+  MRC_COLUMNS, MRC_COLUMNS_DIAG, CRIT_LABEL_MAP,
   getFaseLabel, getResultadoColor, getCritColor,
   infoLine, fillCreme,
 } = S
 
-function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNome, regressoesMap = {}, numFases, comTeste) {
+function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNome, regressoesMap = {}, numFases, comTeste, isDiag = false) {
   // Determinar quantas colunas de regressão são necessárias
   const maxRegressoes = Math.max(0, ...controles.map(c => c.num_regressoes || 0))
   const regCols = []
   for (let i = 1; i <= maxRegressoes; i++) {
     regCols.push({ key: `_reg_${i}`, header: `Regressão ${i}`, width: 24, computed: true })
   }
-  const ALL_COLUMNS = [...MRC_COLUMNS, ...regCols]
+  const BASE_COLUMNS = isDiag ? MRC_COLUMNS_DIAG : MRC_COLUMNS
+  const ALL_COLUMNS = [...BASE_COLUMNS, ...regCols]
   const lastCol = ALL_COLUMNS.length + 1
   const ws = wb.addWorksheet(tituloAba, {
     views: [{ state: 'frozen', ySplit: 4, xSplit: 1, showGridLines: false }],
@@ -199,6 +200,11 @@ function buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNom
       }
       if (col.key === 'crit_label') {
         const cor = getCritColor(row.crit)
+        if (cor) cell.font = { ...BODY_FONT, bold: true, color: cor }
+      }
+      if (col.key === 'existencia') {
+        const ev = (value || '').toLowerCase()
+        const cor = ev === 'existente' ? { argb: 'FF1B5E20' } : ev === 'parcial' ? { argb: 'FFE65100' } : ev === 'inexistente' ? { argb: 'FFB71C1C' } : null
         if (cor) cell.font = { ...BODY_FONT, bold: true, color: cor }
       }
       if (col.key.startsWith('_reg_') && value !== '—') {

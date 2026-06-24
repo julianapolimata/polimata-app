@@ -71,6 +71,35 @@ export const MRC_COLUMNS = [
   // Colunas de regressão são adicionadas dinamicamente em buildMRCSheet
 ]
 
+// MRC_COLUMNS para projetos SÓ DIAGNÓSTICO (f1_tem_teste=false).
+// Espelha o template de diagnóstico: troca Passos/Resultado/F1–F5 por
+// "Cenário Atual" + "Existência" (Existente/Parcial/Inexistente da Indagação).
+export const MRC_COLUMNS_DIAG = [
+  { key: 'dt_ult', header: 'Data Última Atualização', width: 18, fmt: 'date' },
+  { key: 'ger', header: 'Gerência', width: 18 },
+  { key: 'resp_sub', header: 'Responsável Área', width: 20 },
+  { key: 'area', header: 'Área', width: 22 },
+  { key: 'sub', header: 'Subprocesso', width: 20 },
+  { key: 'cenario_atual', header: 'Cenário Atual', width: 42 },
+  { key: 'rr', header: 'Ref. Risco', width: 12 },
+  { key: 'dr', header: 'Descrição do Risco', width: 40 },
+  { key: 'rc', header: 'Ref. Controle', width: 14 },
+  { key: 'dc', header: 'Descrição do Controle', width: 40 },
+  { key: 'cat', header: 'Categoria de Controle', width: 18 },
+  { key: 'freq', header: 'Frequência', width: 14 },
+  { key: 'nat', header: 'Natureza', width: 12 },
+  { key: 'car', header: 'Característica', width: 14 },
+  { key: 'sis', header: 'Sistema', width: 14 },
+  { key: 'chave', header: 'Controle Chave?', width: 14 },
+  { key: 'existencia', header: 'Existência', width: 16 },
+  { key: '_vitrine_incons', header: 'Descrição da Inconsistência', width: 40, computed: true },
+  { key: '_vitrine_rec', header: 'Recomendação / Melhoria', width: 40, computed: true },
+  { key: 'imp', header: 'Impacto', width: 12 },
+  { key: 'prob', header: 'Probabilidade', width: 14 },
+  { key: 'crit_label', header: 'Criticidade', width: 16, computed: true },
+  { key: 'status_atual', header: 'Status Atual', width: 18, computed: true },
+]
+
 export const CRIT_LABEL_MAP = { 4: '4. Crítico', 3: '3. Significativo', 2: '2. Moderado', 1: '1. Baixo' }
 export const HM_IMP_LABELS = ['Crítico', 'Alto', 'Moderado', 'Baixo']
 export const HM_PROB_LABELS = ['Extrema', 'Alta', 'Média', 'Baixa']

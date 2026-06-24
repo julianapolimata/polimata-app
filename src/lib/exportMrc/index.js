@@ -42,7 +42,8 @@ export async function exportarMRCExcel(controles, nomeArquivo, tituloAba = 'MRC'
   buildHeatmapSheet(wb, controles, iconId, clienteNome, projetoNome)
   const numFases = projeto?.num_fases ?? 5
   const comTeste = projeto?.f1_tem_teste === true
-  buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNome, regressoesMap, numFases, comTeste)
+  const isDiag = projeto?.f1_tem_teste === false
+  buildMRCSheet(wb, controles, tituloAba, iconId, clienteNome, projetoNome, regressoesMap, numFases, comTeste, isDiag)
 
   const buffer = await wb.xlsx.writeBuffer()
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
