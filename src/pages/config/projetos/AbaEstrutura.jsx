@@ -43,7 +43,7 @@ function AbaEstrutura({ projetoId, areas, subprocessos, onReload }) {
       const existentesNomes = existentes.map(s => s.nome)
       // Remover os que foram apagados
       const remover = existentes.filter(s => !subNomes.includes(s.nome))
-      for (const s of remover) { await supabase.from('subprocessos').delete().eq('id', s.id) }
+      if (remover.length > 0) { await supabase.from('subprocessos').delete().in('id', remover.map(s => s.id)) }
       // Inserir os novos
       const novos = subNomes.filter(n => !existentesNomes.includes(n))
       if (novos.length > 0) {
