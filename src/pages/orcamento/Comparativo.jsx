@@ -47,16 +47,16 @@ export default function Comparativo({ projeto }) {
       </div>
 
       <Card pad={false}>
-        <div style={{ overflowX: 'auto' }}>
+        <div style={{ overflow: 'auto', maxHeight: '72vh' }}>
           <table style={{ borderCollapse: 'collapse', minWidth: 280 + meses.length * 210 }}>
             <thead>
               <tr>
-                <th rowSpan={2} style={{ padding: '7px 12px', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--lt-text3)', textAlign: 'left', borderBottom: '1px solid var(--lt-brd)', position: 'sticky', left: 0, background: '#fff', minWidth: 200 }}>Categoria</th>
-                {meses.map(m => <th key={m} colSpan={3} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 700, color: 'var(--lt-text)', borderBottom: '1px solid var(--lt-brd)', borderLeft: '2px solid var(--lt-brd)', textAlign: 'center', background: 'rgba(34,185,138,0.05)' }}>{MESES_ABREV[m]}</th>)}
+                <th rowSpan={2} style={{ padding: '7px 12px', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--lt-text3)', textAlign: 'left', borderBottom: '1px solid var(--lt-brd)', position: 'sticky', left: 0, top: 0, zIndex: 6, background: '#fff', minWidth: 200, boxShadow: 'inset 0 -1px 0 var(--lt-brd)' }}>Categoria</th>
+                {meses.map(m => <th key={m} colSpan={3} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 700, color: 'var(--lt-text)', borderBottom: '1px solid var(--lt-brd)', borderLeft: '2px solid var(--lt-brd)', textAlign: 'center', background: '#EAF6F1', position: 'sticky', top: 0, zIndex: 4, boxShadow: 'inset 0 -1px 0 var(--lt-brd)' }}>{MESES_ABREV[m]}</th>)}
               </tr>
               <tr>
                 {meses.map(m => (
-                  ['Orçado', 'Realizado', 'Δ%'].map(h => <th key={m + h} style={{ padding: '5px 10px', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--lt-text3)', textAlign: 'right', borderBottom: '1px solid var(--lt-brd)', borderLeft: h === 'Orçado' ? '2px solid var(--lt-brd)' : 'none' }}>{h}</th>)
+                  ['Orçado', 'Realizado', 'Δ%'].map(h => <th key={m + h} style={{ padding: '5px 10px', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--lt-text3)', textAlign: 'right', borderBottom: '1px solid var(--lt-brd)', borderLeft: h === 'Orçado' ? '2px solid var(--lt-brd)' : 'none', background: '#fff', position: 'sticky', top: 31, zIndex: 4, boxShadow: 'inset 0 -1px 0 var(--lt-brd)' }}>{h}</th>)
                 ))}
               </tr>
             </thead>
@@ -65,7 +65,7 @@ export default function Comparativo({ projeto }) {
                 const totalCelula = (m) => g.cats.reduce((acc, c) => { const x = celula(c.id, m); return { o: acc.o + (x.o || 0), r: acc.r + (x.r || 0) } }, { o: 0, r: 0 })
                 return [
                   <tr key={g.tipo.id} style={{ background: 'var(--lt-bg)' }}>
-                    <td style={{ padding: '7px 12px', fontSize: 11.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, position: 'sticky', left: 0, background: 'var(--lt-bg)' }}>{g.tipo.id === 'receita' ? '' : '(-) '}{g.tipo.nome}</td>
+                    <td style={{ padding: '7px 12px', fontSize: 11.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, position: 'sticky', left: 0, zIndex: 2, background: 'var(--lt-bg)' }}>{g.tipo.id === 'receita' ? '' : '(-) '}{g.tipo.nome}</td>
                     {meses.map(m => {
                       const t = totalCelula(m); const pct = t.o ? ((t.r - t.o) / Math.abs(t.o)) * 100 : null
                       return ['o', 'r', 'p'].map(k => (
@@ -77,7 +77,7 @@ export default function Comparativo({ projeto }) {
                   </tr>,
                   ...g.cats.map(c => (
                     <tr key={c.id}>
-                      <td style={{ padding: '6px 12px 6px 28px', fontSize: 12.5, borderBottom: '1px solid var(--lt-brd)', position: 'sticky', left: 0, background: '#fff' }}>{c.nome}</td>
+                      <td style={{ padding: '6px 12px 6px 28px', fontSize: 12.5, borderBottom: '1px solid var(--lt-brd)', position: 'sticky', left: 0, zIndex: 2, background: '#fff' }}>{c.nome}</td>
                       {meses.map(m => {
                         const x = celula(c.id, m)
                         return ['o', 'r', 'p'].map(k => (
