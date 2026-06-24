@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useOrcDados, PageHeader, Card, HelpTag, SeletorAno, Badge, BotaoVerde, BotaoSec, ErroBox, fmtPct, THL, TH, TDL, TD } from './_shared'
-import { METODOS, sugerir } from '../../lib/orcamento/sugestao'
+import { METODOS, sugerir, sugerirIntraAno } from '../../lib/orcamento/sugestao'
 import { carregarIndices, INDICES } from '../../lib/orcamento/bcb'
 import { iaSugerir } from '../../lib/orcamento/ia'
 
@@ -17,6 +17,10 @@ export default function Gerador({ projeto }) {
   const [indices, setIndices] = useState(null)
   const [gerando, setGerando] = useState(false)
   const [msg, setMsg] = useState('')
+  const [base, setBase] = useState('anterior') // 'anterior' = ano N-1 | 'intra' = completar ano corrente
+  const ehIntra = base === 'intra'
+  const defMet = ehIntra ? 'media_movel' : 'repeticao'
+  const temAlgum = (serie) => !!(serie && serie.some(v => v !== null && v !== undefined))
 
   useEffect(() => { carregarIndices().then(setIndices).catch(() => setIndices([])) }, [])
   useEffect(() => {
@@ -47,7 +51,16 @@ export default function Gerador({ projeto }) {
       const idxResumo = (indices || []).map(i => ({ nome: i.nome, variacao_12m: i.variacao12m }))
       const catsIA = [], linhas = []
       d.catsAtivas.forEach(c => {
-        const cfg = config[c.id] || { metodo: 'repeticao', params: {} }
+        const cfg = config[c.id] || { metodo: defMet, params: {} }
+        if (ehIntra) {
+          const serie = d.realPorCat[c.id]?.[ano]
+          if (!temAlgum(serie)) return
+          const met = METODOS.find(m => m.id === cfg.metodo)?.intraAno ? cfg.metodo : 'media_movel'
+          const vals = sugerirIntraAno(met, serie, { janela: cfg.params.janela, mesInicio: 6 })
+          if (!vals.some(v => v !== null && v !== undefined)) return
+          linhas.push({ cat: c, vals, metodo: met, just: `Método ${METODOS.find(m => m.id === met)?.nome} — projeção do 2º semestre (Jul–Dez) sobre o realizado de ${ano}.`, conf: 70 })
+          return
+        }
         const s1 = d.realPorCat[c.id]?.[ano - 1] || null
         const s2 = d.realPorCat[c.id]?.[ano - 2] || null
         if (!s1 && !s2) return
@@ -57,7 +70,7 @@ export default function Gerador({ projeto }) {
         const vals = sugerir(cfg.metodo, s1, s2, { ...cfg.params, percentual: pct })
         linhas.push({ cat: c, vals, metodo: cfg.metodo, just: `Método ${METODOS.find(m => m.id === cfg.metodo)?.nome}${cfg.metodo === 'indice' && idxSel ? ` (${idxSel.nome} ${fmtPct(idxSel.variacao12m)})` : ''} sobre o realizado de ${ano - 1}.`, conf: 75 })
       })
-      if (catsIA.length) {
+      if (!ehIntra && catsIA.length) {
         const sug = await iaSugerir(
           catsIA.map(x => ({ categoria: x.c.nome, tipo: x.c.tipo, serie_ano_anterior: x.s1, serie_2_anos: x.s2, contexto: x.cfg.params.observacoes || null })),
           ano, idxResumo, null)
@@ -67,11 +80,14 @@ export default function Gerador({ projeto }) {
         })
       }
       const rows = []
-      linhas.forEach(l => l.vals.forEach((v, m) => rows.push({
-        orcamento_id: cenario.id, categoria_id: l.cat.id, mes: m + 1,
-        valor: v, sugerido: v, metodo: l.metodo, justificativa_ia: l.just, confianca: l.conf,
-        status_revisao: (l.conf ?? 100) < 60 ? 'revisar' : 'sugerido',
-      })))
+      linhas.forEach(l => l.vals.forEach((v, m) => {
+        if (v === null || v === undefined) return
+        rows.push({
+          orcamento_id: cenario.id, categoria_id: l.cat.id, mes: m + 1,
+          valor: v, sugerido: v, metodo: l.metodo, justificativa_ia: l.just, confianca: l.conf,
+          status_revisao: (l.conf ?? 100) < 60 ? 'revisar' : 'sugerido',
+        })
+      }))
       if (!rows.length) { setMsg('Nenhuma categoria com histórico para sugerir — importe ou lance o realizado primeiro.'); return }
       const { error } = await supabase.from('orc_orcamento_itens').upsert(rows, { onConflict: 'orcamento_id,categoria_id,mes' })
       if (error) throw error
@@ -81,7 +97,11 @@ export default function Gerador({ projeto }) {
 
   return (
     <div style={{ padding: '20px 28px 40px', maxWidth: 1280, margin: '0 auto' }}>
-      <PageHeader projeto={projeto} titulo="Gerador de Sugestão Orçamentária" subtitulo={`Crie o orçamento de ${ano} a partir do realizado histórico`}>
+      <PageHeader projeto={projeto} titulo="Gerador de Sugestão Orçamentária" subtitulo={ehIntra ? `Projeta o 2º semestre de ${ano} a partir do realizado já lançado` : `Cria o orçamento de ${ano} a partir do realizado do ano anterior`}>
+        <select className="input-light" style={{ width: 210 }} value={base} onChange={e => setBase(e.target.value)} title="Base da projeção">
+          <option value="anterior">Base: ano anterior</option>
+          <option value="intra">Base: completar ano corrente</option>
+        </select>
         <SeletorAno ano={ano} setAno={setAno} />
         <select className="input-light" style={{ width: 160 }} value={cenario?.id || ''} onChange={e => setCenarioId(e.target.value)}>
           {d.cenarios.map(c => <option key={c.id} value={c.id}>{(c.nome || 'v' + c.versao) + (c.status === 'aprovado' ? ' ★' : '')}</option>)}
@@ -93,21 +113,22 @@ export default function Gerador({ projeto }) {
       <ErroBox erro={d.erro} onClose={() => d.setErro('')} />
       {msg && <div style={{ background: 'rgba(34,185,138,0.08)', border: '1px solid rgba(34,185,138,0.35)', borderRadius: 8, padding: '8px 14px', fontSize: 12.5, marginBottom: 14 }}>{msg}</div>}
       <HelpTag><strong>Ponto de partida inteligente:</strong> em vez de orçar do zero, o sistema analisa o realizado histórico, identifica padrões, busca índices de mercado e propõe valores. Você edita só o que precisa de ajuste.</HelpTag>
+      {ehIntra && <div style={{ background: 'rgba(204,145,94,0.10)', border: '1px solid rgba(204,145,94,0.4)', borderRadius: 8, padding: '9px 14px', fontSize: 12, margin: '0 0 14px' }}><strong>Modo completar o ano corrente:</strong> sem histórico de anos anteriores, o sistema projeta os meses de <strong>Jul–Dez</strong> a partir do que já foi realizado em {ano}. Aplicam-se <strong>Média móvel</strong> e <strong>Tendência linear</strong>; os demais métodos exigem um ano fechado e ficam indisponíveis. Com poucos meses, a tendência tende a oscilar — a média móvel costuma ser mais estável.</div>}
 
       <Card titulo="Configuração de Método por Categoria" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>Os 6 métodos têm o mesmo peso — escolha o que faz sentido para cada conta</span>} pad={false}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={THL}>Categoria Gerencial</th><th style={THL}>Método de Projeção</th><th style={THL}>Parâmetro</th><th style={TH}>Histórico</th></tr></thead>
           <tbody>
             {d.catsAtivas.map(c => {
-              const cfg = config[c.id] || { metodo: 'repeticao', params: {} }
-              const s1 = d.realPorCat[c.id]?.[ano - 1]
-              const temHist = !!(s1 || d.realPorCat[c.id]?.[ano - 2])
+              const cfg = config[c.id] || { metodo: defMet, params: {} }
+              const metodoSel = ehIntra && !METODOS.find(m => m.id === cfg.metodo)?.intraAno ? 'media_movel' : cfg.metodo
+              const temHist = ehIntra ? temAlgum(d.realPorCat[c.id]?.[ano]) : !!(d.realPorCat[c.id]?.[ano - 1] || d.realPorCat[c.id]?.[ano - 2])
               return (
                 <tr key={c.id}>
                   <td style={{ ...TDL, fontWeight: 600 }}>{c.nome}<br /><span style={{ fontSize: 10.5, color: 'var(--lt-text3)', fontWeight: 400 }}>{c.tipo}</span></td>
                   <td style={TDL}>
-                    <select className="input-light" style={{ width: 210, padding: '5px 8px', fontSize: 12 }} value={cfg.metodo} onChange={e => u(c.id, 'metodo', e.target.value)}>
-                      {METODOS.map(m => <option key={m.id} value={m.id}>{ICONE_METODO[m.id]} {m.nome}</option>)}
+                    <select className="input-light" style={{ width: 230, padding: '5px 8px', fontSize: 12 }} value={metodoSel} onChange={e => u(c.id, 'metodo', e.target.value)}>
+                      {METODOS.map(m => <option key={m.id} value={m.id} disabled={ehIntra && !m.intraAno}>{ICONE_METODO[m.id]} {m.nome}{ehIntra && !m.intraAno ? ' — exige ano anterior' : ''}</option>)}
                     </select>
                   </td>
                   <td style={TDL}>
