@@ -2,7 +2,6 @@
 // gerarMatrizXlsx.js — Matriz de Riscos COSO+ISO, RACI, Pontos de Atenção e
 // Legenda, a partir da estrutura JSON do mapeamento. Identidade Polímata.
 // ═══════════════════════════════════════════════════════════════════════════
-import ExcelJS from 'exceljs'
 
 const NAVY = 'FF00203E'
 const NAVY_DEEP = 'FF00112C'
@@ -53,6 +52,7 @@ const CRIT = (p, i) => {
 }
 
 export async function gerarMatrizXlsx(estrutura, { nomeProcesso, clienteNome, codigoBase }) {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Polímata GRC'
 

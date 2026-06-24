@@ -1,4 +1,3 @@
-import ExcelJS from 'exceljs'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TEMPLATE PLANO DE CONTAS — modelo fixo do Polímata App (Gestão Orçamentária)
@@ -41,7 +40,8 @@ const EXEMPLOS = [
   ['51.01.002', 'SALÁRIOS', 'Resultado', 'Sim', 'Pessoal', 'Despesa'],
 ]
 
-export function montarWorkbookPlanoContas({ linhas = null } = {}) {
+export async function montarWorkbookPlanoContas({ linhas = null } = {}) {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Polímata App'
 
@@ -88,7 +88,7 @@ export function montarWorkbookPlanoContas({ linhas = null } = {}) {
 }
 
 export async function baixarTemplatePlanoContas() {
-  const wb = montarWorkbookPlanoContas()
+  const wb = await montarWorkbookPlanoContas()
   const buf = await wb.xlsx.writeBuffer()
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
   const url = URL.createObjectURL(blob)
@@ -102,6 +102,7 @@ export async function baixarTemplatePlanoContas() {
 function norm(s) { return String(s ?? '').trim() }
 
 export async function parsePlanoContas(file) {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   await wb.xlsx.load(await file.arrayBuffer())
   const ws = wb.getWorksheet('Plano de Contas') || wb.worksheets[0]

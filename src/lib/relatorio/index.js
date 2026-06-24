@@ -1,6 +1,5 @@
 // Entrypoint do gerador de relatório Excel.
 // Extraído em 22/mai/2026 (fatiamento Etapa 4).
-import ExcelJS from 'exceljs'
 import { buildResumoSheet } from './resumo'
 import { buildAreaSheet } from './areaSheet'
 import { buildMatrizSheet } from './matrizSheet'
@@ -8,6 +7,7 @@ import { buildPlanosSheet } from './planosSheet'
 import { fetchIconBase64 } from './_shared'
 
 export async function gerarRelatorioExcel({ controles, areas, secoes, clienteNome, projetoNome, projeto }) {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Polímata App'
   wb.created = new Date()

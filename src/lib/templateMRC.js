@@ -1,5 +1,4 @@
 import { CATEGORIAS, FREQUENCIAS, NATUREZAS, CARACTERISTICAS, CONTROLE_CHAVE } from './opcoesControle'
-import ExcelJS from 'exceljs'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TEMPLATE MRC — Planilha vazia para mapeamento de processos
@@ -79,6 +78,7 @@ const TEMPLATE_COLS_DIAG = [
 ]
 
 export async function gerarTemplateMRC(clienteNome, projeto) {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Polímata GRC'
   wb.created = new Date()

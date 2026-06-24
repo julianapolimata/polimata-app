@@ -2,7 +2,6 @@
 // Conta a história: KPIs com sinal, evolução mensal (receita×saídas×resultado, realizado+orçado),
 // DRE gerencial (realizado + projeção), receita por situação fiscal e maiores rubricas (explosíveis).
 import { useState, useMemo, useEffect } from 'react'
-import ExcelJS from 'exceljs'
 import { supabase } from '../../lib/supabase'
 import { useOrcDados, useItens, PageHeader, Card, KPICard, KPIGrid, BotaoSec, fmtBRL, MESES_ABREV, ErroBox } from './_shared'
 
@@ -234,6 +233,7 @@ export default function DashboardExec({ projeto }) {
   async function exportar() {
     setMsg('')
     try {
+      const ExcelJS = (await import('exceljs')).default
       const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Dashboard')
       const comp = modo === 'comparativo'
       const hr = ws.addRow(['Categoria', ...(comp ? ['Orçado'] : []), 'Realizado', ...(comp ? ['Variação %'] : []), 'AV %', 'AH %'])

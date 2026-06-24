@@ -1,4 +1,3 @@
-import ExcelJS from 'exceljs'
 
 const STATUS_LABEL = {
   aguardando: 'Aguardando',
@@ -27,6 +26,7 @@ function fmtDateTime(v) {
 }
 
 export async function exportarSolicitacoesExcel({ solicitacoes, controles, areas, clienteNome, projetoNome }) {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Polímata GRC'
   wb.created = new Date()

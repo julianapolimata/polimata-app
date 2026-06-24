@@ -3,7 +3,6 @@
 // Função pura — recebe os dados do controle e dispara o download do .xlsx.
 // Sem React, sem hooks, sem efeitos colaterais além do download do arquivo.
 
-import ExcelJS from 'exceljs'
 import { formatNomeEmpresa } from './formatNome'
 
 export async function gerarFichaRiscoExcel({
@@ -24,6 +23,7 @@ export async function gerarFichaRiscoExcel({
 }) {
   const { pq, quando, onde, quem, como, resultado } = premissas || {}
 
+  const ExcelJS = (await import('exceljs')).default
   const workbook = new ExcelJS.Workbook()
   workbook.creator = 'Polímata GRC'
   workbook.created = new Date()

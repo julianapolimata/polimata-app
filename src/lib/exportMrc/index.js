@@ -1,12 +1,12 @@
 // Entrypoint do gerador de Excel MRC.
 // Extraído em 22/mai/2026 (fatiamento Etapa 9).
-import ExcelJS from 'exceljs'
 import { supabase } from '../supabase'
 import { buildHeatmapSheet } from './heatmapSheet'
 import { buildMRCSheet } from './mrcSheet'
 import { fetchIconBase64 } from './_shared'
 
 export async function exportarMRCExcel(controles, nomeArquivo, tituloAba = 'MRC', clienteNome = '', projetoNome = '', projeto = null) {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Polímata App'
   wb.created = new Date()

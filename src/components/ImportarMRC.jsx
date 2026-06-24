@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabase'
 import { formatNomeEmpresa } from '../lib/formatNome'
 import { useAuth } from '../contexts/AuthContext'
 import { gerarTemplateMRC } from '../lib/templateMRC'
-import ExcelJS from 'exceljs'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // MAPEAMENTO: coluna Excel (0-indexed) → campo Supabase
@@ -145,6 +144,7 @@ export default function ImportarMRC({ projetoId, projeto, areas, onImported, all
     setFile(f); setPreview(null); setResultado(null); setErro(null); setLoading(true)
     try {
       const buffer = await f.arrayBuffer()
+      const ExcelJS = (await import('exceljs')).default
       const wb = new ExcelJS.Workbook()
       await wb.xlsx.load(buffer)
       const ws = wb.worksheets[0]

@@ -1,4 +1,3 @@
-import ExcelJS from 'exceljs'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TEMPLATE REALIZADO — modelo fixo do Polímata App (Gestão Orçamentária)
@@ -49,7 +48,8 @@ const EXEMPLOS = [
 
 const canon = (s) => String(s ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
-export function montarWorkbookRealizado({ linhas = null } = {}) {
+export async function montarWorkbookRealizado({ linhas = null } = {}) {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Polímata App'
 
@@ -92,7 +92,7 @@ export function montarWorkbookRealizado({ linhas = null } = {}) {
 }
 
 export async function baixarTemplateRealizado() {
-  const wb = montarWorkbookRealizado()
+  const wb = await montarWorkbookRealizado()
   const buf = await wb.xlsx.writeBuffer()
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
   const url = URL.createObjectURL(blob)
@@ -123,6 +123,7 @@ function parseValor(v) {
 const competenciaDe = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-01`
 
 export async function parseRealizado(file) {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   await wb.xlsx.load(await file.arrayBuffer())
   const ws = wb.getWorksheet('Realizado') || wb.worksheets[0]
