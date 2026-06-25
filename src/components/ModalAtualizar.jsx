@@ -55,7 +55,8 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
   const [recomendacao, setRecomendacao] = useState(row?.rec || '')
   const [saving, setSaving] = useState(false)
   const [perfil, setPerfil] = useState(null)
-  const podeAprovarDiag = isDiag && ['admin_polimata', 'gerente_polimata'].includes(perfil?.papel) && !row?.consultor_id
+  const donoControle = row?.consultor_id || row?.submetido_por || row?.criado_por
+  const podeAprovarDiag = isDiag && ['admin_polimata', 'gerente_polimata'].includes(perfil?.papel) && (!donoControle || donoControle === perfil?.id)
   const [showHistorico, setShowHistorico] = useState(false)
   // Solicitações v2: passos de teste com checkbox para gerar solicitação
   const [passos, setPassos] = useState([])

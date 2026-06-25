@@ -10,13 +10,15 @@ const ModalReavaliar = ({ row, perfil, modo, onClose, onSaved }) => {
   const [justificativa, setJustificativa] = useState('')
   const [saving, setSaving] = useState(false)
   const { confirm } = useConfirm()
+  const donoCtrl = row?.consultor_id || row?.submetido_por || row?.criado_por
+  const podeAprovar = ['admin_polimata', 'gerente_polimata'].includes(perfil?.papel) && (!donoCtrl || donoCtrl === perfil?.id)
 
   async function solicitar() {
     if (!justificativa.trim()) { alert('A justificativa é obrigatória.'); return }
     setSaving(true)
     try {
       const { data: upd, error } = await supabase.from('mrc').update({
-        status_workflow: 'reavaliacao_pendente',
+        status_workflow: podeAprovar ? 'reprovado' : 'reavaliacao_pendente',
         reavaliacao_justificativa: justificativa.trim(),
         reavaliacao_solicitada_por: perfil?.id || null,
         reavaliacao_solicitada_em: new Date().toISOString(),
@@ -25,7 +27,7 @@ const ModalReavaliar = ({ row, perfil, modo, onClose, onSaved }) => {
       }).eq('id', row.id).select('id')
       if (error) throw error
       if (!upd || upd.length === 0) throw new Error('Não foi possível gravar (verifique permissões).')
-      supabase.functions.invoke('send-email', {
+      if (!podeAprovar) supabase.functions.invoke('send-email', {
         body: { type: 'reavaliacao_solicitada', data: {
           autor_id: perfil?.id, ref: row.rc || row.rr, justificativa: justificativa.trim(),
           area_id: row.area_id, mrc_id: row.id,
@@ -88,7 +90,7 @@ const ModalReavaliar = ({ row, perfil, modo, onClose, onSaved }) => {
           {modo === 'solicitar' ? (
             <>
               <div style={{ fontSize: 12.5, color: '#444', lineHeight: 1.6, marginBottom: 14 }}>
-                Este controle está <strong>Concluído</strong> (aprovado e com criticidade avaliada). Para editá-lo é preciso justificar a reavaliação — o pedido segue para aprovação do gerente antes da edição ser liberada.
+                Este controle está <strong>Concluído</strong> (aprovado e com criticidade avaliada). Para editá-lo é preciso justificar a reavaliação — {podeAprovar ? 'ao confirmar, o controle fica Em Correção e é liberado para edição na hora.' : 'o pedido segue para aprovação do gerente antes da edição ser liberada.'}
               </div>
               <div style={lbl}>Justificativa <span style={{ color: '#E24B4A' }}>*</span></div>
               <textarea value={justificativa} onChange={e => setJustificativa(e.target.value)}
@@ -109,7 +111,7 @@ const ModalReavaliar = ({ row, perfil, modo, onClose, onSaved }) => {
         <div style={{ padding: '14px 24px', borderTop: '1px solid #E8E8E8', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button onClick={onClose} disabled={saving} style={{ padding: '10px 18px', border: '1px solid #D0D0D0', borderRadius: 6, background: 'white', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, color: '#00203E', cursor: 'pointer' }}>Cancelar</button>
           {modo === 'solicitar' ? (
-            <button onClick={solicitar} disabled={saving || !justificativa.trim()} style={{ padding: '10px 18px', border: 'none', borderRadius: 6, background: '#CC915E', color: 'white', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', opacity: (saving || !justificativa.trim()) ? 0.5 : 1 }}>{saving ? 'Enviando...' : 'Solicitar Reavaliação'}</button>
+            <button onClick={solicitar} disabled={saving || !justificativa.trim()} style={{ padding: '10px 18px', border: 'none', borderRadius: 6, background: '#CC915E', color: 'white', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', opacity: (saving || !justificativa.trim()) ? 0.5 : 1 }}>{saving ? 'Salvando...' : (podeAprovar ? 'Reavaliar e editar' : 'Solicitar Reavaliação')}</button>
           ) : (
             <>
               <button onClick={() => decidir(false)} disabled={saving} style={{ padding: '10px 18px', border: '1px solid rgba(198,40,40,0.4)', borderRadius: 6, background: 'white', color: '#C62828', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Recusar</button>
