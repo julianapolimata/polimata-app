@@ -72,7 +72,7 @@ export default function ModalPromoverTeste({ projeto, onClose, onPromoted }) {
               <div style={{ marginBottom: 16 }}>
                 <div style={lbl}>Até qual fase o projeto vai? <span style={{ color: '#5D6E80', textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(distribui os %)</span></div>
                 <select value={numFases} onChange={e => setNumFases(parseInt(e.target.value))} style={{ width: '100%', maxWidth: 320, marginTop: 6, padding: '9px 12px', border: '1px solid #D0D0D0', borderRadius: 6, fontFamily: 'inherit', fontSize: 13 }}>
-                  {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{FASES_LABEL[n]}</option>)}
+                  {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 1 ? 'Até Fase 1 - Diagnóstico Inicial Com Testes' : FASES_LABEL[n]}</option>)}
                 </select>
                 <div style={{ fontSize: 11, color: '#5D6E80', marginTop: 6 }}>{numFases === 1 ? 'Projeto vai até a Fase 1 — agora com o teste de efetividade do controle (régua N1–N5). O diagnóstico já feito é o ponto de partida.' : FASES_DETALHE[numFases]}</div>
               </div>
