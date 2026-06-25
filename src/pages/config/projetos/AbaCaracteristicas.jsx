@@ -1,6 +1,7 @@
 // AbaCaracteristicas extraído de ProjetosConfig.jsx em 22/mai/2026 (fatiamento Etapa 4).
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { useAuth } from '../../../contexts/AuthContext'
 import { FASES_LABEL, FASES_DETALHE } from './_consts'
 import InfoCell from './InfoCell'
 import { vincularResponsavelAoProjeto } from '../../../lib/vinculoConsultor'
@@ -8,6 +9,8 @@ import ModalPromoverTeste from '../../../components/ModalPromoverTeste'
 import { resumoDiagnostico } from '../../../lib/promoverTeste'
 
 function AbaCaracteristicas({ dados, perfisPolimata = [], onUpdate, editando, setEditando }) {
+  const { perfil } = useAuth()
+  const isAdmin = perfil?.papel === 'admin_polimata'
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [erro, setErro] = useState('')
@@ -132,7 +135,7 @@ function AbaCaracteristicas({ dados, perfisPolimata = [], onUpdate, editando, se
             <InfoCell label="Inclui teste de efetividade?" value={dados.f1_tem_teste === false ? 'Não — diagnóstico apenas' : 'Sim — F1 inclui teste'} />
             <InfoCell label="Matriz de Calor" value={`${dados.matriz_tamanho??4}×${dados.matriz_tamanho??4}`} />
           </div>
-          {dados.f1_tem_teste === false && (
+          {dados.f1_tem_teste === false && isAdmin && (
             <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--lt-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--lt-text)' }}>Fase de teste</div>

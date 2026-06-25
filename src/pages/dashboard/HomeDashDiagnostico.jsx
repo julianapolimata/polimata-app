@@ -113,8 +113,8 @@ export default function HomeDashDiagnostico({ projeto, areasCalc, todosControles
 
   const ativosDiag = todosControles.filter(c => c.ativo !== false)
   const diagConcluido = ativosDiag.length > 0 && ativosDiag.every(c => c.status_workflow === 'aprovado' && c.crit != null)
-  const isClienteRole = perfil?.papel === 'gestor_cliente' || perfil?.papel === 'usuario_cliente'
-  const mostrarPromover = projeto?.f1_tem_teste === false && diagConcluido && !isClienteRole
+  const isAdmin = perfil?.papel === 'admin_polimata'
+  const mostrarPromover = projeto?.f1_tem_teste === false && diagConcluido && isAdmin
 
   return (
     <div style={D.page}>
