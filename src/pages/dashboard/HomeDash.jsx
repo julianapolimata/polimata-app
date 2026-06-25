@@ -18,7 +18,9 @@ import {
 // TELA 1 — DASHBOARD (REDESIGN v7)
 // ══════════════════════════════════════════════════════════════════════════════
 
-export default function HomeDash({ projeto, areasCalc, todosControles, loading, ultimaAtualizacao, loadDados }) {
+export default function HomeDash({ projeto, areasCalc, todosControles: todosControlesRaw, loading, ultimaAtualizacao, loadDados }) {
+  const todosControles = (todosControlesRaw || []).filter(c => c.ativo !== false && (String(c.status_risco || '').toLowerCase() !== 'descontinuado'))
+
   const navigate = useNavigate()
   const { perfil } = useAuth()
   const [areaFiltro, setAreaFiltro] = useState(null)
