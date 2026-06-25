@@ -17,7 +17,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { gerarFichaRiscoExcel } from '../lib/gerarFichaRiscoExcel'
 import { uploadDocumento } from '../lib/documentos'
 import { getFaseInfo } from '../lib/fases'
-import { reabrirBloco, blocosAplicaveis, faseDoBloco } from '../lib/aprovacoesBloco'
+import { reabrirBloco, blocosAplicaveis, faseDoBloco, setBlocoStatus } from '../lib/aprovacoesBloco'
 
 import StepRisco from './modalAtualizar/StepRisco'
 import StepControle from './modalAtualizar/StepControle'
@@ -54,6 +54,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
   const [novaDescControle, setNovaDescControle] = useState('')
   const [saving, setSaving] = useState(false)
   const [perfil, setPerfil] = useState(null)
+  const podeAprovarDiag = isDiag && ['admin_polimata', 'gerente_polimata'].includes(perfil?.papel) && !row?.consultor_id
   const [showHistorico, setShowHistorico] = useState(false)
   // Solicitações v2: passos de teste com checkbox para gerar solicitação
   const [passos, setPassos] = useState([])
@@ -432,7 +433,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
         cenario_atual: cenarioAtual.trim() || null,
         ...(isDiag ? { existencia: existencia || null } : {}),
         dt_implementacao: dtImplementacao || null,
-        status_workflow: 'em_revisao',
+        status_workflow: podeAprovarDiag ? 'aprovado' : 'em_revisao',
         edicao_pendente: !isDiag,
         ...((row.crit != null && mudouRiscoControle()) ? { imp: null, prob: null, crit: null } : {}),
         submetido_por: perfil?.id,
@@ -444,12 +445,18 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
       if (error) throw error
       if (!_u || _u.length === 0) throw new Error('Não foi possível gravar (0 registros — verifique permissões/conexão).')
       if (!isDiag) { try { await syncPassosESolicitacoes({ controle: row, passos, projetoId: row.projeto_id }) } catch (e) { console.error('syncPassos:', e) } }
-      for (const b of blocosReabrir) {
-        try { await reabrirBloco({ mrcId: row.id, bloco: b, fase: faseDoBloco(b, row, projeto) }) } catch (e) { console.error('reabrirBloco:', e) }
+      if (podeAprovarDiag) {
+        for (const b of blocosAplicaveis(projeto)) {
+          try { await setBlocoStatus({ mrcId: row.id, bloco: b, fase: faseDoBloco(b, row, projeto), status: 'aprovado', revisorId: perfil?.id }) } catch (e) { console.error('aprovar bloco:', e) }
+        }
+      } else {
+        for (const b of blocosReabrir) {
+          try { await reabrirBloco({ mrcId: row.id, bloco: b, fase: faseDoBloco(b, row, projeto) }) } catch (e) { console.error('reabrirBloco:', e) }
+        }
       }
       // Notificar revisores (admins) via edge function — consultor não enxerga
       // a lista de admins pela RLS, então a resolução é feita no servidor.
-      supabase.functions.invoke('send-email', {
+      if (!podeAprovarDiag) supabase.functions.invoke('send-email', {
         body: { type: 'review_submitted_admins', data: {
           autor_id: perfil?.id, ref: row.rc || row.rr, descricao: row.dc || '',
           area_id: row.area_id, mrc_id: row.id,
@@ -458,7 +465,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
         } }
       }).catch(err => console.error('Erro ao notificar revisão:', err))
       logAtualizarControle(row, row.projeto_id)
-      alert('✅ Alterações salvas e enviadas para revisão. Após a aprovação, será necessário baixar uma nova ficha (Ficha Pendente).')
+      alert(podeAprovarDiag ? '✅ Alterações salvas e aprovadas.' : '✅ Alterações salvas e enviadas para revisão. Após a aprovação, será necessário baixar uma nova ficha (Ficha Pendente).')
       onSaved?.()
       onClose?.()
     } catch (err) {
@@ -648,7 +655,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
               )}
               {(blocosReabrir.length > 0 || (isDiag && step === 2)) && (
                 <button onClick={handleSalvarEnviarRevisao} disabled={saving || !canEnviarRevisao} title={!canEnviarRevisao ? 'Preencha os campos obrigatórios da(s) seção(ões) em edição antes de enviar.' : ''} style={{ flex: 2, padding: '10px 14px', border: 'none', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, cursor: (saving || !canEnviarRevisao) ? 'not-allowed' : 'pointer', background: '#15803D', color: 'white', opacity: (saving || !canEnviarRevisao) ? 0.5 : 1 }}>
-                  {saving ? 'Salvando...' : '✓ Salvar e enviar para revisão'}
+                  {saving ? 'Salvando...' : (podeAprovarDiag ? '✓ Salvar e aprovar' : '✓ Salvar e enviar para revisão')}
                 </button>
               )}
             </>
