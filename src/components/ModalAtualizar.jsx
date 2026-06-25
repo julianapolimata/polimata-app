@@ -34,7 +34,6 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
   const [mostrarLista, setMostrarLista] = useState(true)
   const isDiag = projeto?.f1_tem_teste === false
   // Rascunho/não iniciado = primeira revisão: exige conjunto completo (não vale envio por bloco)
-  const ehPrimeiraRevisao = ['rascunho', 'nao_iniciado'].includes(row?.status_workflow || '')
   const { confirm } = useConfirm()
   const [dirty, setDirty] = useState(false)
   const requestClose = async () => {
@@ -207,7 +206,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
   }
 
   // Validação por bloco (item 11): só valida os blocos efetivamente reabertos
-  const canEnviarRevisao = (blocosReabrir.length > 0 && !ehPrimeiraRevisao)
+  const canEnviarRevisao = (blocosReabrir.length > 0)
     ? blocosReabrir.every(b =>
         b === 'risco' ? canAdvanceStep1 :
         b === 'controle' ? canAdvanceStep2 :
