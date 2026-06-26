@@ -68,14 +68,16 @@ export default function PorAreaTabela({ ctx }) {
                       } else if (podeEditarEste && st === 'em_analise') {
                         primary = { label: 'Registrar Resultado', color: '#15803D', bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.35)', onClick: () => setRowRegistrarResultado(c) }
                         secondary = { label: '✏ Editar', onClick: () => setAtualizarRow(c) }
-                      } else if (podeEditarEste && (st === 'nao_iniciado' || st === 'teste_pendente' || st === 'reprovado')) {
+                      } else if (podeEditarEste && st === 'teste_pendente') {
+                        primary = { label: '📄 Baixar Ficha', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.45)', onClick: () => { setAtualizarFicha(true); setAtualizarRow(c) } }
+                      } else if (podeEditarEste && (st === 'nao_iniciado' || st === 'reprovado')) {
                         primary = { label: 'Atualizar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => setAtualizarRow(c) }
                       }
                       return (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
                           {primary && <button onClick={e => { e.stopPropagation(); primary.onClick() }} style={{ background: primary.bg, border: `1px solid ${primary.border}`, borderRadius: 6, padding: '6px 10px', fontSize: 11, fontWeight: 700, color: primary.color, cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>{primary.label}</button>}
                           {secondary && <button onClick={e => { e.stopPropagation(); secondary.onClick() }} style={{ background: 'transparent', border: 'none', padding: '2px 4px', fontSize: 10, fontWeight: 500, color: 'var(--copper-text)', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}>{secondary.label}</button>}
-                          {getAlertas(c).filter(a => !['Resultado Pendente', 'Revisar'].includes(a.label) || !primary).map((a, idx) => {
+                          {getAlertas(c).filter(a => !['Resultado Pendente', 'Revisar', 'Ficha Pendente'].includes(a.label) || !primary).map((a, idx) => {
                             const baseStyle = { fontSize: 10, fontWeight: 700, color: a.color, background: a.bg, padding: '3px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4, whiteSpace: 'nowrap', lineHeight: 1.2 }
                             if (a.onClick) {
                               return <button key={idx} onClick={e => { e.stopPropagation(); a.onClick() }} style={{ ...baseStyle, border: `1px solid ${a.color}33`, cursor: 'pointer', fontFamily: 'inherit' }} title="Clique para abrir">{a.label}</button>

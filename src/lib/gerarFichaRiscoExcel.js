@@ -4,6 +4,7 @@
 // Sem React, sem hooks, sem efeitos colaterais além do download do arquivo.
 
 import { formatNomeEmpresa } from './formatNome'
+import { calcularAmostra, textoAmostra } from './amostragem'
 
 export async function gerarFichaRiscoExcel({
   row,
@@ -20,6 +21,7 @@ export async function gerarFichaRiscoExcel({
   premissas,
   passos,
   isAutomatic,
+  dtImplementacao,
 }) {
   const { pq, quando, onde, quem, como, resultado } = premissas || {}
 
@@ -140,6 +142,8 @@ export async function gerarFichaRiscoExcel({
   applyRow(ws, 28, 'CARACTERÍSTICA',  editCar   || row.car   || '—', false)
   applyRow(ws, 29, 'SISTEMA',         editSis   || row.sis   || '—', false)
   applyRow(ws, 30, 'CONTROLE CHAVE?', editChave || row.chave || '—', false)
+  const _amostraFicha = calcularAmostra({ ...row, freq: editFreq || row.freq, car: editCar || row.car, chave: editChave || row.chave, dt_implementacao: dtImplementacao || row.dt_implementacao })
+  applyRow(ws, 31, 'AMOSTRA RECOMENDADA', textoAmostra(_amostraFicha), false, { valueBold: true, valueColor: COPPER })
   ws.getRow(31).height = 5
 
   applySection(ws, 32, '4. AS 6 PREMISSAS DO CONTROLE — VALIDAÇÃO METODOLÓGICA')

@@ -15,6 +15,7 @@ import ModalComentario from './ModalComentario'
 import { syncPassosESolicitacoes, loadPassosTeste, criarPassoVazio } from '../lib/passosTeste'
 import { useAuth } from '../contexts/AuthContext'
 import { gerarFichaRiscoExcel } from '../lib/gerarFichaRiscoExcel'
+import { calcularAmostra } from '../lib/amostragem'
 import { uploadDocumento } from '../lib/documentos'
 import { getFaseInfo } from '../lib/fases'
 import { reabrirBloco, blocosAplicaveis, faseDoBloco, setBlocoStatus } from '../lib/aprovacoesBloco'
@@ -141,6 +142,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
 
   // ═══ LOGIC ═══
   const isAutomatic = editCar === 'Automatizado'
+  const amostraInfo = calcularAmostra({ ...row, freq: editFreq || row.freq, car: editCar || row.car, chave: editChave || row.chave, dt_implementacao: dtImplementacao || row.dt_implementacao })
   const isEndFlow = statusChoice === 'sim' && (newStatus === 'evitado' || newStatus === 'transferido')
 
   // Validação Step 1
@@ -362,6 +364,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
         premissas: { pq, quando, onde, quem, como, resultado },
         passos,
         isAutomatic,
+        dtImplementacao,
       })
       try {
         if (ficha?.blob) await uploadDocumento({
@@ -460,7 +463,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
         edicao_pendente: !isDiag,
         // Projeto COM teste: mudar o risco/controle invalida o teste anterior -> limpa os
         // resultados para o controle voltar a "Teste Pendente" (precisa testar de novo).
-        ...((!isDiag && mudouRiscoControle()) ? { r1: null, r_ader: null, r3: null, r_f4c1: null, r_f4c2: null, r_f5: null } : {}),
+        ...((!isDiag && (mudouRiscoControle() || blocosReabrir.includes('passos'))) ? { r1: null, r_ader: null, r3: null, r_f4c1: null, r_f4c2: null, r_f5: null } : {}),
         ...((row.crit != null && mudouRiscoControle()) ? { crit_revalidar: true } : {}),
         submetido_por: perfil?.id,
         submetido_em: new Date().toISOString(),
@@ -644,6 +647,7 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
                   saving={saving}
                   handleSaveFicha={handleSaveFicha}
                   handleSaveSemFicha={handleSaveSemFicha}
+                  amostraInfo={amostraInfo}
                 />
               )}
             </>

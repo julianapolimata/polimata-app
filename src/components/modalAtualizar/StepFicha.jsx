@@ -1,6 +1,7 @@
 // Step Ficha do ModalAtualizar — confirmar e baixar a ficha de risco.
 // Extraído em 22/mai/2026 (fatiamento Etapa 3). Diff-zero: visual idêntico.
 import React from 'react'
+import { textoAmostra } from '../../lib/amostragem'
 
 export default function StepFicha({
   row,
@@ -13,6 +14,7 @@ export default function StepFicha({
   saving,
   handleSaveFicha,
   handleSaveSemFicha,
+  amostraInfo,
 }) {
   return (
     <div>
@@ -45,6 +47,9 @@ export default function StepFicha({
         </div>
       </div>
 
+      <div style={{ background: '#F3EEE4', border: '1px solid #E0D5C7', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#00203E', lineHeight: 1.5 }}>
+        <strong>Amostra a ser testada/pedida:</strong> {textoAmostra(amostraInfo)}
+      </div>
       <div
         onClick={!saving ? handleSaveFicha : undefined}
         style={{ background: '#00203E', color: 'white', padding: 16, borderRadius: 8, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, cursor: saving ? 'wait' : 'pointer', transition: 'opacity .15s', opacity: saving ? 0.6 : 1 }}

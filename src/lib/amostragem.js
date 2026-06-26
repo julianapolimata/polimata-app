@@ -169,3 +169,17 @@ export function recomendacaoCausa(nErros, nAmostra, { taxaTolerada = 0.05 } = {}
   return { sugestao: 'aderencia', destino: '2/2', taxa,
     texto: `Resultado da amostra: ${n} falha(s) em ${tam} itens (${pct}%). Um índice dentro da faixa de desvio isolado (≤ ${lim}%) tende a indicar falha de execução/aderência (erro humano), não de desenho. Recomendação: retorno à Fase 2-E2 — Teste de Efetividade (TOE).` }
 }
+
+
+// Texto curto e legível da amostra recomendada (usado na ficha e no passo Executar Teste).
+export function textoAmostra(a) {
+  if (!a) return '—'
+  if (a.requerUniverseManual) return 'Sob demanda — informe o nº de ocorrências do período ao classificar a causa-raiz.'
+  if (!a.ok) return a.motivo || 'Amostra indisponível.'
+  const partes = []
+  partes.push(`${a.amostraFinal}${a.itgc ? ' (saídas) + avaliação de ITGCs' : ''}`)
+  if (a.universo != null) partes.push(`universo ${a.universo}`)
+  partes.push(`base ${a.amostraBase}`)
+  if (a.ajustes && a.ajustes.length) partes.push(a.ajustes.join(', '))
+  return partes.join(' · ')
+}
