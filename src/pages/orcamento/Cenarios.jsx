@@ -61,6 +61,13 @@ export default function Cenarios({ projeto }) {
     if (error) d.setErro(error.message); else d.reload()
   }
 
+  async function excluir(cenId, nome) {
+    if (!window.confirm(`Excluir o cenário "${nome}"? Isso remove o orçado cadastrado nele e não pode ser desfeito.`)) return
+    await supabase.from('orc_orcamento_itens').delete().eq('orcamento_id', cenId)
+    const { error } = await supabase.from('orc_orcamentos').delete().eq('id', cenId)
+    if (error) d.setErro(error.message); else d.reload()
+  }
+
   async function gerarInsight() {
     setGerando(true)
     try {
@@ -125,6 +132,14 @@ export default function Cenarios({ projeto }) {
                   {r.cen.status === 'aprovado'
                     ? <Badge tone="gold">★ Aprovado</Badge>
                     : <button onClick={() => aprovar(r.cen.id)} style={{ background: 'none', border: '1px solid var(--lt-brd)', borderRadius: 6, padding: '3px 10px', fontSize: 11, cursor: 'pointer', color: 'var(--lt-text3)', fontFamily: 'inherit' }}>★ Definir aprovado</button>}
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td style={TDL}>Ações</td>
+              {resumo.map(r => (
+                <td key={r.cen.id} style={TD}>
+                  <button onClick={() => excluir(r.cen.id, r.cen.nome || 'v' + r.cen.versao)} title="Excluir cenário" style={{ background: 'none', border: '1px solid var(--lt-brd)', borderRadius: 6, padding: '3px 10px', fontSize: 11, cursor: 'pointer', color: 'var(--lt-danger, #A32D2D)', fontFamily: 'inherit' }}>🗑 Excluir</button>
                 </td>
               ))}
             </tr>
