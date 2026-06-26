@@ -200,6 +200,14 @@ const CAMPOS_FASE = {
   F5:   ['r_f5', 'incons_f5', 'rec_f5', 'coment_f5', 'dt_f5'],
 }
 
+// Resultados de teste das fases (exclui st_pa = plano de ação). Usado p/ exigir teste antes de Concluído.
+const RESULTADO_TESTE_KEYS = ['r1', 'r_ader', 'r3', 'r_f4c1', 'r_f4c2', 'r_f5']
+function temAlgumResultadoTeste(c) {
+  // Conservador: qualquer resultado preenchido conta (inclui GAP / Teste Não Realizado),
+  // pois são desfechos deliberados. Só rebaixa quando NÃO há nenhum resultado registrado.
+  return RESULTADO_TESTE_KEYS.some(k => { const v = c[k]; return v != null && String(v).trim() !== '' })
+}
+
 function temDadosNaFase(c, codigoFase) {
   const campos = CAMPOS_FASE[codigoFase]
   if (!campos) return false
@@ -224,6 +232,9 @@ export function getStatusComputado(c, numFases, comTeste) {
 
   // Estados explícitos do workflow têm prioridade
   const sw = c.status_workflow
+  // Projeto COM teste: 'aprovado'/Concluído exige resultado de teste. Sem teste (nunca testado
+  // ou risco/controle editado após o teste) -> precisa (re)testar.
+  if (comTeste && sw === 'aprovado' && !temAlgumResultadoTeste(c)) return 'teste_pendente'
   if (sw === 'rascunho' || sw === 'em_revisao' || sw === 'aprovado' || sw === 'reprovado' || sw === 'em_analise' || sw === 'teste_pendente' || sw === 'reavaliacao_pendente') return sw
 
   const info = getFaseInfo(c, numFases, comTeste)

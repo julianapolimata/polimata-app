@@ -388,7 +388,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
   // Calcula primary/secondary action pra o modal aberto (mesma lógica da coluna Ação)
   function getModalActions(c) {
     if (!c) return {}
-    const st = c.status_workflow
+    const st = getStatusComputado(c, projeto?.num_fases, projeto?.f1_tem_teste === true)
     const podeEditarEste = canEditControle(c)
     const ehInativo = c.ativo === false || ['evitado','transferido','descontinuado'].includes((c.status_risco || '').toLowerCase())
     if (ehInativo) {

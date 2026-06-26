@@ -450,6 +450,9 @@ const ModalAtualizar = ({ row, onClose, onSaved, areas, projeto, irParaFicha }) 
         dt_implementacao: dtImplementacao || null,
         status_workflow: podeAprovarSolo ? 'aprovado' : 'em_revisao',
         edicao_pendente: !isDiag,
+        // Projeto COM teste: mudar o risco/controle invalida o teste anterior -> limpa os
+        // resultados para o controle voltar a "Teste Pendente" (precisa testar de novo).
+        ...((!isDiag && mudouRiscoControle()) ? { r1: null, r_ader: null, r3: null, r_f4c1: null, r_f4c2: null, r_f5: null } : {}),
         ...((row.crit != null && mudouRiscoControle()) ? { crit_revalidar: true } : {}),
         submetido_por: perfil?.id,
         submetido_em: new Date().toISOString(),
