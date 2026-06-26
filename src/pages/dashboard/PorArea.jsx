@@ -94,6 +94,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
   const areaHeatmap = useMemo(() => {
     const grid = Array.from({ length: 4 }, () => Array(4).fill(0))
     controles.forEach(c => {
+      if (c.ativo === false || String(c.status_risco || '').toLowerCase() === 'descontinuado') return
       const ri = impToIdx(c.imp), ci = probToIdx(c.prob)
       if (ri >= 0 && ci >= 0) grid[ri][ci]++
     })
@@ -162,7 +163,9 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
   const p = area.calc?.percentual||0, nv = getNivelMaturidade(p)
   let efetivos=0, inefetivos=0, gaps=0, planosAcao=0
   let pa_ex=0, pa_pc=0, pa_ix=0, pa_crit=0
-  area.controles.forEach(c => {
+  // Contagens/KPIs ignoram inativos (evitado/transferido) e descontinuados — igual ao dashboard
+  const controlesAtivos = area.controles.filter(c => c.ativo !== false && String(c.status_risco || '').toLowerCase() !== 'descontinuado')
+  controlesAtivos.forEach(c => {
     const rv = getResultadoVitrine(c, projeto)
     if (isEfetivo(rv)) efetivos++
     else if (isInefetivo(rv)) inefetivos++
@@ -173,7 +176,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
     else if (c.existencia === 'Inexistente') pa_ix++
     if (c.crit === 4) pa_crit++
   })
-  const pa_total = area.controles.length
+  const pa_total = controlesAtivos.length
   const pa_pct = (n) => pa_total > 0 ? Math.round(n / pa_total * 100) : 0
 
   // Resultado geral: retorna o resultado da fase mais avançada do controle

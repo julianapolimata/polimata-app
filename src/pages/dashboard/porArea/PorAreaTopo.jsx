@@ -19,7 +19,7 @@ export default function PorAreaTopo({ ctx }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <div className="mrc-header-stats">
-            <div className="mrc-stat"><span className="mrc-stat-n">{area.controles.length}</span><span className="mrc-stat-l">controles</span></div>
+            <div className="mrc-stat"><span className="mrc-stat-n">{pa_total}</span><span className="mrc-stat-l">controles</span></div>
             <div className="mrc-stat"><span className="mrc-stat-n">{pesoEmpresa}%</span><span className="mrc-stat-l">peso empresa</span></div>
           </div>
           <NotificacoesPanel />
@@ -106,13 +106,13 @@ export default function PorAreaTopo({ ctx }) {
           </div>
           <div style={{ ...PA.kpiCard, borderTopColor: 'var(--navy)' }}>
             <div style={PA.kpiLabel}>Total de Controles</div>
-            <div style={{ ...PA.kpiValor, color: 'var(--navy)' }}>{area.controles.length}</div>
+            <div style={{ ...PA.kpiValor, color: 'var(--navy)' }}>{pa_total}</div>
             <div style={PA.kpiSub}>Peso empresa: {pesoEmpresa}%</div>
           </div>
           <div style={{ ...PA.kpiCard, borderTopColor: '#22C55E' }}>
             <div style={PA.kpiLabel}>Efetivos</div>
             <div style={{ ...PA.kpiValor, color: '#22C55E' }}>{efetivos}</div>
-            <div style={PA.kpiSub}>{area.controles.length > 0 ? Math.round(efetivos / area.controles.length * 100) : 0}% do total</div>
+            <div style={PA.kpiSub}>{pa_total > 0 ? Math.round(efetivos / pa_total * 100) : 0}% do total</div>
           </div>
           <div style={{ ...PA.kpiCard, borderTopColor: '#FACC15' }}>
             <div style={PA.kpiLabel}>Inefetivos</div>

@@ -45,11 +45,14 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
     load()
   }, [projetoId])
 
+  // Contagens/KPIs ignoram inativos (evitado/transferido) e descontinuados — igual ao dashboard
+  const mrcAtivos = useMemo(() => mrc.filter(c => c.ativo !== false && String(c.status_risco || '').toLowerCase() !== 'descontinuado'), [mrc])
+
   // KPIs — iguala padrão PorArea
   const kpis = useMemo(() => {
     let ef = 0, inf = 0, gap = 0, pa = 0
     let ex = 0, pc = 0, ix = 0, crit = 0
-    mrc.forEach(c => {
+    mrcAtivos.forEach(c => {
       const r = (getResultadoVitrine(c, projeto) || '').toLowerCase()
       if (r === 'efetivo') ef++
       else if (r === 'inefetivo') inf++
@@ -66,16 +69,16 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
       if (c.crit === 4) crit++
     })
     return { ef, inf, gap, pa, ex, pc, ix, crit }
-  }, [mrc])
+  }, [mrcAtivos])
 
   const heatGrid = useMemo(() => {
     const grid = Array.from({ length: 4 }, () => Array(4).fill(0))
-    mrc.forEach(c => {
+    mrcAtivos.forEach(c => {
       const ri = impToIdx(c.imp), ci = probToIdx(c.prob)
       if (ri >= 0 && ci >= 0) grid[ri][ci]++
     })
     return grid
-  }, [mrc])
+  }, [mrcAtivos])
 
   const mrcVisiveis = mrc.filter(r => {
     // Rascunho: visível só para quem criou (legado sem autor: só consultores)
@@ -126,7 +129,7 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
         </div>
         <div style={{ display:'flex',alignItems:'center',gap:20 }}>
           <div className="mrc-header-stats">
-            <div className="mrc-stat"><span className="mrc-stat-n">{mrc.length}</span><span className="mrc-stat-l">controles</span></div>
+            <div className="mrc-stat"><span className="mrc-stat-n">{mrcAtivos.length}</span><span className="mrc-stat-l">controles</span></div>
             <div className="mrc-stat"><span className="mrc-stat-n">{areas.length}</span><span className="mrc-stat-l">áreas</span></div>
           </div>
           {notificacoes}
@@ -177,7 +180,7 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: '1fr 1fr', gap: 8 }}>
           <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid var(--navy)', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
             <div style={kpiLabelS}>Total de Controles</div>
-            <div style={{ ...kpiValorS, color: 'var(--navy)' }}>{mrc.length}</div>
+            <div style={{ ...kpiValorS, color: 'var(--navy)' }}>{mrcAtivos.length}</div>
             <div style={kpiSubS}>{areas.length} áreas · Metodologia Polímata</div>
           </div>
           <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid var(--copper)', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
@@ -189,17 +192,17 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
             <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid #22C55E', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
               <div style={kpiLabelS}>Existentes</div>
               <div style={{ ...kpiValorS, color: '#22C55E' }}>{kpis.ex}</div>
-              <div style={kpiSubS}>{mrc.length > 0 ? Math.round(kpis.ex / mrc.length * 100) : 0}% do total</div>
+              <div style={kpiSubS}>{mrcAtivos.length > 0 ? Math.round(kpis.ex / mrcAtivos.length * 100) : 0}% do total</div>
             </div>
             <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid #FACC15', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
               <div style={kpiLabelS}>Parciais</div>
               <div style={{ ...kpiValorS, color: '#FACC15' }}>{kpis.pc}</div>
-              <div style={kpiSubS}>{mrc.length > 0 ? Math.round(kpis.pc / mrc.length * 100) : 0}% do total</div>
+              <div style={kpiSubS}>{mrcAtivos.length > 0 ? Math.round(kpis.pc / mrcAtivos.length * 100) : 0}% do total</div>
             </div>
             <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid #EF4444', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
               <div style={kpiLabelS}>Inexistentes</div>
               <div style={{ ...kpiValorS, color: '#EF4444' }}>{kpis.ix}</div>
-              <div style={kpiSubS}>{mrc.length > 0 ? Math.round(kpis.ix / mrc.length * 100) : 0}% do total</div>
+              <div style={kpiSubS}>{mrcAtivos.length > 0 ? Math.round(kpis.ix / mrcAtivos.length * 100) : 0}% do total</div>
             </div>
             <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid var(--copper)', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
               <div style={kpiLabelS}>Riscos Críticos</div>
@@ -210,7 +213,7 @@ export default function MRCCompleta({ projetoId, projeto, clienteNome, projetoNo
             <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid #22C55E', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
               <div style={kpiLabelS}>Efetivos</div>
               <div style={{ ...kpiValorS, color: '#22C55E' }}>{kpis.ef}</div>
-              <div style={kpiSubS}>{mrc.length > 0 ? Math.round(kpis.ef / mrc.length * 100) : 0}% do total</div>
+              <div style={kpiSubS}>{mrcAtivos.length > 0 ? Math.round(kpis.ef / mrcAtivos.length * 100) : 0}% do total</div>
             </div>
             <div style={{ background: 'var(--lt-card)', border: '1px solid var(--lt-border)', borderRadius: 12, padding: '12px 14px', borderTop: '3px solid #FACC15', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 3px rgba(10,37,64,0.06)' }}>
               <div style={kpiLabelS}>Inefetivos</div>
