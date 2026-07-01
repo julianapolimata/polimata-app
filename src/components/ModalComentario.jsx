@@ -49,7 +49,7 @@ export default function ModalComentario({ controleId, projetoId, perfil, acao = 
         <div style={{ fontSize: 12, color: 'var(--lt-text3)', marginBottom: 14, lineHeight: 1.5 }}>
           Opcional. Anote contexto, próximos passos, pendências externas — qualquer informação que ajude você ou outro consultor a retomar o trabalho depois. Fica salvo no histórico do controle.
         </div>
-        <textarea
+        <textarea spellCheck lang="pt-BR"
           value={texto}
           onChange={e => setTexto(e.target.value)}
           placeholder="Ex: Cliente confirmou que o controle de aprovação foi migrado pro SAP em março. Aguardando evidência."

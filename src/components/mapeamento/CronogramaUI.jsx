@@ -306,7 +306,7 @@ function DetalheCliente({ map, clienteNome, onMudou }) {
             </div>
           ) : (
             <div>
-              <textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={3} placeholder="Descreva os ajustes que precisam ser feitos…"
+              <textarea spellCheck lang="pt-BR" value={comentario} onChange={(e) => setComentario(e.target.value)} rows={3} placeholder="Descreva os ajustes que precisam ser feitos…"
                 style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'Montserrat', fontSize: 12, padding: 10, borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)', resize: 'vertical' }} />
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <Btn primario cor="linear-gradient(135deg,#9A3412,#EA580C)" disabled={!comentario.trim()} onClick={() => agir('solicitar_ajustes', comentario)}>Enviar solicitação de ajustes</Btn>

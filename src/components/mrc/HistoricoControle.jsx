@@ -42,7 +42,7 @@ function HistoricoControle({ controleId, projetoId }) {
   const formAdicionar = isPolimata && (
     <div style={{ marginTop: 12, padding: 12, background: 'var(--lt-bg)', border: '1px solid var(--lt-border)', borderRadius: 6 }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--lt-text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>+ Adicionar comentário</div>
-      <textarea value={novoTexto} onChange={e=>setNovoTexto(e.target.value)} rows={3} placeholder="Escreva uma anotação sobre este controle…" style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--lt-border)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', color: 'var(--lt-text)', background: '#fff', outline: 'none', resize: 'vertical' }} />
+      <textarea spellCheck lang="pt-BR" value={novoTexto} onChange={e=>setNovoTexto(e.target.value)} rows={3} placeholder="Escreva uma anotação sobre este controle…" style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--lt-border)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', color: 'var(--lt-text)', background: '#fff', outline: 'none', resize: 'vertical' }} />
       <div style={{ marginTop: 6, textAlign: 'right' }}>
         <button onClick={adicionar} disabled={salvando || !novoTexto.trim()} style={{ background: 'var(--copper)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (salvando || !novoTexto.trim()) ? 0.5 : 1 }}>{salvando ? 'Salvando…' : 'Adicionar'}</button>
       </div>

@@ -81,7 +81,7 @@ function NovoProjetoForm({ clientes, perfisPolimata, onSave, onCancel }) {
           </select>
         </div>
         <div className="cfg-field"><label>Descrição</label>
-          <textarea className="input-light" rows={2} value={form.descricao} onChange={e=>u('descricao',e.target.value)} placeholder="Escopo, objetivo ou contexto do projeto (opcional)" style={{resize:'vertical',fontFamily:'inherit'}} />
+          <textarea spellCheck lang="pt-BR" className="input-light" rows={2} value={form.descricao} onChange={e=>u('descricao',e.target.value)} placeholder="Escopo, objetivo ou contexto do projeto (opcional)" style={{resize:'vertical',fontFamily:'inherit'}} />
         </div>
         <div className="cfg-field" style={{maxWidth:200}}><label>Status</label>
           <select className="input-light" value={form.ativo?'ativo':'inativo'} onChange={e=>u('ativo',e.target.value==='ativo')}>

@@ -286,7 +286,7 @@ function ModalResponder({ solicitacao, perfil, controles, areas, onClose, onSave
               <input value={link} onChange={e=>setLink(e.target.value)} disabled={!podeResponder} placeholder="Se a evidência estiver em outro lugar, cole o link aqui" style={M.input} />
             </div>
             <div style={M.field}><label style={M.label}>Descrição do que está enviando</label>
-              <textarea value={descricao} onChange={e=>setDescricao(e.target.value)} disabled={!podeResponder} rows={3} placeholder="Ex: Política de Compras vigente, versão de janeiro/2026 (PDF)" style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
+              <textarea spellCheck lang="pt-BR" value={descricao} onChange={e=>setDescricao(e.target.value)} disabled={!podeResponder} rows={3} placeholder="Ex: Política de Compras vigente, versão de janeiro/2026 (PDF)" style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
             </div>
           </div>
 
@@ -415,7 +415,7 @@ function ModalSolicitacao({ projeto, controles, areas, perfil, solicitacao, dupl
               <input value={form.titulo} onChange={e=>u('titulo', e.target.value)} placeholder="Ex: Disponibilizar política de compras vigente" style={M.input} />
             </div>
             <div style={M.field}><label style={M.label}>Descrição detalhada</label>
-              <textarea value={form.descricao} onChange={e=>u('descricao', e.target.value)} rows={3} placeholder="Detalhe o que precisa: qual documento, período, formato esperado, etc." style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
+              <textarea spellCheck lang="pt-BR" value={form.descricao} onChange={e=>u('descricao', e.target.value)} rows={3} placeholder="Detalhe o que precisa: qual documento, período, formato esperado, etc." style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
             </div>
           </div>
 
@@ -457,10 +457,10 @@ function ModalSolicitacao({ projeto, controles, areas, perfil, solicitacao, dupl
               <input value={form.evidencia_link} onChange={e=>u('evidencia_link', e.target.value)} placeholder="https://drive.google.com/..." style={M.input} />
             </div>
             <div style={M.field}><label style={M.label}>Descrição da evidência</label>
-              <textarea value={form.evidencia_descricao} onChange={e=>u('evidencia_descricao', e.target.value)} rows={2} placeholder="Resumo do que foi entregue" style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
+              <textarea spellCheck lang="pt-BR" value={form.evidencia_descricao} onChange={e=>u('evidencia_descricao', e.target.value)} rows={2} placeholder="Resumo do que foi entregue" style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
             </div>
             <div style={M.field}><label style={M.label}>Comentários</label>
-              <textarea value={form.comentarios} onChange={e=>u('comentarios', e.target.value)} rows={2} placeholder="Observações livres" style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
+              <textarea spellCheck lang="pt-BR" value={form.comentarios} onChange={e=>u('comentarios', e.target.value)} rows={2} placeholder="Observações livres" style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
             </div>
           </div>
 
@@ -533,7 +533,7 @@ function ModalRecusa({ solicitacao, onClose, onDone, onDuplicar }) {
           {erro && <div style={M.erro}>{erro}</div>}
           <div style={M.field}>
             <label style={M.label}>Justificativa da recusa <span style={{ color: '#DC2626' }}>*</span></label>
-            <textarea value={just} onChange={e => setJust(e.target.value)} rows={3} placeholder="Explique o motivo — o cliente verá este texto se a solicitação for devolvida." style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
+            <textarea spellCheck lang="pt-BR" value={just} onChange={e => setJust(e.target.value)} rows={3} placeholder="Explique o motivo — o cliente verá este texto se a solicitação for devolvida." style={{ ...M.input, resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
           <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--copper)', textTransform: 'uppercase', letterSpacing: 1, margin: '14px 0 8px' }}>O que fazer com a solicitação?</div>
           {opcoes.map(o => (

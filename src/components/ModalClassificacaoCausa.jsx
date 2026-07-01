@@ -95,7 +95,7 @@ export default function ModalClassificacaoCausa({ row, onClose, onConfirmar, ini
 
           <div>
             <label style={L}>Justificativa <span style={{ color: '#E24B4A' }}>*</span></label>
-            <textarea value={justificativa} onChange={e => setJustificativa(e.target.value)} rows={3} placeholder="Descreva a análise/indagação que fundamenta a causa-raiz escolhida." style={{ ...INP, resize: 'vertical' }} />
+            <textarea spellCheck lang="pt-BR" value={justificativa} onChange={e => setJustificativa(e.target.value)} rows={3} placeholder="Descreva a análise/indagação que fundamenta a causa-raiz escolhida." style={{ ...INP, resize: 'vertical' }} />
           </div>
         </div>
 

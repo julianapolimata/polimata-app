@@ -49,7 +49,7 @@ export default function SecaoInconsistencia({ showInconsistencia, showInconsiste
               }}>
                 Qual inconsistência foi encontrada? <span style={{ color: '#E24B4A' }}>*</span>
               </label>
-              <textarea
+              <textarea spellCheck lang="pt-BR"
                 value={inconsistencia}
                 onChange={e => setInconsistencia(e.target.value)}
                 style={{

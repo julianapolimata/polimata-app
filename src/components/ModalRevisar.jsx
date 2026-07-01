@@ -242,7 +242,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
           </div>
           <div>
             <label style={S.label}>Nota do revisor <span style={{ fontWeight: 400, color: '#BBB' }}>(opcional)</span></label>
-            <textarea value={notaAprovar} onChange={e => setNotaAprovar(e.target.value)} placeholder="Observações..." style={{ width: '100%', padding: '0.7rem', border: '1px solid #D0D0D0', borderRadius: 4, fontFamily: "'Montserrat', sans-serif", fontSize: 13, minHeight: 60, resize: 'vertical', marginTop: 4 }} />
+            <textarea spellCheck lang="pt-BR" value={notaAprovar} onChange={e => setNotaAprovar(e.target.value)} placeholder="Observações..." style={{ width: '100%', padding: '0.7rem', border: '1px solid #D0D0D0', borderRadius: 4, fontFamily: "'Montserrat', sans-serif", fontSize: 13, minHeight: 60, resize: 'vertical', marginTop: 4 }} />
           </div>
         </div>
         <div style={S.footer}>
@@ -271,7 +271,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
           </div>
           <div>
             <label style={S.label}>Motivo da reprovação <span style={{ color: '#E24B4A' }}>*</span></label>
-            <textarea value={nota} onChange={e => setNota(e.target.value)} placeholder="Descreva o que precisa ser corrigido..." style={{ width: '100%', padding: '0.7rem', border: `1px solid ${nota.trim() ? '#D0D0D0' : '#E24B4A'}`, borderRadius: 4, fontFamily: "'Montserrat', sans-serif", fontSize: 13, minHeight: 80, resize: 'vertical', marginTop: 4 }} />
+            <textarea spellCheck lang="pt-BR" value={nota} onChange={e => setNota(e.target.value)} placeholder="Descreva o que precisa ser corrigido..." style={{ width: '100%', padding: '0.7rem', border: `1px solid ${nota.trim() ? '#D0D0D0' : '#E24B4A'}`, borderRadius: 4, fontFamily: "'Montserrat', sans-serif", fontSize: 13, minHeight: 80, resize: 'vertical', marginTop: 4 }} />
             <div style={{ fontSize: 10, color: '#7A8B9C', marginTop: 4, textAlign: 'right' }}>{nota.length} caracteres</div>
           </div>
         </div>

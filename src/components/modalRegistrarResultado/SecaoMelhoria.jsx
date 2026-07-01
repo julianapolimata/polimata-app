@@ -50,7 +50,7 @@ export default function SecaoMelhoria({ showDescMelhoria, melhoria, setMelhoria,
               }}>
                 Descrição da melhoria <span style={{ color: '#E24B4A' }}>*</span>
               </label>
-              <textarea
+              <textarea spellCheck lang="pt-BR"
                 value={descMelhoria}
                 onChange={e => setDescMelhoria(e.target.value)}
                 style={{

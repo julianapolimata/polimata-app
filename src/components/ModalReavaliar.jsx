@@ -93,7 +93,7 @@ const ModalReavaliar = ({ row, perfil, modo, onClose, onSaved }) => {
                 Este controle está <strong>Concluído</strong> (aprovado e com criticidade avaliada). Para editá-lo é preciso justificar a reavaliação — {podeAprovar ? 'ao confirmar, o controle fica Em Correção e é liberado para edição na hora.' : 'o pedido segue para aprovação do gerente antes da edição ser liberada.'}
               </div>
               <div style={lbl}>Justificativa <span style={{ color: '#E24B4A' }}>*</span></div>
-              <textarea value={justificativa} onChange={e => setJustificativa(e.target.value)}
+              <textarea spellCheck lang="pt-BR" value={justificativa} onChange={e => setJustificativa(e.target.value)}
                 placeholder="Por que este controle precisa ser reavaliado?"
                 style={{ width: '100%', minHeight: 90, padding: 10, border: '1px solid #D0D0D0', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, resize: 'vertical' }} />
             </>

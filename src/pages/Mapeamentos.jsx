@@ -384,7 +384,7 @@ function LacunasResponder({ map, carregar, invocar }) {
       {lacunas.map((q, i) => (
         <div key={i} style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 12.5, color: AZUL, fontWeight: 500, marginBottom: 4 }}>{i + 1}. {q}</div>
-          <textarea value={resp[q] || ''} onChange={(ev) => setResp((st) => ({ ...st, [q]: ev.target.value }))} rows={2} placeholder="Sua resposta…" style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'Montserrat', fontSize: 12, lineHeight: 1.5, padding: 10, borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)', resize: 'vertical' }} />
+          <textarea spellCheck lang="pt-BR" value={resp[q] || ''} onChange={(ev) => setResp((st) => ({ ...st, [q]: ev.target.value }))} rows={2} placeholder="Sua resposta…" style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'Montserrat', fontSize: 12, lineHeight: 1.5, padding: 10, borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)', resize: 'vertical' }} />
         </div>
       ))}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -462,7 +462,7 @@ function Detalhe({ map, projeto, perfil, clienteNome, invocar, carregar, onEdita
       {(map.transcricao || pronto || map.status === 'transcrito') && (
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: AZUL, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>Transcrição da entrevista</div>
-          <textarea value={transcricao} onChange={(ev) => setTranscricao(ev.target.value)} rows={8} style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'Montserrat', fontSize: 12, lineHeight: 1.6, padding: 12, borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)', resize: 'vertical' }} />
+          <textarea spellCheck lang="pt-BR" value={transcricao} onChange={(ev) => setTranscricao(ev.target.value)} rows={8} style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'Montserrat', fontSize: 12, lineHeight: 1.6, padding: 12, borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)', resize: 'vertical' }} />
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <Btn onClick={salvarTranscricao} disabled={salvando || transcricao === (map.transcricao || '')}>{salvando ? 'Salvando…' : 'Salvar transcrição'}</Btn>
             <Btn primario onClick={async () => { await salvarTranscricao(); invocar(map.id, 'estruturar') }} disabled={processando || !transcricao.trim()}>{pronto ? '↻ Reestruturar' : 'Estruturar'}</Btn>

@@ -143,7 +143,7 @@ export default function StepRisco({
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Justificativa da descontinuação *</label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={motivoInativacao}
                   onChange={(e) => setMotivoInativacao(e.target.value)}
                   placeholder="Explique por que o risco foi evitado..."
@@ -265,7 +265,7 @@ export default function StepRisco({
                 Editar descritivo do risco
               </div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Nova descrição do risco</label>
-              <textarea
+              <textarea spellCheck lang="pt-BR"
                 value={novaDescRisco}
                 onChange={(e) => setNovaDescRisco(e.target.value)}
                 placeholder="Descreva o novo risco..."

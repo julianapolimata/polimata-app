@@ -114,7 +114,7 @@ const ModalReabrir = ({ row, perfil, modo, onClose, onSaved }) => {
                 Este controle está <strong>{sitLabel}</strong> (inativo). Para trazê-lo de volta é preciso justificar a reabertura — {podeAprovar ? 'ao confirmar, ele volta a ficar ativo na hora, no início do fluxo (ação Atualizar).' : 'o pedido segue para aprovação do gerente antes da reabertura.'}
               </div>
               <div style={lbl}>Justificativa <span style={{ color: '#E24B4A' }}>*</span></div>
-              <textarea value={justificativa} onChange={e => setJustificativa(e.target.value)}
+              <textarea spellCheck lang="pt-BR" value={justificativa} onChange={e => setJustificativa(e.target.value)}
                 placeholder="Por que este controle precisa ser reaberto?"
                 style={{ width: '100%', minHeight: 90, padding: 10, border: '1px solid #D0D0D0', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, resize: 'vertical' }} />
             </>

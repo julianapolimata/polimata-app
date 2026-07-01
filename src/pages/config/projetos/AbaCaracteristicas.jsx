@@ -194,7 +194,7 @@ function AbaCaracteristicas({ dados, perfisPolimata = [], onUpdate, editando, se
           </div>
         </div>
         <div className="cfg-field"><label>Descrição</label>
-          <textarea className="input-light" rows={2} value={form.descricao} onChange={e=>u('descricao',e.target.value)} placeholder="Escopo, objetivo ou contexto do projeto (opcional)" style={{resize:'vertical',fontFamily:'inherit'}} />
+          <textarea spellCheck lang="pt-BR" className="input-light" rows={2} value={form.descricao} onChange={e=>u('descricao',e.target.value)} placeholder="Escopo, objetivo ou contexto do projeto (opcional)" style={{resize:'vertical',fontFamily:'inherit'}} />
         </div>
       </div>
 

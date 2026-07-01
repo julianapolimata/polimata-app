@@ -63,7 +63,7 @@ export default function StepControle({
       {isDiag && (
         <div style={{ marginBottom: 20 }}>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Recomendação / Melhoria</label>
-          <textarea value={recomendacao || ''} onChange={e => setRecomendacao(e.target.value)} rows={3} placeholder="O que se recomenda para este controle (implementar, formalizar, melhorias)..." style={{ width: '100%', padding: 10, border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, resize: 'vertical' }} />
+          <textarea spellCheck lang="pt-BR" value={recomendacao || ''} onChange={e => setRecomendacao(e.target.value)} rows={3} placeholder="O que se recomenda para este controle (implementar, formalizar, melhorias)..." style={{ width: '100%', padding: 10, border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, resize: 'vertical' }} />
         </div>
       )}
 
@@ -126,7 +126,7 @@ export default function StepControle({
             Editar descritivo do controle
           </div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>Nova descrição do controle</label>
-          <textarea
+          <textarea spellCheck lang="pt-BR"
             value={novaDescControle}
             onChange={(e) => setNovaDescControle(e.target.value)}
             disabled={isDiag && existencia === 'Inexistente'}
@@ -218,7 +218,7 @@ export default function StepControle({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>1. Quem faz? *</label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={quem}
                   onChange={(e) => setQuem(e.target.value)}
                   disabled={isAutomatic}
@@ -237,7 +237,7 @@ export default function StepControle({
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>2. Quando faz? *</label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={quando}
                   onChange={(e) => setQuando(e.target.value)}
                   placeholder="Periodicidade..."
@@ -246,7 +246,7 @@ export default function StepControle({
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>3. Por quê faz? *</label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={pq}
                   onChange={(e) => setPq(e.target.value)}
                   placeholder="Justificativa..."
@@ -255,7 +255,7 @@ export default function StepControle({
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>4. Como faz? *</label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={como}
                   onChange={(e) => setComo(e.target.value)}
                   placeholder="Procedimento..."
@@ -264,7 +264,7 @@ export default function StepControle({
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>5. Onde faz? *</label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={onde}
                   onChange={(e) => setOnde(e.target.value)}
                   placeholder="Local..."
@@ -273,7 +273,7 @@ export default function StepControle({
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#00203E', marginBottom: 6 }}>6. Qual o resultado? *</label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={resultado}
                   onChange={(e) => setResultado(e.target.value)}
                   placeholder="Resultado esperado..."

@@ -84,7 +84,7 @@ const PassosTesteList = ({ passos, onChange, disabled = false }) => {
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: 'var(--lt-text3, #5D6E80)', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 4 }}>
                 Passo de Teste
               </label>
-              <textarea
+              <textarea spellCheck lang="pt-BR"
                 value={p.descricao || ''}
                 onChange={e => setItem(idx, { descricao: e.target.value })}
                 disabled={disabled}

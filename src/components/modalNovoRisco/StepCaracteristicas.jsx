@@ -69,7 +69,7 @@ export default function StepCaracteristicas({ isAutomatic, step, isDiag, existen
                 }}>
                   Descrição do Controle <span style={{ color: '#E24B4A' }}>*</span>
                 </label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={descControle}
                   onChange={e => setDescControle(e.target.value)}
                   disabled={isDiag && existencia === 'Inexistente'}
@@ -149,7 +149,7 @@ export default function StepCaracteristicas({ isAutomatic, step, isDiag, existen
               {isDiag && (
                 <div style={{ marginBottom: '2rem' }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#00203E', marginBottom: 4 }}>Recomendação / Melhoria</label>
-                  <textarea value={recomendacao || ''} onChange={e => setRecomendacao(e.target.value)} rows={3} placeholder="O que se recomenda para este controle (implementar, formalizar, melhorias)..." style={{ width: '100%', padding: 10, border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, resize: 'vertical' }} />
+                  <textarea spellCheck lang="pt-BR" value={recomendacao || ''} onChange={e => setRecomendacao(e.target.value)} rows={3} placeholder="O que se recomenda para este controle (implementar, formalizar, melhorias)..." style={{ width: '100%', padding: 10, border: '1px solid #e5e7eb', borderRadius: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, resize: 'vertical' }} />
                 </div>
               )}
 
@@ -214,7 +214,7 @@ export default function StepCaracteristicas({ isAutomatic, step, isDiag, existen
                           placeholder={field.disabled ? 'N/A (Automatizado)' : ''}
                         />
                       ) : (
-                        <textarea
+                        <textarea spellCheck lang="pt-BR"
                           value={field.state[0]}
                           onChange={e => field.state[1](e.target.value)}
                           style={{

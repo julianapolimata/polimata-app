@@ -66,7 +66,7 @@ export default function SecaoPA({ showPA, temPA, setTemPA, paDesc, setPaDesc, pa
                     }}>
                       Descrição da ação <span style={{ color: '#E24B4A' }}>*</span>
                     </label>
-                    <textarea
+                    <textarea spellCheck lang="pt-BR"
                       value={paDesc}
                       onChange={e => setPaDesc(e.target.value)}
                       style={{
@@ -156,7 +156,7 @@ export default function SecaoPA({ showPA, temPA, setTemPA, paDesc, setPaDesc, pa
                   }}>
                     Por que não haverá plano de ação?
                   </label>
-                  <textarea
+                  <textarea spellCheck lang="pt-BR"
                     value={justificativaPA}
                     onChange={e => setJustificativaPA(e.target.value)}
                     style={{

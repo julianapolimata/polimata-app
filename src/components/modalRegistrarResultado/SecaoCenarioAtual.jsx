@@ -49,7 +49,7 @@ export default function SecaoCenarioAtual({ cenarioAtual, setCenarioAtual, readO
           lineHeight: 1.5,
         }}>{cenarioAtual || 'Não preenchido.'}</div>
       ) : (
-      <textarea
+      <textarea spellCheck lang="pt-BR"
         value={cenarioAtual}
         onChange={e => setCenarioAtual(e.target.value)}
         style={{

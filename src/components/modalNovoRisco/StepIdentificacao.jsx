@@ -100,7 +100,7 @@ export default function StepIdentificacao({ step, area, setArea, subprocesso, se
                 }}>
                   Cenário Atual
                 </label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={cenarioAtual}
                   onChange={e => setCenarioAtual(e.target.value)}
                   style={{
@@ -129,7 +129,7 @@ export default function StepIdentificacao({ step, area, setArea, subprocesso, se
                 }}>
                   Descrição do Risco <span style={{ color: '#E24B4A' }}>*</span>
                 </label>
-                <textarea
+                <textarea spellCheck lang="pt-BR"
                   value={descRisco}
                   onChange={e => setDescRisco(e.target.value)}
                   style={{
