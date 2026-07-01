@@ -23,24 +23,24 @@ export default function StepRisco({
       <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginBottom: 24 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 10 }}>
           <div style={{ borderRight: '1px solid #e5e7eb', paddingRight: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Ref. Risco</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#45566B', textTransform: 'uppercase', marginBottom: 4 }}>Ref. Risco</div>
             <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{row.rr}</div>
           </div>
           <div style={{ borderRight: '1px solid #e5e7eb', paddingRight: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Ref. Controle</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#45566B', textTransform: 'uppercase', marginBottom: 4 }}>Ref. Controle</div>
             <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{row.rc}</div>
           </div>
           <div style={{ borderRight: '1px solid #e5e7eb', paddingRight: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Fase Atual</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#45566B', textTransform: 'uppercase', marginBottom: 4 }}>Fase Atual</div>
             <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{getFaseLabel(row, projeto?.num_fases, projeto?.f1_tem_teste === true) || '—'}</div>
           </div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Resultado</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#45566B', textTransform: 'uppercase', marginBottom: 4 }}>Resultado</div>
             <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{getResultadoVitrine(row, projeto) || row.existencia || '—'}</div>
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Descrição do Risco</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#45566B', textTransform: 'uppercase', marginBottom: 4 }}>Descrição do Risco</div>
           <div style={{ fontSize: 12, color: '#00203E', marginTop: 6, lineHeight: 1.6 }}>{row.dr}</div>
         </div>
       </div>

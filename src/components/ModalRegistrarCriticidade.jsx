@@ -143,7 +143,7 @@ const ModalRegistrarCriticidade = ({ row, onClose, onSaved }) => {
               <span style={{ padding: '0.4rem 0.8rem', borderRadius: 4, fontWeight: 600, fontSize: 12, textTransform: 'uppercase', background: critLabel.color, color: critLabel.colorText }}>
                 {critLabel.label}
               </span>
-              <span style={{ fontSize: 13, color: '#7A8B9C', fontWeight: 500 }}>
+              <span style={{ fontSize: 13, color: '#45566B', fontWeight: 500 }}>
                 Criticidade: {criticidade} (Impacto {impacto} × Prob {probabilidade}) / {critLabel.label}
               </span>
             </div>

@@ -19,8 +19,8 @@ export default function BannerReprovacao({ isReprovado, notaReprovacao, faseAtua
               <div style={{ fontSize: 13, color: '#00203E', lineHeight: 1.5, fontStyle: 'italic' }}>
                 "{notaReprovacao.nota}"
               </div>
-              <div style={{ fontSize: 10, color: '#7A8B9C', marginTop: 6 }}>
-                Reprovado por <strong style={{ color: '#7A8B9C' }}>{notaReprovacao.autor?.nome || '—'}</strong> em{' '}
+              <div style={{ fontSize: 10, color: '#45566B', marginTop: 6 }}>
+                Reprovado por <strong style={{ color: '#45566B' }}>{notaReprovacao.autor?.nome || '—'}</strong> em{' '}
                 {new Date(notaReprovacao.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 {' · '}<span style={{ color: '#CC915E' }}>{faseAtual}</span>
               </div>

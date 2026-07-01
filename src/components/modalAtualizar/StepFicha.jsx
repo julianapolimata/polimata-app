@@ -25,27 +25,27 @@ export default function StepFicha({
       <div style={{ background: '#f9fafb', padding: 16, borderRadius: 8, marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12, fontSize: 12, paddingBottom: 8, borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontWeight: 600, color: '#00203E' }}>Descrição do Risco</div>
-          <div style={{ color: '#7A8B9C' }}>{novaDescRisco || row.dr}</div>
+          <div style={{ color: '#45566B' }}>{novaDescRisco || row.dr}</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12, fontSize: 12, paddingTop: 8, paddingBottom: 8, borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontWeight: 600, color: '#00203E' }}>Descrição do Controle</div>
-          <div style={{ color: '#7A8B9C' }}>{novaDescControle || row.dc}</div>
+          <div style={{ color: '#45566B' }}>{novaDescControle || row.dc}</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12, fontSize: 12, paddingTop: 8, paddingBottom: 8, borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontWeight: 600, color: '#00203E' }}>Categoria</div>
-          <div style={{ color: '#7A8B9C' }}>{editCat || '—'}</div>
+          <div style={{ color: '#45566B' }}>{editCat || '—'}</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12, fontSize: 12, paddingTop: 8, paddingBottom: 8, borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontWeight: 600, color: '#00203E' }}>Frequência</div>
-          <div style={{ color: '#7A8B9C' }}>{editFreq || '—'}</div>
+          <div style={{ color: '#45566B' }}>{editFreq || '—'}</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12, fontSize: 12, paddingTop: 8, paddingBottom: 8, borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontWeight: 600, color: '#00203E' }}>Natureza</div>
-          <div style={{ color: '#7A8B9C' }}>{editNat || '—'}</div>
+          <div style={{ color: '#45566B' }}>{editNat || '—'}</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12, fontSize: 12, paddingTop: 8, paddingBottom: 8, borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontWeight: 600, color: '#00203E' }}>Característica</div>
-          <div style={{ color: '#7A8B9C' }}>{editCar || '—'}</div>
+          <div style={{ color: '#45566B' }}>{editCar || '—'}</div>
         </div>
       </div>
 

@@ -56,7 +56,7 @@ export function ConectarCalendario({ perfil }) {
           {busy ? 'Abrindo…' : '📅 Conectar meu calendário'}
         </button>
       )}
-      {msg && <span style={{ fontSize: 11, color: '#6B7280' }}>{msg}</span>}
+      {msg && <span style={{ fontSize: 11, color: '#4B5563' }}>{msg}</span>}
     </div>
   )
 }
@@ -138,7 +138,7 @@ export function ReunioesProcesso({ map, perfil, carregar }) {
     <div style={{ marginTop: 16, background: '#fff', border: '1px solid rgba(0,32,62,0.12)', borderRadius: 10, padding: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: reunioes.length ? 12 : 0 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: AZUL, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-          🎥 Entrevistas {reunioes.length > 0 && <span style={{ color: '#6B7280' }}>({reunioes.length})</span>}
+          🎥 Entrevistas {reunioes.length > 0 && <span style={{ color: '#4B5563' }}>({reunioes.length})</span>}
         </div>
         {conn && !aberto && (
           <button onClick={() => setAberto(true)} style={{ background: 'rgba(204,145,94,0.10)', color: COBRE, border: '1px solid rgba(204,145,94,0.35)', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Montserrat' }}>
@@ -153,7 +153,7 @@ export function ReunioesProcesso({ map, perfil, carregar }) {
             <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '8px 12px', background: '#F8F6F1', borderRadius: 8 }}>
               <ChipReuniao r={r} />
               <span style={{ fontSize: 12.5, color: AZUL, fontWeight: 500 }}>{r.titulo || 'Entrevista'}</span>
-              {r.inicio && <span style={{ fontSize: 11.5, color: '#6B7280' }}>· {fmtDataHora(r.inicio)}</span>}
+              {r.inicio && <span style={{ fontSize: 11.5, color: '#4B5563' }}>· {fmtDataHora(r.inicio)}</span>}
               {r.meet_url && <a href={r.meet_url} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, color: COBRE, fontWeight: 600, marginLeft: 'auto' }}>Abrir Meet ↗</a>}
             </div>
           ))}
@@ -167,17 +167,17 @@ export function ReunioesProcesso({ map, perfil, carregar }) {
       ) : aberto ? (
         <div style={{ background: '#F8F6F1', border: '1px solid rgba(0,32,62,0.10)', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
-            <label style={{ fontSize: 11, color: '#6B7280' }}>Início<br/>
+            <label style={{ fontSize: 11, color: '#4B5563' }}>Início<br/>
               <input type="datetime-local" value={inicio} onChange={(e) => setInicio(e.target.value)} style={{ fontFamily: 'Montserrat', fontSize: 13, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)' }} />
             </label>
-            <label style={{ fontSize: 11, color: '#6B7280' }}>Duração (min)<br/>
+            <label style={{ fontSize: 11, color: '#4B5563' }}>Duração (min)<br/>
               <input type="number" min={15} step={15} value={duracao} onChange={(e) => setDuracao(e.target.value)} style={{ width: 90, fontFamily: 'Montserrat', fontSize: 13, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)' }} />
             </label>
-            <label style={{ fontSize: 11, color: '#6B7280', flex: 1, minWidth: 160 }}>Título (opcional)<br/>
+            <label style={{ fontSize: 11, color: '#4B5563', flex: 1, minWidth: 160 }}>Título (opcional)<br/>
               <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="ex.: Parte 2 — exceções" style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'Montserrat', fontSize: 13, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)' }} />
             </label>
           </div>
-          <label style={{ fontSize: 11, color: '#6B7280', display: 'block', marginBottom: 10 }}>E-mail(s) do entrevistado (separe por vírgula)<br/>
+          <label style={{ fontSize: 11, color: '#4B5563', display: 'block', marginBottom: 10 }}>E-mail(s) do entrevistado (separe por vírgula)<br/>
             <input value={emails} onChange={(e) => setEmails(e.target.value)} placeholder="fulano@empresa.com" style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'Montserrat', fontSize: 13, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)' }} />
           </label>
           {erro && <div style={{ color: '#991B1B', fontSize: 12, marginBottom: 8 }}>{erro}</div>}
@@ -189,7 +189,7 @@ export function ReunioesProcesso({ map, perfil, carregar }) {
           </div>
         </div>
       ) : reunioes.length === 0 ? (
-        <div style={{ fontSize: 12, color: '#6B7280' }}>Nenhuma entrevista agendada ainda. A IA entra na reunião e grava automaticamente.</div>
+        <div style={{ fontSize: 12, color: '#4B5563' }}>Nenhuma entrevista agendada ainda. A IA entra na reunião e grava automaticamente.</div>
       ) : null}
 
       {gravadas.length > 0 && (
@@ -198,7 +198,7 @@ export function ReunioesProcesso({ map, perfil, carregar }) {
           <button onClick={consolidar} disabled={consolidando || inProc} style={{ background: 'linear-gradient(135deg, #00203E, #16466e)', color: '#fff', border: 'none', borderRadius: 8, padding: '11px 20px', fontSize: 12.5, fontWeight: 600, cursor: (consolidando || inProc) ? 'wait' : 'pointer', fontFamily: 'Montserrat' }}>
             {consolidando ? 'Consolidando…' : `🧩 Consolidar ${gravadas.length} gravaç${gravadas.length > 1 ? 'ões' : 'ão'} e gerar documentos`}
           </button>
-          <div style={{ fontSize: 11, color: '#6B7280', marginTop: 6 }}>Junta as transcrições das entrevistas gravadas e (re)gera POP, fluxograma e matriz do conjunto.</div>
+          <div style={{ fontSize: 11, color: '#4B5563', marginTop: 6 }}>Junta as transcrições das entrevistas gravadas e (re)gera POP, fluxograma e matriz do conjunto.</div>
         </div>
       )}
     </div>

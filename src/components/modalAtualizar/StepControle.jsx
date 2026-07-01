@@ -30,16 +30,16 @@ export default function StepControle({
       <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginBottom: 24 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 10 }}>
           <div style={{ borderRight: '1px solid #e5e7eb', paddingRight: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Ref. Controle</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#45566B', textTransform: 'uppercase', marginBottom: 4 }}>Ref. Controle</div>
             <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{row.rc}</div>
           </div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Área</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#45566B', textTransform: 'uppercase', marginBottom: 4 }}>Área</div>
             <div style={{ fontSize: 12, color: '#00203E', fontWeight: 500 }}>{row.area}</div>
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', marginBottom: 4 }}>Descrição do Controle</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#45566B', textTransform: 'uppercase', marginBottom: 4 }}>Descrição do Controle</div>
           <div style={{ fontSize: 12, color: '#00203E', marginTop: 6, lineHeight: 1.6 }}>{row.dc}</div>
         </div>
       </div>

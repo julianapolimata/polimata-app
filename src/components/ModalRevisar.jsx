@@ -56,7 +56,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
         <div style={S.sectionTitle}>{titleNode}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 9, fontWeight: 700, color: cfg.c, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.3 }}>{cfg.t}</span>
-          {ap?.data_acao && <span style={{ fontSize: 9, color: '#7A8B9C', marginLeft: 2 }}>{new Date(ap.data_acao).toLocaleDateString('pt-BR')}</span>}
+          {ap?.data_acao && <span style={{ fontSize: 9, color: '#45566B', marginLeft: 2 }}>{new Date(ap.data_acao).toLocaleDateString('pt-BR')}</span>}
           {ap?.status === 'reprovado' && ap?.nota && <MotivoReprovacao texto={ap.nota} />}
           {!bloqueado && (st === 'a_aprovar' ? (
             <>
@@ -64,13 +64,13 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
               <button onClick={() => { setBlocoAlvo(blocoKey); setNotaAprovar(''); setView('approve') }} style={{ fontSize: 10, fontWeight: 700, color: 'white', background: '#22C55E', border: '1px solid #22C55E', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit' }}>✅ Aprovar</button>
             </>
           ) : (
-            <button onClick={async () => { await reabrirBloco({ mrcId: row.id, bloco: blocoKey, fase: faseDoBloco(blocoKey, row, projeto) }); setAprovacoes(await loadAprovacoes(row.id)) }} title="Refazer esta decisão" style={{ fontSize: 10, fontWeight: 600, color: '#7A8B9C', background: 'white', border: '1px solid #D0D0D0', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit' }}>↺ Refazer</button>
+            <button onClick={async () => { await reabrirBloco({ mrcId: row.id, bloco: blocoKey, fase: faseDoBloco(blocoKey, row, projeto) }); setAprovacoes(await loadAprovacoes(row.id)) }} title="Refazer esta decisão" style={{ fontSize: 10, fontWeight: 600, color: '#45566B', background: 'white', border: '1px solid #D0D0D0', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit' }}>↺ Refazer</button>
           ))}
         </div>
       </div>
     )
   }
-  const crit = CRIT_MAP[row?.crit] || { label: '—', bg: '#EEE', color: '#7A8B9C' }
+  const crit = CRIT_MAP[row?.crit] || { label: '—', bg: '#EEE', color: '#45566B' }
 
   // Carregar histórico
   useEffect(() => {
@@ -246,7 +246,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
           </div>
         </div>
         <div style={S.footer}>
-          <button onClick={() => setView('review')} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#7A8B9C' }}>Voltar</button>
+          <button onClick={() => setView('review')} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#45566B' }}>Voltar</button>
           <button onClick={handleAprovar} disabled={processing} style={{ ...S.btn, border: '1px solid #22C55E', background: '#22C55E', color: 'white', opacity: processing ? 0.5 : 1 }}>
             {processing ? 'Aprovando...' : '✅ Confirmar Aprovação'}
           </button>
@@ -272,11 +272,11 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
           <div>
             <label style={S.label}>Motivo da reprovação <span style={{ color: '#E24B4A' }}>*</span></label>
             <textarea spellCheck lang="pt-BR" value={nota} onChange={e => setNota(e.target.value)} placeholder="Descreva o que precisa ser corrigido..." style={{ width: '100%', padding: '0.7rem', border: `1px solid ${nota.trim() ? '#D0D0D0' : '#E24B4A'}`, borderRadius: 4, fontFamily: "'Montserrat', sans-serif", fontSize: 13, minHeight: 80, resize: 'vertical', marginTop: 4 }} />
-            <div style={{ fontSize: 10, color: '#7A8B9C', marginTop: 4, textAlign: 'right' }}>{nota.length} caracteres</div>
+            <div style={{ fontSize: 10, color: '#45566B', marginTop: 4, textAlign: 'right' }}>{nota.length} caracteres</div>
           </div>
         </div>
         <div style={S.footer}>
-          <button onClick={() => setView('review')} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#7A8B9C' }}>Voltar</button>
+          <button onClick={() => setView('review')} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#45566B' }}>Voltar</button>
           <button onClick={handleReprovar} disabled={processing || !nota.trim()} style={{ ...S.btn, border: '1px solid #EF4444', background: '#EF4444', color: 'white', opacity: processing || !nota.trim() ? 0.5 : 1 }}>
             {processing ? 'Reprovando...' : '↩ Confirmar Reprovação'}
           </button>
@@ -293,8 +293,8 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 300, fontFamily: "'Raleway', sans-serif", letterSpacing: 0.3 }}>📋 Histórico de Revisões — {row?.rc}</h2>
         </div>
         <div style={S.body}>
-          {loadingHist ? <div style={{ textAlign: 'center', padding: 20, color: '#7A8B9C' }}>Carregando...</div> :
-            historico.length === 0 ? <div style={{ textAlign: 'center', padding: 20, color: '#7A8B9C' }}>Nenhuma revisão registrada.</div> :
+          {loadingHist ? <div style={{ textAlign: 'center', padding: 20, color: '#45566B' }}>Carregando...</div> :
+            historico.length === 0 ? <div style={{ textAlign: 'center', padding: 20, color: '#45566B' }}>Nenhuma revisão registrada.</div> :
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               {historico.map((h, i) => {
                 const tipo = h.tipo
@@ -305,11 +305,11 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
                   <div key={h.id || i} style={{ padding: '12px 0', borderBottom: i < historico.length - 1 ? '1px solid #F0EBE4' : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: cor }}>{icon} {label}</span>
-                      <span style={{ fontSize: 11, color: '#7A8B9C' }}>por {h.autor?.nome || 'Desconhecido'}</span>
+                      <span style={{ fontSize: 11, color: '#45566B' }}>por {h.autor?.nome || 'Desconhecido'}</span>
                       {h.fase && <span style={{ fontSize: 10, fontWeight: 400, color: '#CC915E', background: 'rgba(204,145,94,0.1)', padding: '1px 6px', borderRadius: 3 }}>{h.fase}</span>}
                     </div>
                     {h.nota && <div style={{ fontSize: 12, color: '#00203E', lineHeight: 1.5, paddingLeft: 4, fontStyle: 'italic' }}>"{h.nota}"</div>}
-                    <div style={{ fontSize: 10, color: '#7A8B9C', marginTop: 4 }}>
+                    <div style={{ fontSize: 10, color: '#45566B', marginTop: 4 }}>
                       {new Date(h.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
@@ -318,7 +318,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
             </div>}
         </div>
         <div style={S.footer}>
-          <button onClick={() => setView('review')} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#7A8B9C' }}>Voltar</button>
+          <button onClick={() => setView('review')} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#45566B' }}>Voltar</button>
         </div>
       </div>
     </div>
@@ -344,7 +344,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
                 {(() => {
                   // Suporta projeto com teste (r1: efetivo/inefetivo/gap) e diagnóstico (existencia: Existente/Parcial/Inexistente)
                   const valor = row?.r1 || row?.existencia
-                  if (!valor) return <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 3, fontSize: 11, fontWeight: 700, color: '#7A8B9C' }}>—</span>
+                  if (!valor) return <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 3, fontSize: 11, fontWeight: 700, color: '#45566B' }}>—</span>
                   const v = String(valor).toLowerCase()
                   let bg = '#FFF3E0', color = '#E65100'
                   if (v === 'efetivo' || v === 'existente') { bg = '#E8F5E9'; color = '#1B5E20' }
@@ -395,7 +395,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
               quando vazio, destaca em vermelho pra admin/gerente reprovar
               e devolver pra consultora preencher. */}
           <div style={S.section}>
-            {renderBlocoHeader('cenario', <>Cenário Atual <span style={{ fontSize: 9, color: '#7A8B9C', fontWeight: 500, marginLeft: 6 }}>(como o processo é feito hoje)</span></>)}
+            {renderBlocoHeader('cenario', <>Cenário Atual <span style={{ fontSize: 9, color: '#45566B', fontWeight: 500, marginLeft: 6 }}>(como o processo é feito hoje)</span></>)}
             {row?.cenario_atual && row.cenario_atual.trim() ? (
               <div style={{ ...S.value, whiteSpace: 'pre-wrap' }}>{row.cenario_atual}</div>
             ) : (
@@ -508,7 +508,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
           )}
 
           {/* Botão de histórico */}
-          <button onClick={() => setView('history')} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#7A8B9C', width: '100%', textAlign: 'center', marginTop: 4 }}>
+          <button onClick={() => setView('history')} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#45566B', width: '100%', textAlign: 'center', marginTop: 4 }}>
             📋 Ver Histórico de Revisões ({historico.length})
           </button>
         </div>
@@ -522,7 +522,7 @@ const ModalRevisar = ({ row, onClose, onAction, projeto }) => {
 
         {/* Footer com ações */}
         <div style={S.footer}>
-          <button onClick={requestClose} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#7A8B9C' }}>Fechar</button>
+          <button onClick={requestClose} style={{ ...S.btn, border: '1px solid #D0D0D0', background: 'white', color: '#45566B' }}>Fechar</button>
           {!bloqueado && (
             <button onClick={concluirRevisao} disabled={processing} style={{ ...S.btn, border: '1px solid #00203E', background: '#00203E', color: 'white', opacity: processing ? 0.5 : 1 }}>
               {processing ? 'Concluindo...' : 'Concluir revisão'}

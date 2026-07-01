@@ -49,7 +49,7 @@ export default function ModalClassificacaoCausa({ row, onClose, onConfirmar, ini
             ) : calc.ok ? (
               <div>
                 <strong>Amostra recomendada: {calc.amostraFinal}</strong> {calc.itgc ? '(saídas) + avaliação de ITGCs' : ''}<br />
-                <span style={{ color: '#5D6E80' }}>
+                <span style={{ color: '#3D4E62' }}>
                   {calc.periodoInicio ? `Período: ${calc.periodoInicio.toLocaleDateString('pt-BR')} → hoje · ` : ''}
                   {calc.universo != null ? `Universo: ${calc.universo} · ` : ''}
                   Base {calc.amostraBase}{calc.ajustes?.length ? ` · ${calc.ajustes.join(', ')}` : ''}

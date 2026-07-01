@@ -104,18 +104,18 @@ export default function CronogramaJira({ lista, projeto, carregar, onEditar, onA
         <div style={{ display: 'inline-flex', border: '1px solid rgba(0,32,62,0.15)', borderRadius: 8, overflow: 'hidden' }}>
           {zBtn('semana', 'Semana')}{zBtn('mes', 'Mês')}{zBtn('tri', 'Trimestre')}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#6B7280' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#4B5563' }}>
           Prazo médio por processo:
           <input type="number" min={1} defaultValue={duracaoPadrao || 30} key={duracaoPadrao} onBlur={(ev) => { const v = Math.max(Number(ev.target.value) || 1, 1); if (onDuracaoPadrao && v !== (duracaoPadrao || 30)) onDuracaoPadrao(v) }} style={{ width: 58, fontFamily: 'Montserrat', fontSize: 13, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(0,32,62,0.15)' }} />
           dias
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 16, fontSize: 12.5 }}>
-          <span style={{ color: '#6B7280' }}>Prazo final: <b style={{ color: AZUL }}>{fmt(fimPrev)} {new Date(fimPrev).getFullYear()}</b></span>
+          <span style={{ color: '#4B5563' }}>Prazo final: <b style={{ color: AZUL }}>{fmt(fimPrev)} {new Date(fimPrev).getFullYear()}</b></span>
           {impacto > 0 && <span style={{ color: VERMELHO, fontWeight: 600 }}>+{impacto} {impacto === 1 ? 'dia' : 'dias'} de atraso</span>}
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 10, fontSize: 11.5, color: '#6B7280' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 10, fontSize: 11.5, color: '#4B5563' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 11, height: 11, borderRadius: 2, background: COBRE }} />Em produção</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 11, height: 11, borderRadius: 2, background: VERDE }} />Vigente</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 11, height: 11, borderRadius: 2, background: VERMELHO }} />Atrasado</span>
@@ -126,7 +126,7 @@ export default function CronogramaJira({ lista, projeto, carregar, onEditar, onA
         <div style={{ position: 'relative', width: (LBL + spanPx) + 'px', height: (HEAD + totalH) + 'px' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, width: LBL, height: HEAD, background: '#fff', borderBottom: '1px solid rgba(0,32,62,0.10)', zIndex: 4 }} />
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: HEAD, borderBottom: '1px solid rgba(0,32,62,0.10)' }}>
-            {ticks.map((tk, i) => <div key={i} style={{ position: 'absolute', left: (LBL + tk.x) + 'px', top: 0, height: '100%', borderLeft: '1px solid rgba(0,32,62,0.08)', paddingLeft: 5, fontSize: 10.5, color: '#9CA3AF', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>{tk.t}</div>)}
+            {ticks.map((tk, i) => <div key={i} style={{ position: 'absolute', left: (LBL + tk.x) + 'px', top: 0, height: '100%', borderLeft: '1px solid rgba(0,32,62,0.08)', paddingLeft: 5, fontSize: 10.5, color: '#586477', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>{tk.t}</div>)}
           </div>
           <div style={{ position: 'absolute', top: HEAD, left: 0, right: 0, bottom: 0 }}>
             {vlines.map((vx, i) => <div key={i} style={{ position: 'absolute', left: (LBL + vx) + 'px', top: 0, bottom: 0, width: 1, background: 'rgba(0,32,62,0.05)' }} />)}
@@ -165,7 +165,7 @@ export default function CronogramaJira({ lista, projeto, carregar, onEditar, onA
                 const col = !!collapsed[r.aid || 'sem']
                 return (
                   <div key={idx} onClick={() => setCollapsed((s) => ({ ...s, [r.aid || 'sem']: !col }))} style={{ height: AH, display: 'flex', alignItems: 'center', gap: 6, padding: '0 10px', boxSizing: 'border-box', cursor: 'pointer', background: '#FAF8F3', borderTop: '1px solid rgba(0,32,62,0.06)' }}>
-                    <span style={{ fontSize: 13, color: '#6B7280', width: 12 }}>{col ? '▸' : '▾'}</span>
+                    <span style={{ fontSize: 13, color: '#4B5563', width: 12 }}>{col ? '▸' : '▾'}</span>
                     <span style={{ fontSize: 11.5, fontWeight: 600, color: AZUL, textTransform: 'uppercase', letterSpacing: 0.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.nome}</span>
                   </div>
                 )
@@ -174,12 +174,12 @@ export default function CronogramaJira({ lista, projeto, carregar, onEditar, onA
               return (
                 <div key={idx} onClick={() => onAbrir && onAbrir(p)} style={{ height: PH, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 14px', boxSizing: 'border-box', borderTop: '1px solid rgba(0,32,62,0.06)', cursor: 'pointer' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                    <button onClick={(ev) => { ev.stopPropagation(); onMover && onMover(p, -1) }} title="Subir" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 10, lineHeight: 1, padding: 0 }}>▲</button>
-                    <button onClick={(ev) => { ev.stopPropagation(); onMover && onMover(p, 1) }} title="Descer" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 10, lineHeight: 1, padding: 0 }}>▼</button>
+                    <button onClick={(ev) => { ev.stopPropagation(); onMover && onMover(p, -1) }} title="Subir" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#586477', fontSize: 10, lineHeight: 1, padding: 0 }}>▲</button>
+                    <button onClick={(ev) => { ev.stopPropagation(); onMover && onMover(p, 1) }} title="Descer" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#586477', fontSize: 10, lineHeight: 1, padding: 0 }}>▼</button>
                   </div>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 600, color: AZUL, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nome_processo}</div>
-                    <div style={{ fontSize: 10.5, color: '#9CA3AF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{Math.max(p.duracao_dias ?? duracaoPadrao ?? 30, 1)} dias · {lbl}</div>
+                    <div style={{ fontSize: 10.5, color: '#586477', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{Math.max(p.duracao_dias ?? duracaoPadrao ?? 30, 1)} dias · {lbl}</div>
                   </div>
                   {onEditar && <button onClick={(ev) => { ev.stopPropagation(); onEditar(p) }} title="Editar processo" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: COBRE, flexShrink: 0 }}>✎</button>}
                 </div>
@@ -188,7 +188,7 @@ export default function CronogramaJira({ lista, projeto, carregar, onEditar, onA
           </div>
         </div>
       </div>
-      <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 8 }}>A linha vermelha marca hoje. As setas mostram a dependência em cascata: cada processo começa quando o anterior termina. Use ▲▼ para reordenar a sequência. Clique num processo para abrir (gravar/agendar/documentos).</div>
+      <div style={{ fontSize: 10.5, color: '#586477', marginTop: 8 }}>A linha vermelha marca hoje. As setas mostram a dependência em cascata: cada processo começa quando o anterior termina. Use ▲▼ para reordenar a sequência. Clique num processo para abrir (gravar/agendar/documentos).</div>
     </div>
   )
 }

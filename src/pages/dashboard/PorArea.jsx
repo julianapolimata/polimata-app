@@ -280,7 +280,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
   // Badge de fase — resultado ou "Não iniciado"
   function badgeFase(val) {
     if (val === 'N/A') return <span style={{ fontSize: 10, fontStyle: 'italic', color: 'var(--lt-text3)' }}>N/A</span>
-    if (val === 'Evitado') return <span style={{ ...bdgS, background: 'rgba(107,114,128,0.1)', color: '#6B7280', fontStyle: 'italic' }}>Evitado</span>
+    if (val === 'Evitado') return <span style={{ ...bdgS, background: 'rgba(107,114,128,0.1)', color: '#4B5563', fontStyle: 'italic' }}>Evitado</span>
     if (val === 'Transferido') return <span style={{ ...bdgS, background: 'rgba(99,102,241,0.1)', color: '#6366F1', fontStyle: 'italic' }}>Transferido</span>
     if (!val || val === 'Teste Não Realizado') return <span style={{ fontSize: 10, fontStyle: 'italic', color: 'var(--lt-text3)' }}>Não iniciado</span>
     return badgeR(val)

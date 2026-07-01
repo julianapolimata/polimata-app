@@ -31,8 +31,8 @@
   --bg3: #143556;
   --bg4: #0D2844;
   --txt1: #F3EEE4;
-  --txt2: rgba(243,238,228,0.72);
-  --txt3: rgba(243,238,228,0.42);
+  --txt2: rgba(243,238,228,0.85);
+  --txt3: rgba(243,238,228,0.62);
   --brd: rgba(204,145,94,0.12);
   --brd2: rgba(204,145,94,0.24);
 
@@ -54,8 +54,8 @@
   --lt-input: #FFFFFF;
   --lt-hover: rgba(204,145,94,0.06);
   --lt-text: #00203E;
-  --lt-text2: #3D5068;
-  --lt-text3: #4A5A6E;          /* escurecido p/ legibilidade: 5,26:1 -> 6,6:1 (cliente reportou claro) */
+  --lt-text2: #2E4258;
+  --lt-text3: #384658;          /* escurecido 2x p/ legibilidade (Juliana 1/jul: cinza claro ruim de ler): #4A5A6E -> #384658, ~8:1 no branco */
   --lt-border: rgba(0,32,62,0.12);    /* was 0.08, too subtle on cream */
   --lt-border2: rgba(0,32,62,0.20);   /* was 0.15 */
   --lt-shadow-sm: 0 2px 8px rgba(0,32,62,0.08);  /* stronger for cream bg */

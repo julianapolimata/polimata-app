@@ -249,7 +249,7 @@ const mrcTdS = { padding: '7px 10px', borderBottom: '1px solid var(--lt-border)'
 
 function badgeFaseMRC(val) {
   if (val === 'N/A') return <span style={{ fontSize: 10, fontStyle: 'italic', color: 'var(--lt-text3)' }}>N/A</span>
-  if (val === 'Evitado') return <span className="bd b-na" style={{ fontStyle: 'italic', background: 'rgba(107,114,128,0.1)', color: '#6B7280' }}>Evitado</span>
+  if (val === 'Evitado') return <span className="bd b-na" style={{ fontStyle: 'italic', background: 'rgba(107,114,128,0.1)', color: '#4B5563' }}>Evitado</span>
   if (val === 'Transferido') return <span className="bd b-na" style={{ fontStyle: 'italic', background: 'rgba(99,102,241,0.1)', color: '#6366F1' }}>Transferido</span>
   if (!val || val === 'Teste Não Realizado') return <span style={{ fontSize: 10, fontStyle: 'italic', color: 'var(--lt-text3)' }}>Não iniciado</span>
   return badge(R1_MAP[val] || 'b-na', val)

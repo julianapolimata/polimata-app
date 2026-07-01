@@ -104,7 +104,7 @@ const PassosTesteList = ({ passos, onChange, disabled = false }) => {
                 borderRadius: 4,
                 padding: '4px 6px',
                 fontSize: 14,
-                color: '#7A8B9C',
+                color: '#45566B',
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 alignSelf: 'start',
                 marginTop: 18,

@@ -74,7 +74,7 @@ const ModalReavaliar = ({ row, perfil, modo, onClose, onSaved }) => {
     } catch (err) { alert('Erro: ' + (err.message || err)) } finally { setSaving(false) }
   }
 
-  const lbl = { fontSize: 11, fontWeight: 700, color: '#7A8B9C', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }
+  const lbl = { fontSize: 11, fontWeight: 700, color: '#45566B', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
       <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', maxWidth: 540, width: '90vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -104,7 +104,7 @@ const ModalReavaliar = ({ row, perfil, modo, onClose, onSaved }) => {
               </div>
               <div style={lbl}>Justificativa apresentada</div>
               <div style={{ background: '#F3EEE4', borderRadius: 8, padding: 12, fontSize: 13, color: '#00203E', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{row.reavaliacao_justificativa || '—'}</div>
-              {row.reavaliacao_solicitada_em && <div style={{ fontSize: 11, color: '#7A8B9C', marginTop: 8 }}>Solicitada em {new Date(row.reavaliacao_solicitada_em).toLocaleString('pt-BR')}</div>}
+              {row.reavaliacao_solicitada_em && <div style={{ fontSize: 11, color: '#45566B', marginTop: 8 }}>Solicitada em {new Date(row.reavaliacao_solicitada_em).toLocaleString('pt-BR')}</div>}
             </>
           )}
         </div>

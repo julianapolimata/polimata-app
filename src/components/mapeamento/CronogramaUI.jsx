@@ -48,9 +48,9 @@ export function Timeline({ map }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: s.estado === 'pendente' ? '#9CA3AF' : AZUL }}>{s.label}</span>
                 <span style={{ fontSize: 9.5, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '2px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.erro ? 'Travado por erro' : cfg.label}</span>
-                {s.data && <span style={{ fontSize: 11, color: '#6B7280' }}>{fmtData(s.data)}</span>}
+                {s.data && <span style={{ fontSize: 11, color: '#4B5563' }}>{fmtData(s.data)}</span>}
               </div>
-              <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 3, lineHeight: 1.5 }}>{s.desc}</div>
+              <div style={{ fontSize: 11.5, color: '#4B5563', marginTop: 3, lineHeight: 1.5 }}>{s.desc}</div>
             </div>
           </div>
         )
@@ -85,7 +85,7 @@ export function Historico({ itens }) {
       {itens.map((it) => (
         <div key={it.id} style={{ borderLeft: `2px solid ${it.acao === 'aprovar' ? '#22C55E' : it.acao === 'solicitar_ajustes' ? '#EA580C' : COBRE}`, padding: '4px 0 8px 12px', marginBottom: 4 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: AZUL }}>{ACAO_LABEL[it.acao] || it.acao}</div>
-          <div style={{ fontSize: 10.5, color: '#6B7280' }}>{it.autor_nome || 'Usuário'} · {fmtDataHora(it.criado_em)}</div>
+          <div style={{ fontSize: 10.5, color: '#4B5563' }}>{it.autor_nome || 'Usuário'} · {fmtDataHora(it.criado_em)}</div>
           {it.comentario && <div style={{ fontSize: 12, color: '#1F2937', marginTop: 4, background: 'rgba(0,32,62,0.04)', padding: '6px 10px', borderRadius: 6 }}>“{it.comentario}”</div>}
         </div>
       ))}
@@ -126,7 +126,7 @@ export function ResumoProjeto({ lista }) {
     <div style={{ background: '#fff', borderRadius: 12, border: '1px solid rgba(0,32,62,0.08)', padding: 20, marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: AZUL, textTransform: 'uppercase', letterSpacing: 0.6 }}>Evolução geral</div>
-        <div style={{ fontSize: 12, color: '#6B7280' }}><b style={{ color: AZUL, fontSize: 15 }}>{pct}%</b> concluído · {cont.vigente}/{total} vigentes</div>
+        <div style={{ fontSize: 12, color: '#4B5563' }}><b style={{ color: AZUL, fontSize: 15 }}>{pct}%</b> concluído · {cont.vigente}/{total} vigentes</div>
       </div>
       <div style={{ height: 10, borderRadius: 999, background: 'rgba(0,32,62,0.08)', overflow: 'hidden', margin: '12px 0 16px' }}>
         <div style={{ width: pct + '%', height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${COBRE}, #CC915E)`, transition: 'width .4s' }} />
@@ -178,7 +178,7 @@ export function BlocoConsultor({ map, onMudou }) {
           </Btn>
         )}
         {!docsProntos(map) && (etapa === 'producao') && (
-          <span style={{ fontSize: 11, color: '#6B7280' }}>Gere os documentos antes de enviar para aprovação.</span>
+          <span style={{ fontSize: 11, color: '#4B5563' }}>Gere os documentos antes de enviar para aprovação.</span>
         )}
         {etapa === 'aprovacao' && <span style={{ fontSize: 12, color: '#92400E', fontWeight: 600 }}>⏳ Aguardando a aprovação do cliente.</span>}
         {etapa === 'vigente' && <span style={{ fontSize: 12, color: '#15803D', fontWeight: 600 }}>✓ Procedimento aprovado e vigente.</span>}
@@ -211,7 +211,7 @@ export function VisaoCliente({ projeto }) {
       <div style={{ marginBottom: 22 }}>
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 1.6, textTransform: 'uppercase', color: COBRE }}>Mapeamento de Processos</div>
         <div style={{ fontSize: 22, fontWeight: 300, color: AZUL, fontFamily: 'Raleway, Montserrat' }}>Acompanhamento dos seus processos</div>
-        <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4 }}>Acompanhe a evolução de cada procedimento e aprove quando estiver pronto.</div>
+        <div style={{ fontSize: 12, color: '#4B5563', marginTop: 4 }}>Acompanhe a evolução de cada procedimento e aprove quando estiver pronto.</div>
       </div>
 
       <ResumoProjeto lista={lista} />
@@ -224,8 +224,8 @@ export function VisaoCliente({ projeto }) {
             ))}
           </tr></thead>
           <tbody>
-            {loading && <tr><td colSpan={5} style={{ padding: 24, textAlign: 'center', color: '#6B7280' }}>Carregando…</td></tr>}
-            {!loading && lista.length === 0 && <tr><td colSpan={5} style={{ padding: 36, textAlign: 'center', color: '#6B7280' }}>Nenhum mapeamento de processo disponível ainda.</td></tr>}
+            {loading && <tr><td colSpan={5} style={{ padding: 24, textAlign: 'center', color: '#4B5563' }}>Carregando…</td></tr>}
+            {!loading && lista.length === 0 && <tr><td colSpan={5} style={{ padding: 36, textAlign: 'center', color: '#4B5563' }}>Nenhum mapeamento de processo disponível ainda.</td></tr>}
             {lista.map((m) => {
               const aprovavel = podeAprovar(m)
               return (
@@ -235,7 +235,7 @@ export function VisaoCliente({ projeto }) {
                   <td style={{ padding: '11px 14px' }}>
                     <span style={{ fontSize: 10, fontWeight: 700, color: aprovavel ? '#92400E' : (m.etapa === 'vigente' ? '#15803D' : '#0E7490'), background: aprovavel ? 'rgba(234,179,8,0.15)' : (m.etapa === 'vigente' ? 'rgba(34,197,94,0.12)' : 'rgba(6,182,212,0.10)'), padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{etapaAtualLabel(m)}</span>
                   </td>
-                  <td style={{ padding: '11px 14px', color: '#6B7280' }}>{fmtData(m.criado_em)}</td>
+                  <td style={{ padding: '11px 14px', color: '#4B5563' }}>{fmtData(m.criado_em)}</td>
                   <td style={{ padding: '11px 14px', color: COBRE, fontWeight: 600 }}>{m.id === selId ? '▲' : '▼'}</td>
                 </tr>
               )
@@ -281,7 +281,7 @@ function DetalheCliente({ map, clienteNome, onMudou }) {
 
   return (
     <div style={{ marginTop: 16, background: '#fff', borderRadius: 12, border: '1px solid rgba(0,32,62,0.08)', padding: 22 }}>
-      <div style={{ fontSize: 15, fontWeight: 600, color: AZUL, marginBottom: 16 }}>{map.nome_processo} <span style={{ fontSize: 11, color: '#6B7280', fontWeight: 400 }}>· {codigoBaseDe(map, clienteNome)}</span></div>
+      <div style={{ fontSize: 15, fontWeight: 600, color: AZUL, marginBottom: 16 }}>{map.nome_processo} <span style={{ fontSize: 11, color: '#4B5563', fontWeight: 400 }}>· {codigoBaseDe(map, clienteNome)}</span></div>
 
       <Timeline map={map} />
 

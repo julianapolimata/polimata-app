@@ -20,7 +20,7 @@ import CronogramaJira from '../components/mapeamento/CronogramaJira'
 const COBRE = '#A6512F', AZUL = '#00203E'
 
 const STATUS_CFG = {
-  rascunho:      { label: 'A iniciar',          color: '#6B7280', bg: 'rgba(107,114,128,0.10)' },
+  rascunho:      { label: 'A iniciar',          color: '#4B5563', bg: 'rgba(107,114,128,0.10)' },
   audio_enviado: { label: 'Na fila',            color: '#1D4ED8', bg: 'rgba(59,130,246,0.10)' },
   transcrevendo: { label: 'Transcrevendo…',     color: '#92400E', bg: 'rgba(234,179,8,0.15)' },
   transcrito:    { label: 'Transcrito',         color: '#0E7490', bg: 'rgba(6,182,212,0.10)' },
@@ -49,7 +49,7 @@ function siglaDeNome(nome) {
 }
 
 function PrazoChip({ map }) {
-  if (!map.prazo) return <span style={{ color: '#9CA3AF' }}>—</span>
+  if (!map.prazo) return <span style={{ color: '#586477' }}>—</span>
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
   const dias = Math.round((new Date(map.prazo + 'T00:00:00') - hoje) / 86400000)
   let cor = '#0E7490', bg = 'rgba(6,182,212,0.10)', label = 'No prazo'
@@ -202,7 +202,7 @@ export default function Mapeamentos({ projeto, simularCliente, onSimular }) {
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 1.6, textTransform: 'uppercase', color: COBRE }}>Polímata · Mapeamento</div>
           <div style={{ fontSize: 22, fontWeight: 300, color: AZUL, fontFamily: 'Raleway, Montserrat' }}>Cronograma</div>
-          <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4 }}>Cadastre os processos, defina o setor e o prazo, e clique num processo para gravar/agendar e gerar os documentos.</div>
+          <div style={{ fontSize: 12, color: '#4B5563', marginTop: 4 }}>Cadastre os processos, defina o setor e o prazo, e clique num processo para gravar/agendar e gerar os documentos.</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <button onClick={() => onSimular && onSimular(true)} style={btnGhost}>👁 Ver como cliente</button>
@@ -227,8 +227,8 @@ function CronogramaView({ lista, loading, onEditar, onAbrir, projeto, carregar, 
   return (
     <>
       <ResumoProjeto lista={lista} />
-      {loading ? <div style={{ padding: 24, textAlign: 'center', color: '#6B7280' }}>Carregando…</div>
-        : lista.length === 0 ? <div style={{ background: '#fff', borderRadius: 12, border: '1px solid rgba(0,32,62,0.08)', padding: 36, textAlign: 'center', color: '#6B7280' }}>Nenhum processo cadastrado. Clique em <b>Cadastrar processo</b> para planejar o que será mapeado, com início e prazo.</div>
+      {loading ? <div style={{ padding: 24, textAlign: 'center', color: '#4B5563' }}>Carregando…</div>
+        : lista.length === 0 ? <div style={{ background: '#fff', borderRadius: 12, border: '1px solid rgba(0,32,62,0.08)', padding: 36, textAlign: 'center', color: '#4B5563' }}>Nenhum processo cadastrado. Clique em <b>Cadastrar processo</b> para planejar o que será mapeado, com início e prazo.</div>
         : <CronogramaJira lista={lista} projeto={projeto} carregar={carregar} onEditar={onEditar} onAbrir={onAbrir} onMover={onMover} duracaoPadrao={duracaoPadrao} onDuracaoPadrao={onDuracaoPadrao} />}
     </>
   )
@@ -266,7 +266,7 @@ function GanttCronograma({ lista, areas, navigate, onEditar }) {
           <div style={{ width: LBL, flexShrink: 0 }} />
           <div style={{ position: 'relative', flex: 1, height: 22, borderBottom: '1px solid rgba(0,32,62,0.10)' }}>
             {meses.map((mz, i) => (
-              <div key={i} style={{ position: 'absolute', left: pct(mz.getTime()) + '%', top: 0, fontSize: 10, color: '#6B7280', fontWeight: 600, textTransform: 'capitalize', paddingLeft: 4 }}>
+              <div key={i} style={{ position: 'absolute', left: pct(mz.getTime()) + '%', top: 0, fontSize: 10, color: '#4B5563', fontWeight: 600, textTransform: 'capitalize', paddingLeft: 4 }}>
                 {mz.toLocaleDateString('pt-BR', { month: 'short' })}{mz.getMonth() === 0 ? ' ' + mz.getFullYear() : ''}
               </div>
             ))}
@@ -279,7 +279,7 @@ function GanttCronograma({ lista, areas, navigate, onEditar }) {
                 <span style={{ fontSize: 12, fontWeight: 600, color: AZUL, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.nome_processo}</span>
                 {onEditar && <button onClick={(ev) => { ev.stopPropagation(); onEditar(m) }} title="Editar processo" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: COBRE, padding: 0, flexShrink: 0 }}>✎</button>}
               </div>
-              <div style={{ fontSize: 10, color: '#9CA3AF' }}>{areaNome(m.area_id)}</div>
+              <div style={{ fontSize: 10, color: '#586477' }}>{areaNome(m.area_id)}</div>
             </div>
             <div style={{ position: 'relative', flex: 1, height: 34 }}>
               {meses.map((mz, i) => <div key={i} style={{ position: 'absolute', left: pct(mz.getTime()) + '%', top: 0, bottom: 0, width: 1, background: 'rgba(0,32,62,0.05)' }} />)}
@@ -291,7 +291,7 @@ function GanttCronograma({ lista, areas, navigate, onEditar }) {
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 10 }}>A linha vermelha marca hoje. Clique numa barra para abrir a área e fazer o mapeamento.</div>
+      <div style={{ fontSize: 10, color: '#586477', marginTop: 10 }}>A linha vermelha marca hoje. Clique numa barra para abrir a área e fazer o mapeamento.</div>
     </div>
   )
 }
@@ -302,8 +302,8 @@ function AreaWorkspace({ lista, loading, selId, setSelId, onEditar }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
         <thead><tr style={{ background: '#F3EEE4' }}>{['Processo', 'Sigla', 'Prazo', 'Áudio', 'Status', ''].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
         <tbody>
-          {loading && <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: '#6B7280' }}>Carregando…</td></tr>}
-          {!loading && lista.length === 0 && <tr><td colSpan={6} style={{ padding: 36, textAlign: 'center', color: '#6B7280' }}>Nenhum processo nesta área ainda. Clique em <b>Novo mapeamento</b> para gravar/agendar a entrevista, ou cadastre o processo no Cronograma.</td></tr>}
+          {loading && <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: '#4B5563' }}>Carregando…</td></tr>}
+          {!loading && lista.length === 0 && <tr><td colSpan={6} style={{ padding: 36, textAlign: 'center', color: '#4B5563' }}>Nenhum processo nesta área ainda. Clique em <b>Novo mapeamento</b> para gravar/agendar a entrevista, ou cadastre o processo no Cronograma.</td></tr>}
           {lista.map((m) => (
             <tr key={m.id} onClick={() => setSelId(m.id === selId ? null : m.id)} style={{ borderTop: '1px solid rgba(0,32,62,0.06)', cursor: 'pointer', background: m.id === selId ? 'rgba(204,145,94,0.07)' : 'transparent' }}>
               <td style={{ padding: '11px 14px', fontWeight: 600, color: AZUL }}>{m.nome_processo}</td>
@@ -340,14 +340,14 @@ function CapturaAudio({ map, projeto, invocar, carregar }) {
         ) : (
           <button onClick={async () => setBlobGravado(await grav.parar())} style={{ background: '#DC2626', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 18px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Montserrat' }}>■ Parar ({Math.floor(grav.segundos / 60)}:{String(grav.segundos % 60).padStart(2, '0')})</button>
         )}
-        <span style={{ fontSize: 11, color: '#6B7280' }}>ou</span>
+        <span style={{ fontSize: 11, color: '#4B5563' }}>ou</span>
         <input type="file" accept="audio/*,.mp3,.m4a,.wav,.webm,.ogg" onChange={(ev) => { setBlobGravado(null); setArquivo(ev.target.files?.[0] || null) }} style={{ fontSize: 12, fontFamily: 'Montserrat' }} />
         {base && <button onClick={enviar} disabled={enviando} style={{ ...btnPrim, borderRadius: 8, padding: '9px 18px' }}>{enviando ? (etapa || 'Enviando…') : 'Enviar e processar'}</button>}
       </div>
       {blobGravado && <div style={{ fontSize: 12, color: '#15803D', marginTop: 10 }}>✓ Gravação pronta ({(blobGravado.size / 1024 / 1024).toFixed(1)} MB)</div>}
       {arquivo && <div style={{ fontSize: 12, color: '#15803D', marginTop: 10 }}>✓ {arquivo.name} ({(arquivo.size / 1024 / 1024).toFixed(1)} MB)</div>}
       {erro && <div style={{ color: '#991B1B', fontSize: 12, marginTop: 8 }}>{erro}</div>}
-      <div style={{ fontSize: 10, color: '#6B7280', marginTop: 8 }}>Grave por quanto tempo precisar — áudios longos são otimizados e divididos automaticamente.</div>
+      <div style={{ fontSize: 10, color: '#4B5563', marginTop: 8 }}>Grave por quanto tempo precisar — áudios longos são otimizados e divididos automaticamente.</div>
     </div>
   )
 }
@@ -380,7 +380,7 @@ function LacunasResponder({ map, carregar, invocar }) {
   return (
     <div style={{ background: 'rgba(204,145,94,0.08)', border: '1px solid rgba(204,145,94,0.25)', borderRadius: 10, padding: '14px 16px', marginBottom: 18 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: COBRE, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>Perguntas para esclarecer ({respondidas}/{lacunas.length} respondidas)</div>
-      <div style={{ fontSize: 11.5, color: '#6B7280', marginBottom: 12 }}>Responda o que conseguir. Ao reestruturar, a IA incorpora as respostas e refaz POP, fluxograma e matriz.</div>
+      <div style={{ fontSize: 11.5, color: '#4B5563', marginBottom: 12 }}>Responda o que conseguir. Ao reestruturar, a IA incorpora as respostas e refaz POP, fluxograma e matriz.</div>
       {lacunas.map((q, i) => (
         <div key={i} style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 12.5, color: AZUL, fontWeight: 500, marginBottom: 4 }}>{i + 1}. {q}</div>
@@ -425,7 +425,7 @@ function Detalhe({ map, projeto, perfil, clienteNome, invocar, carregar, onEdita
   return (
     <div style={{ marginTop: 16, background: '#fff', borderRadius: 12, border: '1px solid rgba(0,32,62,0.08)', padding: 22 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: AZUL }}>{map.nome_processo} <span style={{ fontSize: 11, color: '#6B7280', fontWeight: 400 }}>· {codigoBase}</span>{onEditar && <button onClick={() => onEditar(map)} title="Editar processo" style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: COBRE }}>✎</button>}</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: AZUL }}>{map.nome_processo} <span style={{ fontSize: 11, color: '#4B5563', fontWeight: 400 }}>· {codigoBase}</span>{onEditar && <button onClick={() => onEditar(map)} title="Editar processo" style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: COBRE }}>✎</button>}</div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><PrazoChip map={map} /><StatusBadge status={map.status} /></div>
       </div>
 
@@ -548,12 +548,12 @@ function ModalNovo({ projeto, areas, areaFixa, perfil, onFechar, onCriado, invoc
             ) : (
               <button onClick={async () => setBlobGravado(await grav.parar())} style={{ background: '#DC2626', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 18px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Montserrat' }}>■ Parar ({Math.floor(grav.segundos / 60)}:{String(grav.segundos % 60).padStart(2, '0')})</button>
             )}
-            <span style={{ fontSize: 11, color: '#6B7280' }}>ou</span>
+            <span style={{ fontSize: 11, color: '#4B5563' }}>ou</span>
             <input type="file" accept="audio/*,.mp3,.m4a,.wav,.webm,.ogg" onChange={(e) => { setBlobGravado(null); setArquivo(e.target.files?.[0] || null) }} style={{ fontSize: 12, fontFamily: 'Montserrat' }} />
           </div>
           {blobGravado && <div style={{ fontSize: 12, color: '#15803D', marginTop: 10 }}>✓ Gravação pronta ({(blobGravado.size / 1024 / 1024).toFixed(1)} MB)</div>}
           {arquivo && <div style={{ fontSize: 12, color: '#15803D', marginTop: 10 }}>✓ {arquivo.name} ({(arquivo.size / 1024 / 1024).toFixed(1)} MB)</div>}
-          <div style={{ fontSize: 10, color: '#6B7280', marginTop: 8 }}>Grave por quanto tempo precisar — áudios longos são otimizados e divididos automaticamente.</div>
+          <div style={{ fontSize: 10, color: '#4B5563', marginTop: 8 }}>Grave por quanto tempo precisar — áudios longos são otimizados e divididos automaticamente.</div>
         </div>
       </Campo>
     </Modal>
@@ -568,7 +568,7 @@ function Modal({ titulo, sub, children, onFechar, onConfirmar, salvando, confirm
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,17,44,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={onFechar}>
       <div style={{ background: '#fff', borderRadius: 14, padding: 26, width: 520, maxWidth: '92vw', maxHeight: '88vh', overflowY: 'auto', fontFamily: 'Montserrat' }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 600, color: AZUL, marginBottom: 4 }}>{titulo}</div>
-        {sub && <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 18 }}>{sub}</div>}
+        {sub && <div style={{ fontSize: 12, color: '#4B5563', marginBottom: 18 }}>{sub}</div>}
         {children}
         {erro && <div style={{ background: 'rgba(239,68,68,0.10)', color: '#991B1B', padding: '9px 12px', borderRadius: 8, fontSize: 12, margin: '12px 0' }}>{erro}</div>}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>

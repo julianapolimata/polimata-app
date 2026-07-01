@@ -24,7 +24,7 @@ export default function BannerRegressao({ isRegressao, resultado, faseAtual, row
                 <div style={{ fontSize: 13, color: '#00203E', lineHeight: 1.5 }}>
                   Este resultado regredirá o controle à <strong>Fase 2</strong> e a regressão impactará o nível de maturidade da área.
                   {(row?.num_regressoes || 0) > 0 && (
-                    <span style={{ display: 'block', marginTop: 4, fontSize: 12, color: '#7A8B9C' }}>
+                    <span style={{ display: 'block', marginTop: 4, fontSize: 12, color: '#45566B' }}>
                       Este controle já regrediu {row.num_regressoes} vez{row.num_regressoes > 1 ? 'es' : ''} anteriormente.
                     </span>
                   )}
