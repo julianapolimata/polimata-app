@@ -77,8 +77,6 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor, proj, 
           })}
           {idealPts && <polyline points={idealPts} fill="none" stroke="#2a78d6" strokeWidth="1.6" strokeDasharray="5 4" strokeLinejoin="round" strokeLinecap="round" />}
           {projPts && <polyline points={projPts} fill="none" stroke={lineColor} strokeWidth="2" strokeDasharray="2 3" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />}
-          {(() => { const pts = real.map((v, i) => (v && v > 0 && i < aberto) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' '); return pts ? <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /> : null })()}
-          {real.map((v, i) => (v && v > 0 && i < aberto) ? <circle key={'d' + i} cx={L + slot * i + slot / 2} cy={y(v)} r="2.6" fill={lineColor} stroke="#fff" strokeWidth="1" /> : null)}
         </svg>
       </div>
     </div>
