@@ -26,40 +26,6 @@ const DEFAULT_ON = ['receita', 'aFaturar', 'margem', 'margemPct']
 const soma = (arr, de, ate) => (arr || []).slice(de, ate + 1).reduce((s, v) => s + (v || 0), 0)
 const pct = (n) => (n >= 0 ? '' : '−') + Math.abs(n).toFixed(1) + '%'
 
-function GraficoMensal({ receita, saidas, resultado, lastReal }) {
-  const W = 720, H = 250, T = 16, B = 40, L = 6, R = 6
-  const plotH = H - T - B
-  const vals = [...receita, ...saidas, ...resultado].filter(v => v !== null && v !== undefined)
-  const max = Math.max(1, ...vals) * 1.08
-  const min = Math.min(0, ...vals) * 1.08
-  const y = (v) => T + plotH * (max - v) / (max - min)
-  const zeroY = y(0)
-  const slot = (W - L - R) / 12
-  const bw = Math.min(13, slot / 2 - 3)
-  const pts = (arr, pred) => arr.map((v, i) => (v === null || v === undefined || !pred(i)) ? null : `${L + slot * i + slot / 2},${y(v)}`).filter(Boolean).join(' ')
-  const ptsReal = pts(resultado, i => i <= lastReal)
-  const ptsOrc = pts(resultado, i => i >= lastReal)
-  return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Receita, saídas e resultado por mês — realizado e orçado" style={{ display: 'block' }}>
-      <line x1={L} y1={zeroY} x2={W - R} y2={zeroY} stroke="var(--lt-brd, #ddd)" strokeWidth="1" />
-      {receita.map((_, i) => {
-        const cx = L + slot * i + slot / 2, orc = i > lastReal
-        const rv = receita[i], sv = saidas[i]
-        return (
-          <g key={i}>
-            {rv != null && <rect x={cx - bw - 1} y={Math.min(zeroY, y(rv))} width={bw} height={Math.abs(zeroY - y(rv))} rx="2" fill={orc ? VERDE_L : VERDE} />}
-            {sv != null && <rect x={cx + 1} y={Math.min(zeroY, y(sv))} width={bw} height={Math.abs(zeroY - y(sv))} rx="2" fill={orc ? COBRE_L : COBRE} />}
-            <text x={cx} y={H - 24} textAnchor="middle" fontSize="11" fill="var(--lt-text3, #888)">{MESES_ABREV[i]}</text>
-          </g>
-        )
-      })}
-      {ptsReal && <polyline points={ptsReal} fill="none" stroke={NAVY} strokeWidth="2" />}
-      {ptsOrc && <polyline points={ptsOrc} fill="none" stroke={NAVY} strokeWidth="2" strokeDasharray="5 4" opacity="0.8" />}
-      {resultado.map((v, i) => v == null ? null : <circle key={i} cx={L + slot * i + slot / 2} cy={y(v)} r="2.6" fill={NAVY} />)}
-    </svg>
-  )
-}
-
 function Linha({ label, valor, w, cor, forte, sufixo }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0', fontSize: 12.5 }}>
@@ -403,7 +369,7 @@ export default function DashboardExec({ projeto }) {
       {proj && proj.comentario && <div style={{ fontSize: 11.5, color: 'var(--lt-text)', background: 'rgba(42,120,214,0.06)', border: '1px solid rgba(42,120,214,0.25)', borderRadius: 8, padding: '8px 12px', margin: '0 2px 16px', lineHeight: 1.5 }}>✨ <strong>Projeção IA:</strong> {proj.comentario}{projLoad ? ' · atualizando…' : ''}</div>}
 
       {analiseMargem && (
-        <Card titulo="Onde atuar para proteger a margem" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>meta: margem líquida de 15% · próximos {analiseMargem.fut} meses (projeção IA)</span>}>
+        <Card titulo="Análise de tendência da margem" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>meta: margem líquida de 15% · próximos {analiseMargem.fut} meses (projeção IA)</span>}>
           <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--lt-text3)', lineHeight: 1.55 }}>A linha tracejada azul nos gráficos é o <strong style={{ color: 'var(--lt-text)' }}>nível ideal para 15% de margem</strong>. Enquanto a projeção estiver do lado saudável dela, a meta se sustenta; onde cruza, é hora de agir.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
             <div style={{ borderLeft: '3px solid ' + (analiseMargem.gapSai > 0 ? RED : VERDE), borderRadius: 0, padding: '2px 0 2px 12px' }}>
@@ -457,16 +423,6 @@ export default function DashboardExec({ projeto }) {
       </KPIGrid>
 
 
-      <Card titulo="Evolução mensal — receita, saídas e resultado" extra={
-        <span style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--lt-text3)', flexWrap: 'wrap' }}>
-          <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: VERDE, marginRight: 4 }} />Receita</span>
-          <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: COBRE, marginRight: 4 }} />Saídas</span>
-          <span><span style={{ display: 'inline-block', width: 14, height: 0, borderTop: '2px solid ' + NAVY, marginRight: 4, verticalAlign: 'middle' }} />Resultado</span>
-          <span style={{ opacity: 0.75 }}>tom claro = orçado</span>
-        </span>}>
-        <GraficoMensal receita={W.gReceita} saidas={W.gSaida} resultado={W.gRes} lastReal={W.lastReal} />
-        {W.incompleto >= 0 && <p style={{ fontSize: 11, color: 'var(--lt-text3)', margin: '4px 2px 0' }}>{MESES_ABREV[W.incompleto]} é o mês corrente (parcial) — receita lançada, saídas ainda não fechadas.</p>}
-      </Card>
 
       <Card titulo={dreCol ? 'DRE gerencial — realizado e projeção do ano' : 'DRE gerencial do período'} extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>barra = % da receita · explosível nas rubricas abaixo</span>}>
         {[
