@@ -157,6 +157,7 @@ function AbaCaracteristicas({ dados, perfisPolimata = [], onUpdate, editando, se
           <div className="usr-info-grid">
             <InfoCell label="Data de Início" value={fmtDate(dados.data_inicio)} />
             <InfoCell label="Previsão de Conclusão" value={fmtDate(dados.data_previsao_conclusao)} />
+            <InfoCell label="Criado em" value={dados.criado_em ? new Date(dados.criado_em).toLocaleDateString('pt-BR') : '—'} />
           </div>
         </div>
         <div className="cfg-group">

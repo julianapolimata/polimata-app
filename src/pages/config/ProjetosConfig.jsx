@@ -72,6 +72,7 @@ export default function ProjetosConfig({ projetoIdInicial }) {
                     {formatNomeEmpresa(p.clientes?.nome_fantasia || p.clientes?.nome) || '—'}
                     <span style={{margin:'0 4px',opacity:0.3}}>·</span>
                     {FASES_LABEL[p.num_fases ?? 5]} · {(p.matriz_tamanho??4)}×{(p.matriz_tamanho??4)}
+                    {p.criado_em && <><span style={{margin:'0 4px',opacity:0.3}}>·</span>Criado em {new Date(p.criado_em).toLocaleDateString('pt-BR')}</>}
                     {p.ativo ? <span className="badge-ativo">Ativo</span> : <span className="badge-inativo">Inativo</span>}
                   </div>
                 </div>

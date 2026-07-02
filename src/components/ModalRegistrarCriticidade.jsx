@@ -38,6 +38,10 @@ const ModalRegistrarCriticidade = ({ row, onClose, onSaved }) => {
   const [saving, setSaving] = useState(false)
   const { confirm } = useConfirm()
   const [dirty, setDirty] = useState(false)
+  const [justificativaCrit, setJustificativaCrit] = useState(row?.crit_justificativa || '')
+  const PRIORIDADES = ['Imediata', 'Urgente', 'Alta', 'Média', 'Baixa']
+  const [prioridade, setPrioridade] = useState(row?.prioridade_acao || '')
+  const [justificativaPrioridade, setJustificativaPrioridade] = useState(row?.prioridade_justificativa || '')
   const requestClose = async () => {
     if (dirty) {
       const ok = await confirm({ title: 'Descartar alterações?', message: 'Há alterações não salvas neste formulário. Deseja fechar mesmo assim? As alterações serão perdidas.', confirmText: 'Descartar', cancelText: 'Continuar editando', variant: 'danger' })
@@ -48,6 +52,8 @@ const ModalRegistrarCriticidade = ({ row, onClose, onSaved }) => {
 
   const criticidade = (impacto && probabilidade && impacto !== '0' && probabilidade !== '0') ? MATRIZ_CRIT[parseInt(impacto)]?.[parseInt(probabilidade)] ?? null : null
   const critLabel = getCriticidadeLabel(criticidade)
+  const PRIORIDADE_SUGERIDA = { 4: 'Imediata', 3: 'Alta', 2: 'Média', 1: 'Baixa' }
+  const prioridadeSugerida = criticidade ? PRIORIDADE_SUGERIDA[criticidade] : ''
   const canSave = !!impacto && !!probabilidade
 
   async function handleSave() {
@@ -60,6 +66,9 @@ const ModalRegistrarCriticidade = ({ row, onClose, onSaved }) => {
         crit: criticidade,
         crit_label: critLabel.label || null,
         crit_revalidar: false,
+        crit_justificativa: justificativaCrit.trim() || null,
+        prioridade_acao: prioridade || null,
+        prioridade_justificativa: justificativaPrioridade.trim() || null,
         atualizado_em: new Date().toISOString(),
       }
       const { error } = await supabase.from('mrc').update(payload).eq('id', row.id)
@@ -85,6 +94,7 @@ const ModalRegistrarCriticidade = ({ row, onClose, onSaved }) => {
             <div>
               <div style={{ fontSize: 20, fontWeight: 300, fontFamily: "'Raleway', sans-serif", letterSpacing: 0.3, lineHeight: 1.2 }}>Registrar Criticidade</div>
               <div style={{ fontSize: 12, fontWeight: 500, opacity: 0.72, marginTop: 4 }}>{row?.rc}{row?.dr ? ` · ${row.dr}` : (row?.area ? ` · ${row.area}` : '')}</div>
+              {row?.sub && <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.6, marginTop: 2 }}>Subprocesso: {row.sub}</div>}
             </div>
             <button onClick={requestClose} style={{ background: 'none', border: 'none', fontSize: 28, color: 'white', cursor: 'pointer' }}>×</button>
           </div>
@@ -152,6 +162,23 @@ const ModalRegistrarCriticidade = ({ row, onClose, onSaved }) => {
               Selecione Impacto e Probabilidade para ver a criticidade calculada.
             </div>
           )}
+
+          {/* Comentário / embasamento da avaliação (opcional) */}
+          <div style={{ marginTop: 20 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#00203E', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Comentário da avaliação <span style={{ textTransform: 'none', color: '#6B7280', fontWeight: 400 }}>(opcional)</span></label>
+            <textarea spellCheck lang="pt-BR" value={justificativaCrit} onChange={e => setJustificativaCrit(e.target.value)} placeholder="Registre o embasamento desta avaliação de impacto e probabilidade." style={{ width: '100%', minHeight: 70, padding: '0.8rem', border: '1px solid #D0D0D0', borderRadius: 4, fontFamily: 'Montserrat, sans-serif', fontSize: 14, resize: 'vertical' }} />
+          </div>
+
+          {/* Prioridade da ação (opcional) */}
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #eee' }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#00203E', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Prioridade da ação <span style={{ textTransform: 'none', color: '#6B7280', fontWeight: 400 }}>(opcional)</span></label>
+            <select value={prioridade} onChange={e => setPrioridade(e.target.value)} style={{ width: '100%', padding: '0.8rem', border: '1px solid #D0D0D0', borderRadius: 4, fontFamily: 'Montserrat, sans-serif', fontSize: 14 }}>
+              <option value="">Selecionar...</option>
+              {PRIORIDADES.map(pr => <option key={pr} value={pr}>{pr}</option>)}
+            </select>
+            {prioridadeSugerida && !prioridade && <div style={{ fontSize: 11, color: 'var(--copper-text, #A6512F)', marginTop: 6 }}>Sugestão pela criticidade: <strong>{prioridadeSugerida}</strong><button type="button" onClick={() => setPrioridade(prioridadeSugerida)} style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: 'var(--copper-text, #A6512F)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>aplicar</button></div>}
+            <textarea spellCheck lang="pt-BR" value={justificativaPrioridade} onChange={e => setJustificativaPrioridade(e.target.value)} placeholder="Justificativa da prioridade (opcional)." style={{ width: '100%', minHeight: 56, padding: '0.8rem', border: '1px solid #D0D0D0', borderRadius: 4, fontFamily: 'Montserrat, sans-serif', fontSize: 14, resize: 'vertical', marginTop: 8 }} />
+          </div>
         </div>
 
         {/* FOOTER */}

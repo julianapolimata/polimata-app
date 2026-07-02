@@ -43,6 +43,7 @@ function DetalheProjeto({ projeto, perfisPolimata = [], abaInicial = null, onBac
             {formatNomeEmpresa(dados.clientes?.nome_fantasia || dados.clientes?.nome)}
             <span style={{opacity:0.3}}>·</span>
             {dados.ativo ? <span className="badge-ativo">Ativo</span> : <span className="badge-inativo">Inativo</span>}
+            {dados.criado_em && <><span style={{opacity:0.3}}>·</span><span style={{fontSize:11,color:'var(--lt-text3)'}}>Criado em {new Date(dados.criado_em).toLocaleDateString('pt-BR')}</span></>}
           </div>
         </div>
       </div>

@@ -122,6 +122,7 @@ export default function ProjectSelector({ projetos, resumos, perfil, onSelect, s
                     {/* Título: nome do cliente */}
                     <div style={{ fontSize: 15, fontWeight: 300, color: 'var(--cream)', fontFamily: "'Raleway', sans-serif", letterSpacing: '.3px', lineHeight: 1.15 }}>{clienteNome}</div>
                     {r.ultimaAtividade && <div style={{ fontSize: 10.5, color: 'rgba(247,243,238,0.45)', marginTop: 2 }}>Últ. atividade: {r.ultimaAtividade}</div>}
+                    {p?.criado_em && <div style={{ fontSize: 10, color: 'rgba(247,243,238,0.38)', marginTop: 1 }}>Criado em: {new Date(p.criado_em).toLocaleDateString('pt-BR')}</div>}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
                     <span style={{

@@ -164,7 +164,7 @@ export default function Dashboard() {
           }
           let maxDate = null
           ;(mrcRes.data || []).forEach(c => {
-            const d = c.dt_ult || c.atualizado_em || c.criado_em
+            const d = c.atualizado_em || c.dt_ult || c.criado_em
             if (d) { const dt = new Date(d); if (!isNaN(dt) && (!maxDate || dt > maxDate)) maxDate = dt }
           })
           resumos[p.id] = { totalControles, totalAreas, maturidade, diagnostico, isDiag, ultimaAtividade: maxDate ? maxDate.toLocaleDateString('pt-BR') : null }

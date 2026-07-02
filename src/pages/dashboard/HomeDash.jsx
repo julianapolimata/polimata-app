@@ -90,7 +90,10 @@ export default function HomeDash({ projeto, areasCalc, todosControles: todosCont
           <div style={{ fontSize: 22, fontWeight: 200, fontFamily: "'Raleway', sans-serif", color: 'var(--cream)', letterSpacing: 0.3, lineHeight: 1.2 }}>Maturidade do Ambiente de Controles Internos</div>
           <div style={{ fontSize: 11, color: 'rgba(247,243,238,0.65)', marginTop: 2 }}>{areasCalc.length} áreas · {todosControles.length} controles</div>
         </div>
-        <div style={{ fontSize: 10, color: 'rgba(247,243,238,0.72)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '6px 14px', whiteSpace: 'nowrap' }}>Última atualização: {ultimaAtualizacao}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+          {projeto?.criado_em && <div style={{ fontSize: 10, color: 'rgba(247,243,238,0.72)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '6px 14px', whiteSpace: 'nowrap' }}>Criado em: {new Date(projeto.criado_em).toLocaleDateString('pt-BR')}</div>}
+          <div style={{ fontSize: 10, color: 'rgba(247,243,238,0.72)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '6px 14px', whiteSpace: 'nowrap' }}>Última atualização: {ultimaAtualizacao}</div>
+        </div>
       </div>
 
       <div style={D.kpiRow}>

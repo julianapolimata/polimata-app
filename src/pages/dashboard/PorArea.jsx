@@ -235,7 +235,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
   const PA_FASE_KEYS = ['r1', 'st_pa', 'r_ader', 'r3', 'r_f4c1', 'r_f4c2', 'r_f5']
   const toggleSort = (k) => { if (sortCol === k) { setSortDir(d => d === 'asc' ? 'desc' : 'asc') } else { setSortCol(k); setSortDir('asc') } }
   const sortArrow = (k) => sortCol === k ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
-  function paSortVal(row, k) { if (k === '_dt') return row.dt_ult || row.atualizado_em || row.criado_em || ''; if (k === '_resultado') return getResultadoVitrine(row, projeto); if (k === '_fase_atual') return getFaseLabel(row, projeto?.num_fases, projeto?.f1_tem_teste === true); if (k === '_status_atual') return getStatusComputado(row, projeto?.num_fases, projeto?.f1_tem_teste === true); return row[k] ?? '' }
+  function paSortVal(row, k) { if (k === '_dt') return row.atualizado_em || row.dt_ult || row.criado_em || ''; if (k === '_resultado') return getResultadoVitrine(row, projeto); if (k === '_fase_atual') return getFaseLabel(row, projeto?.num_fases, projeto?.f1_tem_teste === true); if (k === '_status_atual') return getStatusComputado(row, projeto?.num_fases, projeto?.f1_tem_teste === true); return row[k] ?? '' }
 
   const cfSorted = !sortCol ? cf : [...cf].sort((a, b) => {
     let va = paSortVal(a, sortCol), vb = paSortVal(b, sortCol)
@@ -398,7 +398,7 @@ export default function PorArea({ projeto, areasCalc, todosControles, loading, n
     }
     if (canRevisar && st === 'em_revisao') return { primary: { label: 'Revisar', color: '#1D4ED8', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.30)', onClick: () => { setRowRevisar(c); setModalRow(null) } } }
     if (st === 'em_revisao') return { bloqueado: true } // em revisão: edição travada p/ quem não revisa
-    if (st === 'aprovado' && (!c.crit || c.crit_revalidar) && canEdit) return { primary: { label: 'Avaliar Criticidade', color: '#9A3412', bg: 'rgba(234,88,12,0.10)', border: 'rgba(234,88,12,0.30)', onClick: () => { setRowCriticidade(c); setModalRow(null) } } }
+    if (st === 'aprovado' && (!c.crit || c.crit_revalidar) && canEdit) return { primary: { label: 'Avaliar Criticidade', color: '#9A3412', bg: 'rgba(234,88,12,0.10)', border: 'rgba(234,88,12,0.30)', onClick: () => { setRowCriticidade(c); setModalRow(null) } }, secondary: canEditControle(c) ? { label: '✏ Editar', onClick: () => { setAtualizarRow(c); setModalRow(null) } } : undefined }
     if (st === 'aprovado' && c.crit != null && !c.crit_revalidar) return canEdit ? { primary: { label: '↺ Reavaliar', color: '#0F766E', bg: 'rgba(20,184,166,0.10)', border: 'rgba(20,184,166,0.30)', onClick: () => { setReavaliarRow({ c, modo: 'solicitar' }); setModalRow(null) } } } : { bloqueado: true }
     if (st === 'reavaliacao_pendente') return canRevisar ? { primary: { label: 'Decidir Reavaliação', color: '#7C3AED', bg: 'rgba(124,58,237,0.10)', border: 'rgba(124,58,237,0.30)', onClick: () => { setReavaliarRow({ c, modo: 'decidir' }); setModalRow(null) } } } : { bloqueado: true }
     if (isDiagnostico && podeEditarEste) return st === 'rascunho' ? { primary: { label: '▶ Continuar', color: '#92400E', bg: 'rgba(234,179,8,0.15)', border: 'rgba(234,179,8,0.40)', onClick: () => { setDraftRow(c); setModalRow(null) } } } : { primary: { label: '✏ Editar', color: 'var(--copper-text)', bg: 'rgba(204,145,94,0.12)', border: 'rgba(204,145,94,0.30)', onClick: () => { setAtualizarRow(c); setModalRow(null) } } }

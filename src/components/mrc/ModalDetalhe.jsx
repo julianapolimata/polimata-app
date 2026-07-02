@@ -9,6 +9,7 @@ import LinhaDoTempo from '../LinhaDoTempo'
 import MotivoReprovacao from './MotivoReprovacao'
 import { loadAprovacoes, faseDoBloco } from '../../lib/aprovacoesBloco'
 import { ultimaDataTeste } from '../../lib/amostragem'
+import { getResultadoVitrine } from '../../lib/fases'
 
 // ─── MODAL ───────────────────────────────────────────────────────────────────
 
@@ -76,6 +77,16 @@ export function ModalDetalhe({ row, projeto, onClose, onEditar, primaryAction, s
         <div className="modal-body">
 
           {tab === 'ident' && (<div className="tp active">
+            {(() => {
+              const res = getResultadoVitrine(row, projeto)
+              if (!res || res === '—' || ['teste não realizado', 'nao_iniciado', 'não iniciado'].includes(String(res).toLowerCase())) return null
+              const rl = String(res).toLowerCase()
+              const cor = ['efetivo', 'existente'].includes(rl) ? { c: '#1B5E20', bg: '#E8F5E9' } : ['inefetivo', 'gap', 'inexistente'].includes(rl) ? { c: '#C62828', bg: '#FFEBEE' } : (rl === 'parcial' ? { c: '#E65100', bg: '#FFE0B2' } : { c: '#45566B', bg: '#ECEFF3' })
+              return (<div className="ms" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <div className="ms-t" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Resultado</div>
+                <span style={{ fontSize: 13, fontWeight: 700, padding: '5px 14px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4, color: cor.c, background: cor.bg }}>{res}</span>
+              </div>)
+            })()}
             <div className="ms"><div className="ms-t">Identificação do Controle</div><div className="mr">{field('Ref. Risco', row.rr)}{field('Ref. Controle', row.rc)}</div><div className="mr">{field('Área', row.area)}{field('Subprocesso', row.sub)}</div><div className="mr">{field('Gerência', row.ger)}{field('Responsável Processo', row.resp_sub)}</div><div className="mr">{field('Data de implementação', fmtData(row.dt_implementacao))}{field('Última data de teste', ultTeste ? ultTeste.toLocaleDateString('pt-BR') : null)}</div></div>
             {isDiagModal && <div className="ms"><div className="ms-t" style={{ display: 'flex', alignItems: 'center' }}>Cenário Atual{blocoBadge('cenario')}</div>{row.cenario_atual && row.cenario_atual.trim() ? fieldText(null, row.cenario_atual) : <div style={{ fontSize: 12, color: '#C62828', fontStyle: 'italic', padding: '6px 10px', background: '#FFEBEE', borderLeft: '3px solid #C62828', borderRadius: 4 }}>— Não preenchido —</div>}</div>}
             <div className="ms"><div className="ms-t" style={{ display: 'flex', alignItems: 'center' }}>Descrição do Risco{blocoBadge('risco')}</div>{fieldText(null, row.dr)}</div>
@@ -126,6 +137,7 @@ export function ModalDetalhe({ row, projeto, onClose, onEditar, primaryAction, s
                 )
               })()}
             </div>
+            {row.rec && row.rec !== 'N/A' && String(row.rec).trim() && <div className="ms"><div className="ms-t">Recomendação · Próximos Passos</div>{fieldText(null, row.rec)}</div>}
           </div>)}
 
           {tab === 'f1' && (<div className="tp active">

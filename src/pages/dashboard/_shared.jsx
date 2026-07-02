@@ -71,7 +71,7 @@ export function planoAcaoConcluido(c) { const st = (c.st_pa || '').toLowerCase()
 export function getUltimaAtualizacao(controles) {
   let max = null
   controles.forEach(c => {
-    const d = c.dt_ult || c.atualizado_em || c.criado_em
+    const d = c.atualizado_em || c.dt_ult || c.criado_em
     if (d) { const dt = new Date(d); if (!isNaN(dt) && (!max || dt > max)) max = dt }
   })
   return max ? max.toLocaleDateString('pt-BR') : '—'
