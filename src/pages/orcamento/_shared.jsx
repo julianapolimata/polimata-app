@@ -192,6 +192,7 @@ export function MonthRail({ recReal, saiReal, recOrc, saiOrc, ano, modo, setModo
   const real = rec ? recReal : saiReal
   const has = (v) => v != null && v !== 0
   const fc = (v) => v == null ? '—' : (Math.abs(v) >= 1e6 ? 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M' : 'R$ ' + Math.round(v / 1e3) + 'k')
+  const fh = (v) => v == null ? '—' : (Math.abs(v) >= 1e6 ? 'R$ ' + (v / 1e6).toFixed(2).replace('.', ',') + 'M' : 'R$ ' + Math.round(v / 1e3).toLocaleString('pt-BR') + 'k')
   const oTot = orc.reduce((a, b) => a + (b || 0), 0)
   const rTot = real.reduce((a, b) => a + (has(b) ? b : 0), 0)
   const pctAno = oTot ? Math.min(rTot / oTot * 100, 100) : 0
@@ -212,8 +213,8 @@ export function MonthRail({ recReal, saiReal, recOrc, saiOrc, ano, modo, setModo
           <div className="mrl" onClick={onAno} style={{ gridRow: '1 / span 2', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'linear-gradient(150deg, #22456B, #00203E 72%)', border: '1.5px solid ' + (anoSel ? COBRE : '#294a6e'), borderRadius: 14, padding: '16px 18px', color: '#fff' }}>
             <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: COBRE, fontWeight: 600, marginBottom: 8 }}>Ano {ano} · consolidado</div>
             <div style={{ fontSize: 10.5, color: '#B9C5D4' }}>Realizado</div>
-            <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 28, fontWeight: 600, lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{fc(rTot)}</div>
-            <div style={{ fontSize: 11, color: '#B9C5D4', marginTop: 6 }}>de {fc(oTot)} orçado</div>
+            <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 28, fontWeight: 600, lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{fh(rTot)}</div>
+            <div style={{ fontSize: 11, color: '#B9C5D4', marginTop: 6 }}>de {fh(oTot)} orçado</div>
             <div style={{ height: 7, background: 'rgba(255,255,255,.14)', borderRadius: 4, marginTop: 12, overflow: 'hidden' }}><div style={{ height: '100%', width: pctAno + '%', background: COBRE, borderRadius: 4 }} /></div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7 }}><span style={{ fontSize: 11, fontWeight: 600, fontFamily: "'Raleway', sans-serif" }}>{pctAno.toFixed(0)}%</span><span style={{ fontSize: 10, color: '#B9C5D4' }}>{rec ? 'da meta' : 'do orçamento'} no ano</span></div>
           </div>
