@@ -130,7 +130,7 @@ export default function AnaliseMensal({ projeto }) {
   const sitTot = A ? (A.sit.Faturado + A.sit['A faturar'] + A.sit['Sem nota']) : 0
 
   return (
-    <div style={{ padding: '20px 28px 40px', maxWidth: 1080, margin: '0 auto' }}>
+    <div style={{ padding: '20px 28px 40px' }}>
       <PageHeader projeto={projeto} titulo="Análise Mensal" subtitulo={`${projeto?.nome || ''} · fechamento do mês · regime de competência`} />
       <ErroBox erro={d.erro} onClose={() => d.setErro('')} />
 
