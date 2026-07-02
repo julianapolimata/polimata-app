@@ -31,3 +31,9 @@ export async function iaProjecao(serieSaidas, serieReceita) {
   const r = await chamar({ acao: 'projecao', serie_saidas: serieSaidas, serie_receita: serieReceita })
   return { saidas: r.saidas_proj || [], receita: r.receita_proj || [], comentario: r.comentario || '' }
 }
+
+/** Análise consolidada do ano: narrativas executivas + interpretação por rubrica recorrente. */
+export async function iaAnaliseAno(dados) {
+  const r = await chamar({ acao: 'analise_ano', dados })
+  return { narrativaSaidas: r.narrativa_saidas || '', narrativaReceita: r.narrativa_receita || '', itens: r.itens || [], acoes: r.acoes || [] }
+}

@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useOrcDados, useItens, PageHeader, Card, KPICard, KPIGrid, BotaoSec, fmtBRL, MESES_ABREV, ErroBox, MonthRail } from './_shared'
-import { iaProjecao } from '../../lib/orcamento/ia'
+import { iaProjecao, iaAnaliseAno } from '../../lib/orcamento/ia'
 
 const ANO_ATUAL = new Date().getFullYear()
 const NAVY = '#00203E', COBRE = '#CC915E', VERDE = '#22B98A', RED = '#A32D2D'
@@ -98,6 +98,9 @@ export default function DashboardExec({ projeto }) {
   const [railModo, setRailModo] = useState('sai')
   const [proj, setProj] = useState(null)
   const [projLoad, setProjLoad] = useState(false)
+  const [anoIA, setAnoIA] = useState(null)
+  const [anoIALoad, setAnoIALoad] = useState(false)
+  const [grpOpen, setGrpOpen] = useState({})
   const [libOpen, setLibOpen] = useState(false)
   const [modal, setModal] = useState(null)
   const [cardsOn, setCardsOn] = useState(DEFAULT_ON)
@@ -230,6 +233,62 @@ export default function DashboardExec({ projeto }) {
     const projRecM = avg(proj.receita), idealRecM = avg(idealRec)
     return { fut, projSaiM, idealSaiM, gapSai: projSaiM - idealSaiM, projRecM, idealRecM, gapRec: idealRecM - projRecM }
   })() : null
+
+  const A2 = useMemo(() => {
+    const n = W.mesesSaida || 0
+    if (!n || !temOrcado) return null
+    const saiCats = (W.cats || []).filter(c => c.tipo !== 'receita')
+    const recorrentes = [], pontuais = []
+    saiCats.forEach(c => {
+      const desv = [], reals = [], orcs = []
+      for (let m = 0; m < n; m++) { const r = (c.rArr && c.rArr[m]) || 0, oo = (c.oArr && c.oArr[m]) || 0; reals.push(r); orcs.push(oo); desv.push(r - oo) }
+      const tot = desv.reduce((a, b) => a + b, 0)
+      const orcTot = orcs.reduce((a, b) => a + b, 0), realTot = reals.reduce((a, b) => a + b, 0)
+      const dom = Math.max(desv.filter(d => d > 0).length, desv.filter(d => d < 0).length)
+      const semOrc = orcTot === 0 && realTot > 0
+      const material = Math.abs(tot) >= 20000 && (semOrc ? realTot >= 20000 : Math.abs(tot) / Math.max(orcTot, realTot, 1) >= 0.08)
+      if (dom >= Math.ceil(n * 0.6) && material) {
+        recorrentes.push({ nome: c.nome, tipo: c.tipo, semOrc, direcao: tot > 0 ? 'acima' : 'abaixo', mesesDom: dom, n, total: Math.round(tot), media: Math.round(tot / n), orcTot: Math.round(orcTot), realTot: Math.round(realTot) })
+      }
+      const absd = desv.map(Math.abs), mx = Math.max(...absd)
+      if (mx >= 10000) {
+        const outros = absd.filter(x => x !== mx)
+        const med = outros.length ? outros.reduce((a, b) => a + b, 0) / outros.length : 0
+        if (mx >= 2.5 * Math.max(med, 1)) { const mi = absd.indexOf(mx); pontuais.push({ nome: c.nome, tipo: c.tipo, mes: mi, valor: Math.round(desv[mi]) }) }
+      }
+    })
+    recorrentes.sort((a, b) => Math.abs(b.total) - Math.abs(a.total))
+    pontuais.sort((a, b) => Math.abs(b.valor) - Math.abs(a.valor))
+    const recRealYtd = W.receitaRealYtd || 0, recMeta = W.receitaOrcAno || 0
+    const pctMeta = recMeta ? recRealYtd / recMeta * 100 : 0
+    const projRec = n ? recRealYtd / n * 12 : 0
+    const projPctMeta = recMeta ? projRec / recMeta * 100 : 0
+    const recCats = (W.cats || []).filter(c => c.tipo === 'receita' && c.realYtd > 0).sort((a, b) => b.realYtd - a.realYtd)
+    const recTot = recCats.reduce((sx, c) => sx + c.realYtd, 0)
+    const concPct = recTot ? Math.round((recCats[0] ? recCats[0].realYtd : 0) / recTot * 100) : 0
+    const sitTot = (W.sit.Faturado || 0) + (W.sit['A faturar'] || 0) + (W.sit['Sem nota'] || 0)
+    const fatPct = sitTot ? Math.round((W.sit.Faturado || 0) / sitTot * 100) : 0
+    return { n, recorrentes, pontuais, recRealYtd, recMeta, pctMeta, projRec, projPctMeta, concPct, topRecNome: recCats[0] ? recCats[0].nome : '', fatPct }
+  }, [W, temOrcado])
+
+  const anoSelecionado = de === 0 && ate === 11
+  useEffect(() => {
+    if (!A2 || !anoSelecionado) return
+    const key = 'orc_ano_v1_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + A2.recorrentes.length + '_' + A2.pontuais.length
+    try { const c = localStorage.getItem(key); if (c) { setAnoIA(JSON.parse(c)); return } } catch (e) { /* segue */ }
+    let cancel = false
+    setAnoIALoad(true)
+    const payload = {
+      periodo_meses: A2.n,
+      recorrentes: A2.recorrentes,
+      pontuais: A2.pontuais.map(p => ({ nome: p.nome, mes: MESES_ABREV[p.mes], valor: p.valor })),
+      receita: { pct_meta: Math.round(A2.pctMeta), projecao_pct_meta: Math.round(A2.projPctMeta), meta: A2.recMeta, realizado: Math.round(A2.recRealYtd), concentracao_top_pct: A2.concPct, concentracao_top: A2.topRecNome, faturado_pct: A2.fatPct },
+    }
+    iaAnaliseAno(payload).then(r => { if (!cancel) { setAnoIA(r); try { localStorage.setItem(key, JSON.stringify(r)) } catch (e) { /* segue */ } } })
+      .catch(() => { if (!cancel) setAnoIA(null) })
+      .finally(() => { if (!cancel) setAnoIALoad(false) })
+    return () => { cancel = true }
+  }, [A2, anoSelecionado, projeto?.id, ano])
 
   function appOk(dep) { if (dep === 'receita') return W.pReceita > 0; if (dep === 'orcado') return temOrcado; return true }
   function naoAplic(dep) { return dep === 'receita' ? 'Aplicável com as receitas importadas.' : 'Aplicável no cenário comparativo (com orçado cadastrado).' }
@@ -419,6 +478,96 @@ export default function DashboardExec({ projeto }) {
       </KPIGrid>
 
 
+
+      {anoSelecionado && A2 && (() => {
+        const TIPO_LAB = { custo: 'Custo (CPV)', despesa: 'Despesa', deducao: 'Dedução' }
+        const fbTexto = (r) => r.semOrc
+          ? `Dispêndio recorrente sem previsão orçamentária (${r.mesesDom} de ${r.n} meses), da ordem de ${fmtBRL(r.media)} por mês. Recomenda-se criar rubrica e incorporá-la ao orçamento.`
+          : (r.direcao === 'acima'
+            ? `Realizado sistematicamente acima do orçado (${r.mesesDom} de ${r.n} meses), desvio médio de ${fmtBRL(r.media)} por mês. Orçamento subdimensionado — recomenda-se recalibrar o teto.`
+            : `Realizado consistentemente abaixo do previsto (${r.mesesDom} de ${r.n} meses). Provisão possivelmente superdimensionada — recomenda-se revisar o orçamento.`)
+        const itemTexto = (r) => { const it = ((anoIA && anoIA.itens) || []).find(x => x.nome === r.nome); return (it && it.texto) || fbTexto(r) }
+        const grupos = {}; A2.recorrentes.forEach(r => { (grupos[r.tipo] = grupos[r.tipo] || []).push(r) })
+        const acoes = (anoIA && anoIA.acoes && anoIA.acoes.length) ? anoIA.acoes : A2.recorrentes.slice(0, 4).map(r => ({ titulo: r.semOrc ? 'Orçar ' + r.nome : (r.direcao === 'acima' ? 'Recalibrar ' + r.nome : 'Revisar ' + r.nome), detalhe: fbTexto(r), prioridade: Math.abs(r.total) > 100000 ? 'alta' : Math.abs(r.total) > 40000 ? 'média' : 'baixa' }))
+        const corR = (r) => (r.semOrc || r.direcao === 'acima') ? RED : VERDE
+        const prCor = (p) => p === 'alta' ? RED : p === 'média' ? '#B45309' : 'var(--lt-text3)'
+        return (
+          <Card titulo="Análise do Ano" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>✨ IA · {A2.n} meses fechados{anoIALoad ? ' · analisando…' : ''}</span>}>
+            <div style={{ background: 'rgba(204,145,94,0.07)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 8, padding: '11px 14px', fontSize: 12.5, lineHeight: 1.6, marginBottom: 16 }}><strong>✨ Saídas.</strong> {(anoIA && anoIA.narrativaSaidas) || ('Foram identificados ' + A2.recorrentes.length + ' desvio(s) estrutural(is) recorrente(s) e ' + A2.pontuais.length + ' evento(s) pontual(is) nos meses fechados.')}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, margin: '4px 0 8px' }}>Descolamentos recorrentes <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--lt-text3)' }}>· clique no grupo para abrir</span></div>
+            {Object.keys(grupos).map(tp => {
+              const catn = grupos[tp], net = catn.reduce((sx, r) => sx + r.total, 0), open = grpOpen[tp]
+              return (
+                <div key={tp} style={{ border: '1px solid var(--lt-brd)', borderRadius: 10, overflow: 'hidden', marginBottom: 8 }}>
+                  <div onClick={() => setGrpOpen(g => ({ ...g, [tp]: !g[tp] }))} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', cursor: 'pointer' }}>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}><span style={{ color: COBRE, marginRight: 6 }}>{open ? '▾' : '▸'}</span>{TIPO_LAB[tp] || tp} <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--lt-text3)' }}>· {catn.length} rubrica(s)</span></span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: net > 0 ? RED : VERDE }}>{net > 0 ? '+' : ''}{fmtBRL(net)}</span>
+                  </div>
+                  {open && catn.map(r => (
+                    <div key={r.nome} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '9px 14px 9px 16px', borderTop: '1px solid var(--lt-brd)' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: 3, background: corR(r), marginTop: 6, flex: 'none' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600 }}>{r.nome}{r.semOrc && <span style={{ fontSize: 9.5, background: 'rgba(204,145,94,0.18)', color: '#A6512F', padding: '1px 6px', borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>sem orçado</span>} <span style={{ fontWeight: 400, color: 'var(--lt-text3)', fontSize: 11 }}>· {r.direcao} em {r.mesesDom}/{r.n} meses</span></div>
+                        <div style={{ fontSize: 11.5, color: 'var(--lt-text3)', lineHeight: 1.5, marginTop: 2 }}>{itemTexto(r)}</div>
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: 12, color: corR(r), whiteSpace: 'nowrap' }}>{r.total > 0 ? '+' : ''}{fmtBRL(r.total)}</div>
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+            {A2.recorrentes.length === 0 && <p style={{ fontSize: 12, color: 'var(--lt-text3)', margin: 0 }}>Sem desvios estruturais recorrentes materiais no período.</p>}
+            {A2.pontuais.length > 0 && (<>
+              <div style={{ fontSize: 13, fontWeight: 600, margin: '18px 0 8px' }}>Eventos pontuais <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--lt-text3)' }}>· não recorrentes</span></div>
+              {A2.pontuais.map((p, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'baseline', padding: '7px 0', borderBottom: '1px solid var(--lt-brd)', fontSize: 12.5 }}>
+                  <span style={{ color: '#B45309' }}>◆</span><div style={{ flex: 1 }}><strong>{p.nome} · {MESES_ABREV[p.mes]}</strong></div>
+                  <div style={{ fontWeight: 700, color: '#B45309', whiteSpace: 'nowrap' }}>{p.valor > 0 ? '+' : ''}{fmtBRL(p.valor)}</div>
+                </div>
+              ))}
+            </>)}
+            <div style={{ fontSize: 13, fontWeight: 600, margin: '18px 0 8px' }}>Onde atuar <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--lt-text3)' }}>· prioridade por impacto</span></div>
+            {acoes.map((a, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '9px 0', borderBottom: '1px solid var(--lt-brd)', fontSize: 12.5 }}>
+                <span style={{ width: 20, height: 20, borderRadius: 10, background: NAVY, color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', fontWeight: 600 }}>{i + 1}</span>
+                <div style={{ flex: 1 }}><strong>{a.titulo}</strong> <span style={{ color: 'var(--lt-text3)' }}>— {a.detalhe}</span></div>
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: prCor(a.prioridade), textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>{a.prioridade}</span>
+              </div>
+            ))}
+            <div style={{ borderTop: '1px solid var(--lt-brd)', margin: '20px 0 14px' }} />
+            <div style={{ background: 'rgba(34,185,138,0.06)', border: '1px solid rgba(34,185,138,0.3)', borderRadius: 8, padding: '11px 14px', fontSize: 12.5, lineHeight: 1.6, marginBottom: 14 }}><strong>✨ Receita.</strong> {(anoIA && anoIA.narrativaReceita) || ('Receita em ' + Math.round(A2.pctMeta) + '% da meta, projeção de fechamento em ' + Math.round(A2.projPctMeta) + '%. Concentração de ' + A2.concPct + '% em ' + A2.topRecNome + '; ' + A2.fatPct + '% faturado.')}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+              {[['Aderência à meta', Math.round(A2.pctMeta) + '%', 'proj. ' + Math.round(A2.projPctMeta) + '% da meta', A2.projPctMeta < 90 ? RED : VERDE], ['Concentração', A2.concPct + '%', A2.topRecNome, '#B45309'], ['Qualidade fiscal', A2.fatPct + '%', 'faturado', VERDE]].map((k, i) => (
+                <div key={i} style={{ background: '#fff', border: '1px solid var(--lt-brd)', borderRadius: 10, padding: '11px 13px' }}>
+                  <div style={{ fontSize: 10.5, color: 'var(--lt-text3)', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>{k[0]}</div>
+                  <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 20, fontWeight: 600, color: k[3], margin: '2px 0' }}>{k[1]}</div>
+                  <div style={{ fontSize: 10.5, color: 'var(--lt-text3)' }}>{k[2]}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )
+      })()}
+
+      {de === ate && !anoSelecionado && (() => {
+        const m = de, sc = (W.cats || []).filter(c => c.tipo !== 'receita')
+        const movers = sc.map(c => { const r = (c.rArr && c.rArr[m]) || 0, oo = (c.oArr && c.oArr[m]) || 0; return { nome: c.nome, real: r, orc: oo, desv: r - oo } }).filter(x => x.orc > 0)
+        const top = movers.sort((a, b) => Math.abs(b.desv) - Math.abs(a.desv)).slice(0, 3)
+        const saiM = sc.reduce((sx, c) => sx + ((c.rArr && c.rArr[m]) || 0), 0), orcM = sc.reduce((sx, c) => sx + ((c.oArr && c.oArr[m]) || 0), 0)
+        const recM = (W.cats || []).filter(c => c.tipo === 'receita').reduce((sx, c) => sx + ((c.rArr && c.rArr[m]) || 0), 0)
+        return (
+          <Card titulo={'Resumo de ' + MESES_ABREV[m]} extra={<a href="/orcamento/analise" style={{ fontSize: 11.5, color: 'var(--copper, #A6512F)', textDecoration: 'none', fontWeight: 600 }}>ver análise completa →</a>}>
+            <div style={{ fontSize: 12.5, color: 'var(--lt-text3)', marginBottom: 10 }}>Saídas <strong style={{ color: 'var(--lt-text)' }}>{fmtBRL(saiM)}</strong> vs orçado {fmtBRL(orcM)}{orcM ? ' (' + (saiM > orcM ? '+' : '') + Math.round((saiM - orcM) / orcM * 100) + '%)' : ''} · Receita <strong style={{ color: 'var(--lt-text)' }}>{fmtBRL(recM)}</strong></div>
+            {top.length > 0 && <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Rubricas que mais mexeram</div>}
+            {top.map((t, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '5px 0', borderBottom: '1px solid var(--lt-brd)' }}>
+                <span>{t.nome}</span><span style={{ fontWeight: 600, color: t.desv > 0 ? RED : VERDE }}>{t.desv > 0 ? '+' : ''}{fmtBRL(t.desv)} vs orçado</span>
+              </div>
+            ))}
+            <p style={{ fontSize: 11, color: 'var(--lt-text3)', margin: '10px 0 0' }}>Análise detalhada do mês na aba Análise Mensal.</p>
+          </Card>
+        )
+      })()}
 
       <Card titulo={dreCol ? 'DRE gerencial — realizado e projeção do ano' : 'DRE gerencial do período'} extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>barra = % da receita · explosível nas rubricas abaixo</span>}>
         {[

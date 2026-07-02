@@ -122,6 +122,27 @@ async function projecao(body: Record<string, unknown>) {
   return extrairJson(out);
 }
 
+// dados: findings determinísticos consolidados do ano (recorrentes, pontuais, receita). Devolve narrativas + interpretação.
+async function analiseAno(body: Record<string, unknown>) {
+  const dados = body.dados;
+  const system =
+    "Você é um consultor sênior de FP&A (planejamento financeiro) que assessora a diretoria de uma PME brasileira de móveis planejados de alto padrão. " +
+    "Escreva em registro FORMAL, estratégico e executivo — linguagem de relatório de diretoria, em pt-BR. " +
+    "PROIBIDO usar termos coloquiais ou informais (por exemplo: 'folgado', 'vigiar', 'furo', 'ponto cego', 'cara de', 'roda', 'grumosa', 'estourar'). " +
+    "Prefira: superdimensionado, subdimensionado, monitorar, desvio estrutural, lacuna orçamentária, comportamento compatível com, opera em torno de, concentração de receita, previsibilidade. " +
+    "Baseie-se estritamente nos dados fornecidos, seja específico com os números, seja conciso. Sem markdown. Responda APENAS com JSON válido.";
+  const user =
+    "Dados consolidados dos meses já fechados (orçado x realizado):\n" + JSON.stringify(dados).slice(0, 12000) + "\n\n" +
+    "Devolva JSON com esta forma exata: {" +
+    "\"narrativa_saidas\":\"2 a 3 frases executivas sobre o desempenho das saídas frente ao orçado, destacando os desvios estruturais recorrentes e a projeção de fechamento\"," +
+    "\"narrativa_receita\":\"2 a 3 frases executivas sobre a receita frente à meta, o momento, a concentração e a qualidade fiscal\"," +
+    "\"itens\":[{\"nome\":\"<nome exato da rubrica recorrente informada>\",\"texto\":\"1 frase formal com a causa provável e a recomendação\"}]," +
+    "\"acoes\":[{\"titulo\":\"ação objetiva (verbo no início)\",\"detalhe\":\"1 frase\",\"prioridade\":\"alta|média|baixa\"}]" +
+    "}. Gere um item para cada rubrica recorrente informada, usando o nome exato. Ordene as ações por impacto no resultado.";
+  const out = await claude(system, user, 2000);
+  return extrairJson(out);
+}
+
 // ── HTTP ───────────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -139,6 +160,7 @@ Deno.serve(async (req: Request) => {
     if (acao === "sugerir") return json(await sugerir(body));
     if (acao === "insight") return json(await insight(body));
     if (acao === "projecao") return json(await projecao(body));
+    if (acao === "analise_ano") return json(await analiseAno(body));
     return json({ erro: "Ação inválida: " + acao }, 400);
   } catch (e) {
     return json({ erro: (e as Error).message }, 500);
