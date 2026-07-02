@@ -45,7 +45,8 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor, proj, 
   const bw = Math.min(17, slot - 6)
   const y = (v) => T + plotH * (1 - v / max)
   const ticks = [0, max / 2, max]
-  const lastReal = real.reduce((mx, v, i) => (v && v > 0) ? i : mx, -1)
+  const aberto = (curMonth != null && curMonth >= 0) ? curMonth : 99
+  const lastReal = real.reduce((mx, v, i) => (v && v > 0 && i < aberto) ? i : mx, -1)
   const projPts = (proj && lastReal >= 0) ? real.map((v, i) => (i >= lastReal && proj[i] != null) ? `${L + slot * i + slot / 2},${y(proj[i])}` : null).filter(Boolean).join(' ') : ''
   const idealPts = ideal ? ideal.map((v, i) => (v != null && i >= lastReal) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' ') : ''
   return (
@@ -85,8 +86,8 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor, proj, 
           })}
           {idealPts && <polyline points={idealPts} fill="none" stroke="#2a78d6" strokeWidth="1.6" strokeDasharray="5 4" strokeLinejoin="round" strokeLinecap="round" />}
           {projPts && <polyline points={projPts} fill="none" stroke={lineColor} strokeWidth="2" strokeDasharray="2 3" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />}
-          {(() => { const pts = real.map((v, i) => (v && v > 0) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' '); return pts ? <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /> : null })()}
-          {real.map((v, i) => (v && v > 0) ? <circle key={'d' + i} cx={L + slot * i + slot / 2} cy={y(v)} r="2.6" fill={lineColor} stroke="#fff" strokeWidth="1" /> : null)}
+          {(() => { const pts = real.map((v, i) => (v && v > 0 && i < aberto) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' '); return pts ? <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /> : null })()}
+          {real.map((v, i) => (v && v > 0 && i < aberto) ? <circle key={'d' + i} cx={L + slot * i + slot / 2} cy={y(v)} r="2.6" fill={lineColor} stroke="#fff" strokeWidth="1" /> : null)}
         </svg>
       </div>
     </div>
@@ -204,9 +205,11 @@ export default function DashboardExec({ projeto }) {
   }, [W.mSaiReal, W.mRecReal, ano])
 
   useEffect(() => {
-    const sai = W.mSaiReal || [], rec = W.mRecReal || []
-    if (!sai.some(v => v > 0) && !rec.some(v => v > 0)) { setProj(null); return }
-    const key = 'orc_proj_' + projeto.id + '_' + projSig
+    const rs = W.mSaiReal || [], rr = W.mRecReal || []
+    const sai = rs.map(v => v || 0)
+    const rec = rr.map((v, i) => (rs[i] > 0) ? (v || 0) : 0)
+    if (!sai.some(v => v > 0)) { setProj(null); return }
+    const key = 'orc_proj_v2_' + projeto.id + '_' + projSig
     try { const c = localStorage.getItem(key); if (c) { setProj(JSON.parse(c)); return } } catch (e) { /* segue */ }
     let cancel = false
     setProjLoad(true)
