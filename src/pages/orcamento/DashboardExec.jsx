@@ -295,7 +295,8 @@ export default function DashboardExec({ projeto }) {
   const anoSelecionado = de === 0 && ate === 11
   useEffect(() => {
     if (!A2 || !anoSelecionado) return
-    const key = 'orc_ano_v1_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + A2.recorrentes.length + '_' + A2.pontuais.length
+    const sigRec = A2.recorrentes.reduce((sx, r) => sx + Math.round(r.total) + (r.semOrc ? 1 : 0), 0)
+    const key = 'orc_ano_v2_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + Math.round(W.totOrcAno || 0) + '_' + sigRec + '_' + A2.recorrentes.length + '_' + A2.pontuais.length
     try { const c = localStorage.getItem(key); if (c) { setAnoIA(JSON.parse(c)); return } } catch (e) { /* segue */ }
     let cancel = false
     setAnoIALoad(true)
