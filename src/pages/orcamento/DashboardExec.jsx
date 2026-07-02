@@ -9,12 +9,7 @@ import { iaProjecao } from '../../lib/orcamento/ia'
 const ANO_ATUAL = new Date().getFullYear()
 const NAVY = '#00203E', COBRE = '#CC915E', VERDE = '#22B98A', RED = '#A32D2D'
 const COBRE_L = 'rgba(204,145,94,0.4)', VERDE_L = 'rgba(34,185,138,0.4)'
-const AMBER = '#E0972F'
 const fmtC = (v) => v == null ? '—' : (Math.abs(v) >= 1e6 ? 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M' : 'R$ ' + Math.round(v / 1e3) + 'k')
-const corCons = (pct, pace) => { const r = pace ? pct / pace : 0; if (pct > 100) return RED; if (r <= 1.05) return VERDE; if (r <= 1.45) return AMBER; return RED }
-const corReceita = (pct, pace) => { const r = pace ? pct / pace : 0; if (r >= 0.95) return VERDE; if (r >= 0.7) return AMBER; return RED }
-const polar = (cx, cy, r, deg) => { const a = deg * Math.PI / 180; return [cx + r * Math.cos(a), cy - r * Math.sin(a)] }
-const arcPath = (cx, cy, r, d0, d1) => { let p = '', n = Math.max(2, Math.round(Math.abs(d1 - d0))); for (let i = 0; i <= n; i++) { const d = d0 + (d1 - d0) * i / n, q = polar(cx, cy, r, d); p += (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1) + ' ' } return p }
 
 const CATALOGO = [
   { id: 'receita', nome: 'Receita realizada', dep: 'receita', info: 'Total de receitas reconhecidas no período (pelo fato gerador, com ou sem nota).' },
@@ -27,7 +22,7 @@ const CATALOGO = [
   { id: 'maiorRub', nome: 'Maior rubrica de saída', dep: 'none', info: 'A categoria que mais consome recursos no período.' },
   { id: 'exec', nome: 'Execução orçamentária', dep: 'orcado', info: 'Percentual do orçado já consumido pelo realizado (realizado ÷ orçado).' },
 ]
-const DEFAULT_ON = ['pnlConsumo', 'receita', 'aFaturar', 'margem', 'margemPct']
+const DEFAULT_ON = ['receita', 'aFaturar', 'margem', 'margemPct']
 const soma = (arr, de, ate) => (arr || []).slice(de, ate + 1).reduce((s, v) => s + (v || 0), 0)
 const pct = (n) => (n >= 0 ? '' : '−') + Math.abs(n).toFixed(1) + '%'
 
@@ -75,73 +70,18 @@ function Linha({ label, valor, w, cor, forte, sufixo }) {
   )
 }
 
-function BateriaHero({ pct, pace, real, orc, inv }) {
-  const WB = 230, HB = 64, fill = Math.min(Math.max(pct, 0), 100) / 100, paceX = 8 + (WB - 16) * pace / 100
-  const col = inv ? corReceita(pct, pace) : corCons(pct, pace)
-  return (
-    <div style={{ textAlign: 'center' }}>
-      <svg width="100%" viewBox="0 0 262 96" role="img" aria-label={`Bateria do orçamento: ${pct.toFixed(0)}% consumido`} style={{ maxWidth: 300, display: 'block', margin: '0 auto' }}>
-        <rect x="6" y="14" width={WB} height={HB} rx="11" fill="#fff" stroke={NAVY} strokeWidth="2.5" />
-        <rect x={WB + 6} y="30" width="9" height="34" rx="3" fill={NAVY} />
-        <rect x="10" y="18" width={(WB - 8) * fill} height={HB - 8} rx="7" fill={col} />
-        <line x1={paceX} y1="9" x2={paceX} y2={HB + 19} stroke={NAVY} strokeWidth="1.5" strokeDasharray="4 3" />
-        <text x={paceX} y="92" textAnchor="middle" fontSize="9.5" fill={NAVY}>ritmo {pace.toFixed(0)}%</text>
-        <text x={6 + WB / 2} y="53" textAnchor="middle" fontSize="22" fontWeight="700" fontFamily="'Raleway', sans-serif" fill={NAVY} stroke="#fff" strokeWidth="3.5" paintOrder="stroke">{pct.toFixed(0)}%</text>
-      </svg>
-      <div style={{ fontSize: 12, color: 'var(--lt-text3)', marginTop: 4 }}>{fmtBRL(real)} de {fmtBRL(orc)} consumidos</div>
-    </div>
-  )
-}
-
-function Bullet({ nome, pct, pace, real, orc, onClick }) {
-  const col = corCons(pct, pace)
-  const over = pct > 100
-  const fillW = Math.min(Math.max(pct, 0), 100)
-  const paceX = Math.min(Math.max(pace, 0), 100)
-  return (
-    <div onClick={onClick} title={`${nome}: ${fmtBRL(real)} de ${fmtBRL(orc)} orçado`} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--lt-brd)', fontSize: 12.5, cursor: onClick ? 'pointer' : 'default' }}>
-      <span style={{ width: 156, flex: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{nome}</span>
-      <span style={{ flex: 1, position: 'relative', height: 18, background: 'var(--lt-bg2, #eee)', borderRadius: 4, minWidth: 80 }}>
-        <span style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: fillW + '%', background: col, borderRadius: 4 }} />
-        <span title={`ritmo do ano ${pace.toFixed(0)}%`} style={{ position: 'absolute', left: `calc(${paceX}% - 1px)`, top: -3, height: 24, width: 2, background: 'var(--lt-text)' }} />
-        {over && <span style={{ position: 'absolute', right: 4, top: 0, height: '100%', display: 'flex', alignItems: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>▸</span>}
-      </span>
-      <span style={{ width: 150, flex: 'none', textAlign: 'right' }}>
-        <span style={{ fontWeight: 700, color: over ? RED : 'var(--lt-text)' }}>{pct.toFixed(0)}%</span>
-        <span style={{ color: 'var(--lt-text3)', fontSize: 11 }}> · {fmtC(real)}/{fmtC(orc)}</span>
-      </span>
-    </div>
-  )
-}
-
-function Velocimetro({ valor }) {
-  const max = 150, ang = v => 180 - Math.min(Math.max(v, 0), max) / max * 180
-  const col = valor > 120 ? RED : valor > 100 ? AMBER : VERDE
-  const nd = polar(80, 86, 52, ang(valor))
-  return (
-    <svg width="100%" viewBox="0 0 160 102" role="img" aria-label={`Projeção do ano: ${valor.toFixed(0)}% do orçado`} style={{ maxWidth: 220, display: 'block', margin: '0 auto' }}>
-      <path d={arcPath(80, 86, 60, 180, ang(100))} fill="none" stroke={VERDE} strokeWidth="13" strokeLinecap="round" />
-      <path d={arcPath(80, 86, 60, ang(100), ang(120))} fill="none" stroke={AMBER} strokeWidth="13" />
-      <path d={arcPath(80, 86, 60, ang(120), 0)} fill="none" stroke={RED} strokeWidth="13" strokeLinecap="round" />
-      <line x1="80" y1="86" x2={nd[0].toFixed(1)} y2={nd[1].toFixed(1)} stroke={NAVY} strokeWidth="3.5" strokeLinecap="round" />
-      <circle cx="80" cy="86" r="6" fill={NAVY} />
-      <text x="80" y="100" textAnchor="middle" fontSize="16" fontWeight="700" fontFamily="'Raleway', sans-serif" fill={col}>{valor.toFixed(0)}%</text>
-    </svg>
-  )
-}
-
-function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor, proj, ideal }) {
+function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor, proj, ideal, curMonth }) {
   const VW = 360, VH = 178, T = 18, B = 26, L = 44, R = 8
   const plotH = VH - T - B, plotW = VW - L - R
   const vals = real.map((v, i) => (v && v > 0) ? v : (orc[i] || 0))
-  const max = Math.max(1, ...vals, ...((proj || []).filter(x => x > 0)), ...((ideal || []).filter(x => x > 0))) * 1.12
+  const max = Math.max(1, ...vals, ...((orc || []).filter(x => x > 0)), ...((proj || []).filter(x => x > 0)), ...((ideal || []).filter(x => x > 0))) * 1.12
   const slot = plotW / 12
   const bw = Math.min(17, slot - 6)
   const y = (v) => T + plotH * (1 - v / max)
   const ticks = [0, max / 2, max]
   const lastReal = real.reduce((mx, v, i) => (v && v > 0) ? i : mx, -1)
   const projPts = (proj && lastReal >= 0) ? real.map((v, i) => (i >= lastReal && proj[i] != null) ? `${L + slot * i + slot / 2},${y(proj[i])}` : null).filter(Boolean).join(' ') : ''
-  const idealPts = ideal ? ideal.map((v, i) => (v != null) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' ') : ''
+  const idealPts = ideal ? ideal.map((v, i) => (v != null && i >= lastReal) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' ') : ''
   return (
     <div>
       <div style={{ background: base, color: '#fff', fontSize: 12.5, fontWeight: 600, textAlign: 'center', padding: '6px 0', borderRadius: '10px 10px 0 0' }}>{titulo}</div>
@@ -154,14 +94,26 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor, proj, 
             </g>
           ))}
           {vals.map((v, i) => {
-            const h = plotH * v / max
             const x = L + slot * i + (slot - bw) / 2
+            const lbl = <text x={x + bw / 2} y={VH - 10} textAnchor="middle" fontSize="9" fill={i === selMonth ? NAVY : 'var(--lt-text3)'} fontWeight={i === selMonth ? 700 : 400}>{MESES_ABREV[i]}</text>
+            if (i === curMonth) {
+              const oo = orc[i] || 0, rr = (real[i] && real[i] > 0) ? real[i] : 0
+              const hO = plotH * oo / max, hR = plotH * rr / max
+              return (
+                <g key={i}>
+                  <rect x={x} y={T + plotH - hO} width={bw} height={hO} rx="2.5" fill={light} stroke={base} strokeWidth="1" strokeDasharray="2 2" />
+                  {hR > 0 && <rect x={x} y={T + plotH - hR} width={bw} height={hR} rx="2.5" fill={i === selMonth ? NAVY : base} />}
+                  {lbl}
+                </g>
+              )
+            }
+            const h = plotH * v / max
             const hasReal = real[i] && real[i] > 0
             const cor = i === selMonth ? NAVY : (hasReal ? base : light)
             return (
               <g key={i}>
                 <rect x={x} y={T + plotH - h} width={bw} height={h} rx="2.5" fill={cor} />
-                <text x={x + bw / 2} y={VH - 10} textAnchor="middle" fontSize="9" fill={i === selMonth ? NAVY : 'var(--lt-text3)'} fontWeight={i === selMonth ? 700 : 400}>{MESES_ABREV[i]}</text>
+                {lbl}
               </g>
             )
           })}
@@ -307,6 +259,15 @@ export default function DashboardExec({ projeto }) {
   const MARGEM_ALVO = 0.15
   const idealSai = proj ? proj.receita.map((v) => Math.round((v || 0) * (1 - MARGEM_ALVO))) : null
   const idealRec = proj ? proj.saidas.map((v) => Math.round((v || 0) / (1 - MARGEM_ALVO))) : null
+  const analiseMargem = proj ? (() => {
+    const idxFut = (W.mSaiReal || []).map((_, i) => i).filter(i => !((W.mSaiReal[i]) > 0))
+    const fut = idxFut.length
+    if (!fut) return null
+    const avg = (arr) => Math.round(idxFut.reduce((sx, i) => sx + (arr[i] || 0), 0) / fut)
+    const projSaiM = avg(proj.saidas), idealSaiM = avg(idealSai)
+    const projRecM = avg(proj.receita), idealRecM = avg(idealRec)
+    return { fut, projSaiM, idealSaiM, gapSai: projSaiM - idealSaiM, projRecM, idealRecM, gapRec: idealRecM - projRecM }
+  })() : null
 
   function appOk(dep) { if (dep === 'receita') return W.pReceita > 0; if (dep === 'orcado') return temOrcado; return true }
   function naoAplic(dep) { return dep === 'receita' ? 'Aplicável com as receitas importadas.' : 'Aplicável no cenário comparativo (com orçado cadastrado).' }
@@ -394,6 +355,7 @@ export default function DashboardExec({ projeto }) {
     } catch (e) { setMsg('Erro ao exportar: ' + e.message) }
   }
 
+  const curMonth = ano === ANO_ATUAL ? new Date().getMonth() : -1
   const comp = modo === 'comparativo'
   const cardsVisiveis = CATALOGO.filter(k => cardsOn.includes(k.id) && appOk(k.dep))
   const linhas = linhasTabela()
@@ -425,19 +387,46 @@ export default function DashboardExec({ projeto }) {
 
       <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} selMonth={de === ate ? de : -1} anoSel={de === 0 && ate === 11} ano={ano} modo={railModo} setModo={setRailModo} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 6 }}>
-        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} lineColor="#7A3F1E" proj={proj ? proj.saidas : null} ideal={idealSai} />
-        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} lineColor="#0F6E56" proj={proj ? proj.receita : null} ideal={idealRec} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 10 }}>
+        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} lineColor="#7A3F1E" proj={proj ? proj.saidas : null} ideal={idealSai} curMonth={curMonth} />
+        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} lineColor="#0F6E56" proj={proj ? proj.receita : null} ideal={idealRec} curMonth={curMonth} />
       </div>
-      <div style={{ fontSize: 11, color: 'var(--lt-text3)', margin: '0 2px 16px', display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: COBRE, marginRight: 4 }} />realizado</span>
-        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: COBRE_L, marginRight: 4 }} />projeção (orçado nos meses a realizar)</span>
-        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: NAVY, marginRight: 4 }} />mês selecionado</span>
-        <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2px solid #3D5068', marginRight: 4, verticalAlign: 'middle' }} />linha = realizado</span>
-        <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2px dotted #3D5068', marginRight: 4, verticalAlign: 'middle' }} />projeção IA</span>
-        <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2px dashed #2a78d6', marginRight: 4, verticalAlign: 'middle' }} />ideal (margem 15%)</span>
+      <div style={{ fontSize: 10.5, color: 'var(--lt-text3)', margin: '0 2px 14px', display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ color: 'var(--lt-text)', fontWeight: 600 }}>Legenda</span>
+        <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: '#6B7280', marginRight: 3 }} />realizado</span>
+        <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: '#CBD5E1', marginRight: 3 }} />projeção (orçado)</span>
+        <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: NAVY, marginRight: 3 }} />mês selecionado</span>
+        <span><span style={{ display: 'inline-block', width: 15, height: 0, borderTop: '2px dotted #6B7280', marginRight: 3, verticalAlign: 'middle' }} />projeção IA</span>
+        <span><span style={{ display: 'inline-block', width: 15, height: 0, borderTop: '2px dashed #2a78d6', marginRight: 3, verticalAlign: 'middle' }} />ideal (15%)</span>
+        <span style={{ color: '#9a917f' }}>· cobre = saídas · verde = receita · mês corrente: contorno = teto orçado, preenchido = já realizado</span>
       </div>
       {proj && proj.comentario && <div style={{ fontSize: 11.5, color: 'var(--lt-text)', background: 'rgba(42,120,214,0.06)', border: '1px solid rgba(42,120,214,0.25)', borderRadius: 8, padding: '8px 12px', margin: '0 2px 16px', lineHeight: 1.5 }}>✨ <strong>Projeção IA:</strong> {proj.comentario}{projLoad ? ' · atualizando…' : ''}</div>}
+
+      {analiseMargem && (
+        <Card titulo="Onde atuar para proteger a margem" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>meta: margem líquida de 15% · próximos {analiseMargem.fut} meses (projeção IA)</span>}>
+          <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--lt-text3)', lineHeight: 1.55 }}>A linha tracejada azul nos gráficos é o <strong style={{ color: 'var(--lt-text)' }}>nível ideal para 15% de margem</strong>. Enquanto a projeção estiver do lado saudável dela, a meta se sustenta; onde cruza, é hora de agir.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+            <div style={{ borderLeft: '3px solid ' + (analiseMargem.gapSai > 0 ? RED : VERDE), borderRadius: 0, padding: '2px 0 2px 12px' }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--lt-text)', marginBottom: 4 }}>Saídas — teto saudável</div>
+              <div style={{ fontSize: 12.5, color: 'var(--lt-text3)', lineHeight: 1.55 }}>
+                Projeção <strong style={{ color: 'var(--lt-text)' }}>{fmtBRL(analiseMargem.projSaiM)}/mês</strong> · teto p/ 15%: <strong style={{ color: 'var(--lt-text)' }}>{fmtBRL(analiseMargem.idealSaiM)}/mês</strong>.
+                {analiseMargem.gapSai > 0
+                  ? <> Está <strong style={{ color: RED }}>{fmtBRL(analiseMargem.gapSai)}/mês acima</strong> do teto — cortar custos recorrentes ou reduzir o ritmo protege a margem.</>
+                  : <> Dentro do teto — manter o controle preserva a margem.</>}
+              </div>
+            </div>
+            <div style={{ borderLeft: '3px solid ' + (analiseMargem.gapRec > 0 ? RED : VERDE), borderRadius: 0, padding: '2px 0 2px 12px' }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--lt-text)', marginBottom: 4 }}>Receita — piso necessário</div>
+              <div style={{ fontSize: 12.5, color: 'var(--lt-text3)', lineHeight: 1.55 }}>
+                Projeção <strong style={{ color: 'var(--lt-text)' }}>{fmtBRL(analiseMargem.projRecM)}/mês</strong> · piso p/ 15%: <strong style={{ color: 'var(--lt-text)' }}>{fmtBRL(analiseMargem.idealRecM)}/mês</strong>.
+                {analiseMargem.gapRec > 0
+                  ? <> Falta <strong style={{ color: RED }}>{fmtBRL(analiseMargem.gapRec)}/mês</strong> de faturamento — acelerar vendas/entregas sustenta a margem.</>
+                  : <> Acima do piso — faturamento sustenta a margem.</>}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {(d.importacoes && d.importacoes[0]) || W.incompleto >= 0 ? (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10, fontSize: 11, color: 'var(--lt-text3)' }}>
@@ -449,9 +438,6 @@ export default function DashboardExec({ projeto }) {
       {libOpen && (
         <Card titulo="Indicadores do topo" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>ligue/desligue · ⓘ explica cada um</span>}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <button onClick={() => toggleCard('pnlConsumo')} style={{ textAlign: 'left', fontSize: 12.5, padding: '6px 10px', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--lt-brd)', background: cardsOn.includes('pnlConsumo') ? 'rgba(204,145,94,0.12)' : 'transparent', color: cardsOn.includes('pnlConsumo') ? 'var(--copper, #A6512F)' : 'var(--lt-text)', fontWeight: 600 }}>
-              {cardsOn.includes('pnlConsumo') ? '✓ ' : '+ '}Painel de consumo (baterias, anéis e velocímetro){!temOrcado && <span style={{ fontSize: 10.5, fontWeight: 400 }}> · requer orçado</span>}
-            </button>
             {CATALOGO.map(k => {
               const ok = appOk(k.dep), on = cardsOn.includes(k.id)
               return (
@@ -470,90 +456,6 @@ export default function DashboardExec({ projeto }) {
         {cardsVisiveis.map(k => { const r = indicador(k.id); return <KPICard key={k.id} label={k.nome} value={r.v} delta={r.s} /> })}
       </KPIGrid>
 
-      {temOrcado && cardsOn.includes('pnlConsumo') && (() => {
-        const paceP = W.mesesSaida / 12 * 100
-        const pctTot = W.totOrcAno ? W.totRealYtd / W.totOrcAno * 100 : 0
-        const annual = W.mesesSaida ? W.totRealYtd / W.mesesSaida * 12 : 0
-        const projPct = W.totOrcAno ? annual / W.totOrcAno * 100 : 0
-        const pctRec = W.receitaOrcAno ? W.receitaRealYtd / W.receitaOrcAno * 100 : 0
-        const annualRec = W.mesesSaida ? W.receitaRealYtd / W.mesesSaida * 12 : 0
-        const projRecPct = W.receitaOrcAno ? annualRec / W.receitaOrcAno * 100 : 0
-        const mesesRest = Math.max(0, 12 - W.mesesSaida)
-        const ritmoSaida = W.mesesSaida ? W.totRealYtd / W.mesesSaida : 0
-        const runSaida = mesesRest ? Math.max(0, W.totOrcAno - W.totRealYtd) / mesesRest : 0
-        const ritmoRec = W.mesesSaida ? W.receitaRealYtd / W.mesesSaida : 0
-        const runRec = mesesRest ? Math.max(0, W.receitaOrcAno - W.receitaRealYtd) / mesesRest : 0
-        const deltaSaida = ritmoSaida ? (runSaida - ritmoSaida) / ritmoSaida * 100 : 0
-        const deltaRec = ritmoRec ? (runRec - ritmoRec) / ritmoRec * 100 : 0
-        const sinalPct = (v) => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(0) + '%'
-        return (
-          <Card titulo="Consumo do orçamento — quanto do ano já foi gasto" extra={
-            <span style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--lt-text3)', flexWrap: 'wrap', alignItems: 'center' }}>
-              <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: VERDE, marginRight: 4 }} />no ritmo</span>
-              <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: AMBER, marginRight: 4 }} />atenção</span>
-              <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: RED, marginRight: 4 }} />acelerado</span>
-              <span style={{ opacity: 0.8 }}>tracejado = ritmo ({paceP.toFixed(0)}%) · receita abaixo do ritmo = vermelho</span>
-            </span>}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 16, alignItems: 'start' }}>
-              {W.receitaOrcAno > 0 && (
-                <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--lt-text)', marginBottom: 10 }}>Receita vs meta anual</div>
-                  <BateriaHero pct={pctRec} pace={paceP} real={W.receitaRealYtd} orc={W.receitaOrcAno} inv />
-                  <div style={{ fontSize: 11.5, color: projRecPct < 90 ? RED : 'var(--lt-text3)', textAlign: 'center', marginTop: 6 }}>
-                    {`Projeção ${fmtBRL(annualRec)} · ${projRecPct.toFixed(0)}% da meta`}
-                  </div>
-                </div>
-              )}
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--lt-text)', marginBottom: 10 }}>Orçamento anual de saídas</div>
-                <BateriaHero pct={pctTot} pace={paceP} real={W.totRealYtd} orc={W.totOrcAno} />
-              </div>
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--lt-text)', marginBottom: 10 }}>Projeção do ano (ritmo atual)</div>
-                <Velocimetro valor={projPct} />
-                <div style={{ fontSize: 11.5, color: projPct > 100 ? RED : 'var(--lt-text3)', textAlign: 'center', marginTop: 2 }}>
-                  {projPct > 100 ? `Fecha em ${fmtBRL(annual)} · ${pct(projPct - 100)} acima do orçado` : `Projeção ${fmtBRL(annual)} · dentro do orçado`}
-                </div>
-              </div>
-            </div>
-            <div style={{ marginTop: 14, padding: '12px 14px', background: 'rgba(0,32,62,0.04)', border: '1px solid var(--lt-brd)', borderRadius: 10 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--lt-text)', marginBottom: 8 }}>Cenário redistribuição <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--lt-text3)' }}>· manter o teto/meta do ano nos {mesesRest} meses restantes</span></div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
-                <div style={{ fontSize: 12 }}>
-                  <span style={{ color: 'var(--lt-text3)' }}>Saídas — cabe por mês: </span>
-                  <span style={{ fontWeight: 700 }}>{fmtBRL(runSaida)}</span>
-                  <div style={{ fontSize: 11, color: deltaSaida < 0 ? RED : 'var(--lt-text3)' }}>ritmo atual {fmtBRL(ritmoSaida)}/mês · precisa {sinalPct(deltaSaida)}</div>
-                </div>
-                {W.receitaOrcAno > 0 && (
-                  <div style={{ fontSize: 12 }}>
-                    <span style={{ color: 'var(--lt-text3)' }}>Receita — precisa por mês: </span>
-                    <span style={{ fontWeight: 700 }}>{fmtBRL(runRec)}</span>
-                    <div style={{ fontSize: 11, color: deltaRec > 0 ? RED : 'var(--lt-text3)' }}>ritmo atual {fmtBRL(ritmoRec)}/mês · precisa {sinalPct(deltaRec)}</div>
-                  </div>
-                )}
-              </div>
-            </div>
-            {W.consumoCats.length > 0 && (
-              <>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--lt-text)', margin: '20px 0 12px' }}>Por categoria <span style={{ fontWeight: 400, color: 'var(--lt-text3)', fontSize: 11 }}>· % do orçado anual consumido · clique p/ explodir</span></div>
-                <div>
-                  {W.consumoCats.map(c => <Bullet key={c.id} nome={c.nome} pct={c.orcAno ? c.realYtd / c.orcAno * 100 : 0} pace={paceP} real={c.realYtd} orc={c.orcAno} onClick={() => drill(c)} />)}
-                </div>
-              </>
-            )}
-            {W.semOrcCats.length > 0 && (
-              <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(204,145,94,0.08)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 10 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: '#A6512F', marginBottom: 6 }}>Gasto sem orçado <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--lt-text3)' }}>· realizado sem linha no orçamento — vale orçar nos próximos ciclos</span></div>
-                {W.semOrcCats.map(c => (
-                  <div key={c.id} onClick={() => drill(c)} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '5px 0', cursor: 'pointer', borderBottom: '1px solid var(--lt-brd)' }}>
-                    <span>{c.nome}</span><span style={{ fontWeight: 600, color: '#A6512F' }}>{fmtBRL(c.realYtd)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        )
-      })()}
 
       <Card titulo="Evolução mensal — receita, saídas e resultado" extra={
         <span style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--lt-text3)', flexWrap: 'wrap' }}>
