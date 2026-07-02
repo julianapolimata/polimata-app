@@ -277,7 +277,7 @@ export default function DashboardExec({ projeto }) {
   useEffect(() => {
     if (!A2) return
     const sigRec = A2.recorrentes.reduce((sx, r) => sx + Math.round(r.total) + (r.semOrc ? 1 : 0), 0)
-    const key = 'orc_ano_v4_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + Math.round(W.totOrcAno || 0) + '_' + sigRec + '_' + A2.recorrentes.length + '_' + A2.pontuais.length
+    const key = 'orc_ano_v5_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + Math.round(W.totOrcAno || 0) + '_' + sigRec + '_' + A2.recorrentes.length + '_' + A2.pontuais.length
     try { const c = localStorage.getItem(key); if (c) { setAnoIA(JSON.parse(c)); return } } catch (e) { /* segue */ }
     let cancel = false
     setAnoIALoad(true)

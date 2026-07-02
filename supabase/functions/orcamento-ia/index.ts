@@ -126,18 +126,18 @@ async function projecao(body: Record<string, unknown>) {
 async function analiseAno(body: Record<string, unknown>) {
   const dados = body.dados;
   const system =
-    "Você é um consultor sênior de FP&A (planejamento financeiro) que assessora a diretoria de uma PME brasileira de móveis planejados de alto padrão. " +
-    "Escreva em registro FORMAL, estratégico e executivo — linguagem de relatório de diretoria, em pt-BR. " +
-    "PROIBIDO usar termos coloquiais ou informais (por exemplo: 'folgado', 'vigiar', 'furo', 'ponto cego', 'cara de', 'roda', 'grumosa', 'estourar'). " +
-    "Prefira: superdimensionado, subdimensionado, monitorar, desvio estrutural, lacuna orçamentária, comportamento compatível com, opera em torno de, concentração de receita, previsibilidade. " +
-    "A SINOPSE é a análise de MAIOR VALOR: NÃO repita percentuais nem valores já exibidos nos indicadores — entregue INTERPRETAÇÃO (a tensão central do negócio, a causa provável do padrão dominante, a implicação estratégica e o risco ou a oportunidade). Priorize sempre a leitura e a causa sobre a repetição de números; instigante, porém formal. " +
-    "Baseie-se estritamente nos dados fornecidos, seja específico com os números, seja conciso. Sem markdown. Responda APENAS com JSON válido.";
+    "Você é um consultor financeiro experiente que assessora o DONO de uma PME brasileira de móveis planejados de alto padrão. " +
+    "O dono NÃO é especialista em finanças. Escreva de forma CLARA, DIRETA e ACESSÍVEL, como se estivesse explicando pessoalmente para ele, na linguagem do dia a dia — em pt-BR. " +
+    "Evite jargão técnico-financeiro (por exemplo: 'desvio estrutural', 'lacuna orçamentária', 'previsibilidade', 'concentração de receita', 'materialidade'); se um conceito for necessário, explique em poucas palavras simples. " +
+    "Seja profissional e confiável, sem soar acadêmico e sem gírias ou coloquialismos baratos. Traga sempre o 'e daí' prático de cada ponto — o que aquilo significa para o bolso e para as decisões do dono. " +
+    "A SINOPSE é a análise de MAIOR VALOR: NÃO repita percentuais nem valores já exibidos nos indicadores — entregue a LEITURA por trás dos dados (o que está realmente acontecendo, a causa provável, o que isso significa na prática e o risco ou a oportunidade), de forma envolvente e fácil de entender. " +
+    "Baseie-se estritamente nos dados fornecidos, seja específico, seja conciso. Sem markdown. Responda APENAS com JSON válido.";
   const user =
     "Dados consolidados dos meses já fechados (orçado x realizado):\n" + JSON.stringify(dados).slice(0, 12000) + "\n\n" +
     "Devolva JSON com esta forma exata: {" +
-    "\"sinopse\":\"parágrafo executivo de alto valor analítico (3 a 4 frases) que REVELE algo além dos números já exibidos: a tensão central, a causa provável do padrão dominante, a implicação estratégica e o risco ou a oportunidade que a diretoria precisa enxergar, com um gancho para os detalhes. Não repita percentuais/valores dos indicadores\"," +
-    "\"narrativa_saidas\":\"2 a 3 frases executivas sobre o desempenho das saídas frente ao orçado, destacando os desvios estruturais recorrentes e a projeção de fechamento\"," +
-    "\"narrativa_receita\":\"2 a 3 frases executivas sobre a receita frente à meta, o momento, a concentração e a qualidade fiscal\"," +
+    "\"sinopse\":\"parágrafo claro e envolvente, de alto valor (3 a 4 frases) que REVELE algo além dos números já exibidos: a tensão central, a causa provável do padrão dominante, a implicação estratégica e o risco ou a oportunidade que a diretoria precisa enxergar, com um gancho para os detalhes. Não repita percentuais/valores dos indicadores\"," +
+    "\"narrativa_saidas\":\"2 a 3 frases claras (linguagem do dono) sobre o desempenho das saídas frente ao orçado, destacando os desvios estruturais recorrentes e a projeção de fechamento\"," +
+    "\"narrativa_receita\":\"2 a 3 frases claras (linguagem do dono) sobre a receita frente à meta, o momento, a concentração e a qualidade fiscal\"," +
     "\"itens\":[{\"nome\":\"<nome exato da rubrica recorrente informada>\",\"texto\":\"1 frase formal com a causa provável e a recomendação\"}]," +
     "\"acoes\":[{\"titulo\":\"ação objetiva (verbo no início)\",\"detalhe\":\"1 frase\",\"prioridade\":\"alta|média|baixa\"}]" +
     "}. Gere um item para cada rubrica recorrente informada, usando o nome exato. Ordene as ações por impacto no resultado.";
