@@ -3,7 +3,7 @@
 // DRE gerencial (realizado + projeção), receita por situação fiscal e maiores rubricas (explosíveis).
 import { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { useOrcDados, useItens, PageHeader, Card, KPICard, KPIGrid, BotaoSec, fmtBRL, MESES_ABREV, ErroBox } from './_shared'
+import { useOrcDados, useItens, PageHeader, Card, KPICard, KPIGrid, BotaoSec, fmtBRL, MESES_ABREV, ErroBox, MonthRail } from './_shared'
 
 const ANO_ATUAL = new Date().getFullYear()
 const NAVY = '#00203E', COBRE = '#CC915E', VERDE = '#22B98A', RED = '#A32D2D'
@@ -126,58 +126,6 @@ function Velocimetro({ valor }) {
       <circle cx="80" cy="86" r="6" fill={NAVY} />
       <text x="80" y="100" textAnchor="middle" fontSize="16" fontWeight="700" fontFamily="'Raleway', sans-serif" fill={col}>{valor.toFixed(0)}%</text>
     </svg>
-  )
-}
-
-function MonthRail({ recReal, saiReal, recOrc, saiOrc, de, ate, ano, modo, setModo, onMonth, onAno }) {
-  const rec = modo === 'rec'
-  const orc = rec ? recOrc : saiOrc
-  const real = rec ? recReal : saiReal
-  const has = (v) => v != null && v !== 0
-  const oTot = orc.reduce((a, b) => a + (b || 0), 0)
-  const rTot = real.reduce((a, b) => a + (has(b) ? b : 0), 0)
-  const pctAno = oTot ? Math.min(rTot / oTot * 100, 100) : 0
-  const anoOn = de === 0 && ate === 11
-  const cor = (r, oo) => { if (!has(r)) return '#9a917f'; const ruim = rec ? r < oo : r > oo; return ruim ? RED : VERDE }
-  return (
-    <div style={{ marginBottom: 16 }}>
-      <style>{'.mrl{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease}.mrl:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,32,62,.09)}'}</style>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
-        <span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>Clique num mês para focar o dashboard nele — ou no card do Ano para o consolidado.</span>
-        <div style={{ display: 'inline-flex', background: 'var(--lt-bg2, #EDE6D9)', borderRadius: 22, padding: 3 }}>
-          {[['sai', 'Saídas'], ['rec', 'Receita']].map(([id, lbl]) => (
-            <button key={id} onClick={() => setModo(id)} style={{ fontSize: 11.5, padding: '5px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: modo === id ? 600 : 500, background: modo === id ? '#fff' : 'transparent', color: modo === id ? NAVY : 'var(--lt-text3)', boxShadow: modo === id ? '0 1px 3px rgba(0,32,62,.12)' : 'none' }}>{lbl}</button>
-          ))}
-        </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1.7fr repeat(6, 1fr)', gridTemplateRows: 'auto auto', gap: 9 }}>
-        <div className="mrl" onClick={onAno} style={{ gridRow: '1 / span 2', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'linear-gradient(150deg, #22456B, #00203E 72%)', border: '1.5px solid ' + (anoOn ? COBRE : '#294a6e'), borderRadius: 14, padding: '16px 18px', color: '#fff' }}>
-          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: COBRE, fontWeight: 600, marginBottom: 8 }}>Ano {ano} · consolidado</div>
-          <div style={{ fontSize: 10.5, color: '#B9C5D4' }}>Realizado</div>
-          <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 28, fontWeight: 600, lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{fmtC(rTot)}</div>
-          <div style={{ fontSize: 11, color: '#B9C5D4', marginTop: 6 }}>de {fmtC(oTot)} orçado</div>
-          <div style={{ height: 7, background: 'rgba(255,255,255,.14)', borderRadius: 4, marginTop: 12, overflow: 'hidden' }}><div style={{ height: '100%', width: pctAno + '%', background: COBRE, borderRadius: 4 }} /></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7 }}><span style={{ fontSize: 11, fontWeight: 600, fontFamily: "'Raleway', sans-serif" }}>{pctAno.toFixed(0)}%</span><span style={{ fontSize: 10, color: '#B9C5D4' }}>{rec ? 'da meta' : 'do orçamento'} no ano</span></div>
-        </div>
-        {orc.map((_, i) => {
-          const oo = orc[i], r = real[i], tem = has(r), on = de === i && ate === i
-          const pctFill = oo ? Math.min((tem ? r : 0) / oo * 100, 100) : 0
-          const varp = tem && oo ? (r - oo) / oo * 100 : null
-          const c = tem ? cor(r, oo) : '#c9c3b6'
-          return (
-            <div key={i} className="mrl" onClick={() => onMonth(i)} style={{ background: on ? '#FBF6EE' : '#fff', border: '1.5px solid ' + (on ? COBRE : 'var(--lt-brd)'), borderRadius: 12, padding: '9px 11px 10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: on ? '#A6512F' : '#9a917f' }}>{MESES_ABREV[i]}</span>
-                {varp != null ? <span style={{ fontSize: 9.5, fontWeight: 600, color: c }}>{varp > 0 ? '▲' : '▼'} {Math.abs(varp).toFixed(0)}%</span> : <span style={{ fontSize: 9, color: '#c9c3b6', fontStyle: 'italic' }}>a realizar</span>}
-              </div>
-              <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 15.5, fontWeight: 600, color: tem ? NAVY : '#c2bbac', fontVariantNumeric: 'tabular-nums' }}>{tem ? fmtC(r) : '—'}</div>
-              <div style={{ fontSize: 10, color: '#9a917f', marginTop: 1 }}>orçado {fmtC(oo)}</div>
-              <div style={{ height: 5, background: '#F0EADD', borderRadius: 3, marginTop: 7, overflow: 'hidden' }}><div style={{ height: '100%', width: pctFill + '%', background: tem ? c : 'transparent', borderRadius: 3 }} /></div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
   )
 }
 
@@ -385,7 +333,7 @@ export default function DashboardExec({ projeto }) {
       </PageHeader>
       <ErroBox erro={d.erro || msg} onClose={() => { d.setErro(''); setMsg('') }} />
 
-      <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} de={de} ate={ate} ano={ano} modo={railModo} setModo={setRailModo} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
+      <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} selMonth={de === ate ? de : -1} anoSel={de === 0 && ate === 11} ano={ano} modo={railModo} setModo={setRailModo} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12, fontSize: 12.5 }}>
         <span style={{ color: 'var(--lt-text3)' }}>Exercício</span>

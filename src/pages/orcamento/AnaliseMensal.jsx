@@ -2,7 +2,7 @@
 // alertas de materialidade, receita por situação e projeção do restante do ano
 // (saldo: redistribuir × não acumula). Conta a história, não despeja matriz.
 import { useState, useMemo, useEffect } from 'react'
-import { useOrcDados, useItens, PageHeader, Card, KPICard, KPIGrid, fmtBRL, MESES_ABREV, ErroBox } from './_shared'
+import { useOrcDados, useItens, PageHeader, Card, KPICard, KPIGrid, fmtBRL, MESES_ABREV, ErroBox, MonthRail } from './_shared'
 import { iaInsight } from '../../lib/orcamento/ia'
 
 const ANO_ATUAL = new Date().getFullYear()
@@ -18,6 +18,7 @@ export default function AnaliseMensal({ projeto }) {
   const { porCat } = useItens(cenario?.id)
   const [mes, setMes] = useState(null)
   const [modo, setModo] = useState('redistribuir')
+  const [railModo, setRailModo] = useState('sai')
   const [iaTexto, setIaTexto] = useState('')
   const [iaLoad, setIaLoad] = useState(false)
 
@@ -35,6 +36,15 @@ export default function AnaliseMensal({ projeto }) {
   }, [ano, d.realizado, d.categorias])
 
   useEffect(() => { setIaTexto('') }, [mes, ano])
+
+  const rail = useMemo(() => {
+    const arrR = (id) => (d.realPorCat[id] && d.realPorCat[id][ano]) || []
+    const arrO = (id) => (porCat[id] && porCat[id].valores) || []
+    const t = (tipo, fonte) => { const out = Array(12).fill(0); d.catsAtivas.filter(c => c.tipo === tipo).forEach(c => { const a = fonte === 'o' ? arrO(c.id) : arrR(c.id); for (let m = 0; m < 12; m++) out[m] += (a && a[m]) || 0 }); return out }
+    const dedR = t('deducao', 'r'), cusR = t('custo', 'r'), desR = t('despesa', 'r')
+    const dedO = t('deducao', 'o'), cusO = t('custo', 'o'), desO = t('despesa', 'o')
+    return { mRecReal: t('receita', 'r'), mRecOrc: t('receita', 'o'), mSaiReal: dedR.map((v, m) => v + cusR[m] + desR[m]), mSaiOrc: dedO.map((v, m) => v + cusO[m] + desO[m]) }
+  }, [d.catsAtivas, d.realPorCat, porCat, ano])
 
   const A = useMemo(() => {
     if (mes == null) return null
@@ -124,15 +134,14 @@ export default function AnaliseMensal({ projeto }) {
       <PageHeader projeto={projeto} titulo="Análise Mensal" subtitulo={`${projeto?.nome || ''} · fechamento do mês · regime de competência`} />
       <ErroBox erro={d.erro} onClose={() => d.setErro('')} />
 
+      <MonthRail recReal={rail.mRecReal} saiReal={rail.mSaiReal} recOrc={rail.mRecOrc} saiOrc={rail.mSaiOrc} ano={ano} modo={railModo} setModo={setRailModo} selMonth={mes} anoSel={false} showAno={false} onMonth={(i) => setMes(i)} onAno={() => {}} />
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 14, fontSize: 12.5 }}>
         <span style={{ color: 'var(--lt-text3)' }}>Exercício</span>
         <select className="input-light" style={{ width: 'auto' }} value={ano} onChange={e => setAno(parseInt(e.target.value))}>
           {[ANO_ATUAL - 1, ANO_ATUAL, ANO_ATUAL + 1].map(a => <option key={a} value={a}>{a}</option>)}
         </select>
-        <span style={{ color: 'var(--lt-text3)', marginLeft: 6 }}>Mês</span>
-        <select className="input-light" style={{ width: 'auto' }} value={mes ?? ''} onChange={e => setMes(parseInt(e.target.value))}>
-          {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
-        </select>
+        <span style={{ color: 'var(--lt-text3)', marginLeft: 6 }}>Mês: <strong style={{ color: 'var(--lt-text)' }}>{mes != null ? MESES[mes] : '—'}</strong></span>
       </div>
 
       {!A ? <Card><div style={{ color: 'var(--lt-text3)', fontSize: 13 }}>Carregando…</div></Card> : (<>
@@ -155,7 +164,7 @@ export default function AnaliseMensal({ projeto }) {
         </Card>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14 }}>
-          <Card titulo="O que mais mexeu" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>vs mês anterior</span>}>
+          <Card titulo="Maiores variações" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>vs mês anterior</span>}>
             {A.top.map(m => {
               const sobe = m.deltaMoM >= 0
               const ruim = m.tipo === 'receita' ? !sobe : sobe
