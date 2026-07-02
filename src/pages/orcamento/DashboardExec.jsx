@@ -277,7 +277,7 @@ export default function DashboardExec({ projeto }) {
   useEffect(() => {
     if (!A2) return
     const sigRec = A2.recorrentes.reduce((sx, r) => sx + Math.round(r.total) + (r.semOrc ? 1 : 0), 0)
-    const key = 'orc_ano_v3_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + Math.round(W.totOrcAno || 0) + '_' + sigRec + '_' + A2.recorrentes.length + '_' + A2.pontuais.length
+    const key = 'orc_ano_v4_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + Math.round(W.totOrcAno || 0) + '_' + sigRec + '_' + A2.recorrentes.length + '_' + A2.pontuais.length
     try { const c = localStorage.getItem(key); if (c) { setAnoIA(JSON.parse(c)); return } } catch (e) { /* segue */ }
     let cancel = false
     setAnoIALoad(true)
@@ -405,7 +405,7 @@ export default function DashboardExec({ projeto }) {
         const res = A2.recRealYtd - W.totRealYtd
         const marg = A2.recRealYtd ? res / A2.recRealYtd * 100 : 0
         const execS = W.totOrcAno ? W.totRealYtd / W.totOrcAno * 100 : 0
-        const fb = `Nos ${A2.n} meses fechados de ${ano}, a operação acumula ${fmtBRL(W.totRealYtd)} em saídas (${Math.round(execS)}% do orçado) e ${fmtBRL(A2.recRealYtd)} em receita (${Math.round(A2.pctMeta)}% da meta), com resultado de ${fmtBRL(res)}. Foram identificados ${A2.recorrentes.length} desvio(s) estrutural(is) recorrente(s) e ${A2.pontuais.length} evento(s) pontual(is) — abra a análise completa para ver onde atuar.`
+        const fb = anoIALoad ? 'A IA está lendo os dados do ano…' : 'Análise do ano indisponível no momento — recarregue a página.'
         const chip = (lbl, val, cor) => (<span style={{ fontSize: 11.5, color: 'var(--lt-text3)' }}>{lbl} <strong style={{ color: cor || 'var(--lt-text)' }}>{val}</strong></span>)
         return (
           <Card titulo="Sinopse do ano" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>✨ IA · {A2.n} meses fechados{anoIALoad ? ' · gerando…' : ''}</span>}>
@@ -471,7 +471,7 @@ export default function DashboardExec({ projeto }) {
         const prCor = (p) => p === 'alta' ? RED : p === 'média' ? '#B45309' : 'var(--lt-text3)'
         return (
           <Card titulo="Análise do Ano" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>✨ IA · {A2.n} meses fechados{anoIALoad ? ' · analisando…' : ''}</span>}>
-            <div style={{ background: 'rgba(204,145,94,0.07)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 8, padding: '11px 14px', fontSize: 12.5, lineHeight: 1.6, marginBottom: 16 }}><strong>✨ Saídas.</strong> {(anoIA && anoIA.narrativaSaidas) || ('Foram identificados ' + A2.recorrentes.length + ' desvio(s) estrutural(is) recorrente(s) e ' + A2.pontuais.length + ' evento(s) pontual(is) nos meses fechados.')}</div>
+            <div style={{ background: 'rgba(204,145,94,0.07)', border: '1px solid rgba(204,145,94,0.3)', borderRadius: 8, padding: '11px 14px', fontSize: 12.5, lineHeight: 1.6, marginBottom: 16 }}><strong>✨ Saídas.</strong> {(anoIA && anoIA.narrativaSaidas) || (anoIALoad ? 'Analisando os desvios do ano…' : '')}</div>
             <div style={{ fontSize: 13, fontWeight: 600, margin: '4px 0 8px' }}>Descolamentos recorrentes <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--lt-text3)' }}>· clique no grupo para abrir</span></div>
             {Object.keys(grupos).map(tp => {
               const catn = grupos[tp], net = catn.reduce((sx, r) => sx + r.total, 0), open = grpOpen[tp]

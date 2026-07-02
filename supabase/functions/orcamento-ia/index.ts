@@ -130,12 +130,12 @@ async function analiseAno(body: Record<string, unknown>) {
     "Escreva em registro FORMAL, estratégico e executivo — linguagem de relatório de diretoria, em pt-BR. " +
     "PROIBIDO usar termos coloquiais ou informais (por exemplo: 'folgado', 'vigiar', 'furo', 'ponto cego', 'cara de', 'roda', 'grumosa', 'estourar'). " +
     "Prefira: superdimensionado, subdimensionado, monitorar, desvio estrutural, lacuna orçamentária, comportamento compatível com, opera em torno de, concentração de receita, previsibilidade. " +
-    "A SINOPSE deve ser instigante e envolvente (prende o leitor e o convida a explorar), mantendo o registro formal. " +
+    "A SINOPSE é a análise de MAIOR VALOR: NÃO repita percentuais nem valores já exibidos nos indicadores — entregue INTERPRETAÇÃO (a tensão central do negócio, a causa provável do padrão dominante, a implicação estratégica e o risco ou a oportunidade). Priorize sempre a leitura e a causa sobre a repetição de números; instigante, porém formal. " +
     "Baseie-se estritamente nos dados fornecidos, seja específico com os números, seja conciso. Sem markdown. Responda APENAS com JSON válido.";
   const user =
     "Dados consolidados dos meses já fechados (orçado x realizado):\n" + JSON.stringify(dados).slice(0, 12000) + "\n\n" +
     "Devolva JSON com esta forma exata: {" +
-    "\"sinopse\":\"parágrafo executivo envolvente (3 a 4 frases) que conte a história do ano: onde a empresa está, a tensão central, o achado mais relevante e um gancho que faça o leitor querer ver os detalhes\"," +
+    "\"sinopse\":\"parágrafo executivo de alto valor analítico (3 a 4 frases) que REVELE algo além dos números já exibidos: a tensão central, a causa provável do padrão dominante, a implicação estratégica e o risco ou a oportunidade que a diretoria precisa enxergar, com um gancho para os detalhes. Não repita percentuais/valores dos indicadores\"," +
     "\"narrativa_saidas\":\"2 a 3 frases executivas sobre o desempenho das saídas frente ao orçado, destacando os desvios estruturais recorrentes e a projeção de fechamento\"," +
     "\"narrativa_receita\":\"2 a 3 frases executivas sobre a receita frente à meta, o momento, a concentração e a qualidade fiscal\"," +
     "\"itens\":[{\"nome\":\"<nome exato da rubrica recorrente informada>\",\"texto\":\"1 frase formal com a causa provável e a recomendação\"}]," +
