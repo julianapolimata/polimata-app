@@ -60,27 +60,18 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor, proj, 
               <text x={L - 6} y={y(t) + 3} textAnchor="end" fontSize="9" fill="var(--lt-text3, #999)">{fmtC(t)}</text>
             </g>
           ))}
-          {vals.map((v, i) => {
+          {orc.map((_, i) => {
+            const oo = orc[i] || 0, rr = (real[i] && real[i] > 0) ? real[i] : 0
+            const hO = plotH * oo / max, hR = plotH * rr / max
             const x = L + slot * i + (slot - bw) / 2
-            const lbl = <text x={x + bw / 2} y={VH - 10} textAnchor="middle" fontSize="9" fill={i === selMonth ? NAVY : 'var(--lt-text3)'} fontWeight={i === selMonth ? 700 : 400}>{MESES_ABREV[i]}</text>
-            if (i === curMonth) {
-              const oo = orc[i] || 0, rr = (real[i] && real[i] > 0) ? real[i] : 0
-              const hO = plotH * oo / max, hR = plotH * rr / max
-              return (
-                <g key={i}>
-                  <rect x={x} y={T + plotH - hO} width={bw} height={hO} rx="2.5" fill={light} stroke={base} strokeWidth="1" strokeDasharray="2 2" />
-                  {hR > 0 && <rect x={x} y={T + plotH - hR} width={bw} height={hR} rx="2.5" fill={i === selMonth ? NAVY : base} />}
-                  {lbl}
-                </g>
-              )
-            }
-            const h = plotH * v / max
-            const hasReal = real[i] && real[i] > 0
-            const cor = i === selMonth ? NAVY : (hasReal ? base : light)
+            const nbw = Math.max(5, bw * 0.52), xn = L + slot * i + (slot - nbw) / 2
+            const isAberto = i === curMonth
+            const solidCor = i === selMonth ? NAVY : base
             return (
               <g key={i}>
-                <rect x={x} y={T + plotH - h} width={bw} height={h} rx="2.5" fill={cor} />
-                {lbl}
+                <rect x={x} y={T + plotH - hO} width={bw} height={hO} rx="2.5" fill={light} stroke={isAberto ? base : 'none'} strokeWidth={isAberto ? 1 : 0} strokeDasharray={isAberto ? '2 2' : undefined} />
+                {rr > 0 && <rect x={xn} y={T + plotH - hR} width={nbw} height={hR} rx="2" fill={solidCor} />}
+                <text x={x + bw / 2} y={VH - 10} textAnchor="middle" fontSize="9" fill={i === selMonth ? NAVY : 'var(--lt-text3)'} fontWeight={i === selMonth ? 700 : 400}>{MESES_ABREV[i]}</text>
               </g>
             )
           })}
@@ -363,12 +354,12 @@ export default function DashboardExec({ projeto }) {
       </div>
       <div style={{ fontSize: 10.5, color: 'var(--lt-text3)', margin: '0 2px 14px', display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ color: 'var(--lt-text)', fontWeight: 600 }}>Legenda</span>
-        <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: '#6B7280', marginRight: 3 }} />realizado</span>
-        <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: '#CBD5E1', marginRight: 3 }} />projeção (orçado)</span>
+        <span><span style={{ display: 'inline-block', width: 11, height: 9, borderRadius: 2, background: '#CBD5E1', marginRight: 3 }} />orçado</span>
+        <span><span style={{ display: 'inline-block', width: 5, height: 9, borderRadius: 2, background: '#6B7280', marginRight: 3 }} />realizado</span>
         <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: NAVY, marginRight: 3 }} />mês selecionado</span>
         <span><span style={{ display: 'inline-block', width: 15, height: 0, borderTop: '2px dotted #6B7280', marginRight: 3, verticalAlign: 'middle' }} />projeção IA</span>
         <span><span style={{ display: 'inline-block', width: 15, height: 0, borderTop: '2px dashed #2a78d6', marginRight: 3, verticalAlign: 'middle' }} />ideal (15%)</span>
-        <span style={{ color: '#9a917f' }}>· cobre = saídas · verde = receita · mês em aberto (não fechado): contorno = teto orçado, preenchido = já realizado</span>
+        <span style={{ color: '#9a917f' }}>· cobre = saídas · verde = receita · mês em aberto = contorno tracejado</span>
       </div>
       {proj && proj.comentario && <div style={{ fontSize: 11.5, color: 'var(--lt-text)', background: 'rgba(42,120,214,0.06)', border: '1px solid rgba(42,120,214,0.25)', borderRadius: 8, padding: '8px 12px', margin: '0 2px 16px', lineHeight: 1.5 }}>✨ <strong>Projeção IA:</strong> {proj.comentario}{projLoad ? ' · atualizando…' : ''}</div>}
 
