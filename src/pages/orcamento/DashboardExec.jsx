@@ -5,6 +5,19 @@ import { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useOrcDados, useItens, PageHeader, Card, BotaoSec, BotaoVerde, fmtBRL, MESES_ABREV, ErroBox, MonthRail } from './_shared'
 import { useAuth } from '../../contexts/AuthContext'
+
+const CTX_CAMPOS = [
+  { k: 'modelo', q: 'O que a empresa faz e como vende?', ph: 'Ex.: marcenaria de móveis planejados de alto padrão, sob encomenda.' },
+  { k: 'mix', q: 'Mix de receita esperado (linhas de produto e o peso de cada)', ph: 'Ex.: Mobília Fixa é o carro-chefe (~80-85%); Mobília Solta é complementar (~15%) — concentração é normal, não risco.' },
+  { k: 'sazonalidade', q: 'Tem sazonalidade? Meses/trimestres fortes e fracos', ph: 'Ex.: 2º semestre mais forte; janeiro fraco.' },
+  { k: 'natureza', q: 'A receita vem de grandes projetos esporádicos ou é recorrente?', ph: 'Ex.: grandes pedidos sob encomenda, esporádicos.' },
+  { k: 'custos', q: 'Custos/despesas com comportamento particular?', ph: 'Ex.: comissão de arquitetos (RT) sobe junto com a venda.' },
+  { k: 'margem', q: 'Margem líquida saudável de referência (%)', ph: 'Ex.: 15', curto: true },
+  { k: 'prioridade', q: 'Prioridade do momento', ph: 'Ex.: proteger margem / crescer faturamento / gerar caixa', curto: true },
+  { k: 'complemento', q: 'Algo mais que a IA precisa saber?', ph: 'Complemente o que as perguntas acima não cobriram.' },
+]
+const CTX_LABEL = { modelo: 'Modelo de negócio', mix: 'Mix de receita esperado', sazonalidade: 'Sazonalidade', natureza: 'Natureza da receita', custos: 'Particularidades de custo', margem: 'Margem saudável de referência', prioridade: 'Prioridade atual', complemento: 'Outras observações' }
+function composeCtx(f) { if (!f) return ''; return Object.keys(CTX_LABEL).filter(k => (f[k] || '').trim()).map(k => CTX_LABEL[k] + ': ' + f[k].trim()).join('\n') }
 import { iaProjecao, iaAnaliseAno } from '../../lib/orcamento/ia'
 
 const ANO_ATUAL = new Date().getFullYear()
@@ -110,16 +123,21 @@ export default function DashboardExec({ projeto }) {
   const [grpOpen, setGrpOpen] = useState({})
   const { perfil } = useAuth()
   const isAdmin = !!perfil && !['usuario_cliente', 'gestor_cliente'].includes(perfil.papel)
-  const [ctx, setCtx] = useState('')
-  const [ctxDraft, setCtxDraft] = useState('')
+  const [ctxForm, setCtxForm] = useState({})
+  const [ctxDraft, setCtxDraft] = useState({})
   const [ctxModal, setCtxModal] = useState(false)
   const [ctxSaving, setCtxSaving] = useState(false)
   useEffect(() => {
     if (!projeto?.cliente_id) return
     let cancel = false
-    supabase.from('clientes').select('contexto_negocio').eq('id', projeto.cliente_id).single().then(({ data }) => { if (!cancel) setCtx(data?.contexto_negocio || '') })
+    supabase.from('clientes').select('contexto_negocio').eq('id', projeto.cliente_id).single().then(({ data }) => {
+      if (cancel) return
+      const raw = data?.contexto_negocio || ''
+      try { const obj = JSON.parse(raw); setCtxForm(obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : { complemento: raw }) } catch (e) { setCtxForm(raw ? { complemento: raw } : {}) }
+    })
     return () => { cancel = true }
   }, [projeto?.cliente_id])
+  const ctx = useMemo(() => composeCtx(ctxForm), [ctxForm])
   const [modal, setModal] = useState(null)
   const [msg, setMsg] = useState('')
   const [tabOpen, setTabOpen] = useState(false)
@@ -236,7 +254,7 @@ export default function DashboardExec({ projeto }) {
     return () => { cancel = true }
   }, [projeto?.id, projSig])
 
-  const MARGEM_ALVO = 0.15
+  const MARGEM_ALVO = (() => { const m = (ctxForm.margem || '').match(/(\d+([.,]\d+)?)/); const v = m ? parseFloat(m[1].replace(',', '.')) : 15; return Math.min(0.6, Math.max(0.01, v / 100)) })()
   const idealSai = proj ? proj.receita.map((v) => Math.round((v || 0) * (1 - MARGEM_ALVO))) : null
   const idealRec = proj ? proj.saidas.map((v) => Math.round((v || 0) / (1 - MARGEM_ALVO))) : null
   const analiseMargem = proj ? (() => {
@@ -381,7 +399,7 @@ export default function DashboardExec({ projeto }) {
   return (
     <div style={{ padding: '20px 28px 40px' }}>
       <PageHeader projeto={projeto} titulo="Visão Geral do Orçamento" subtitulo={`${projeto?.nome || ''} · ${MESES_ABREV[de]}–${MESES_ABREV[ate]}/${ano} · regime de competência`}>
-        {isAdmin && <BotaoSec onClick={() => { setCtxDraft(ctx); setCtxModal(true) }}>⚙ Contexto (IA)</BotaoSec>}
+        {isAdmin && <BotaoSec onClick={() => { setCtxDraft({ ...ctxForm }); setCtxModal(true) }}>⚙ Contexto (IA)</BotaoSec>}
         <BotaoSec onClick={exportar}>↓ Exportar</BotaoSec>
       </PageHeader>
       <ErroBox erro={d.erro || msg} onClose={() => { d.setErro(''); setMsg('') }} />
@@ -623,13 +641,18 @@ export default function DashboardExec({ projeto }) {
 
       {ctxModal && (
         <div onClick={e => { if (e.target === e.currentTarget) setCtxModal(false) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
-          <div style={{ width: 'min(680px, 96%)', maxHeight: '90vh', overflowY: 'auto', background: 'var(--lt-card, #fff)', border: '1px solid var(--lt-brd)', borderRadius: 14, padding: 22 }}>
+          <div style={{ width: 'min(680px, 96%)', maxHeight: '92vh', overflowY: 'auto', background: 'var(--lt-card, #fff)', border: '1px solid var(--lt-brd)', borderRadius: 14, padding: 22 }}>
             <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--lt-text)', marginBottom: 4 }}>Contexto do negócio — {projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome || 'cliente'}</div>
-            <p style={{ fontSize: 12.5, color: 'var(--lt-text3)', lineHeight: 1.55, margin: '0 0 12px' }}>Ensina a IA a interpretar os números do jeito certo para este cliente — por exemplo, que a concentração em uma linha de produto é estratégia, não risco. Vale para todos os projetos deste cliente.</p>
-            <textarea value={ctxDraft} onChange={e => setCtxDraft(e.target.value)} rows={11} placeholder={'Ex.: Marcenaria de móveis planejados de alto padrão, sob encomenda.\n\u2022 Mix esperado: Mobília Fixa é o carro-chefe (~80-85%); Mobília Solta é complementar (~15%) — concentração é normal, não risco.\n\u2022 Receita vem de grandes projetos esporádicos (não é recorrente); meses fortes: ...\n\u2022 RT-Arquitetos = comissão sobre venda (sobe junto com o faturamento).\n\u2022 Margem saudável de referência: ~15%.\n\u2022 Prioridade atual: proteger margem.'} style={{ width: '100%', fontSize: 13, fontFamily: 'inherit', lineHeight: 1.5, padding: 12, borderRadius: 10, border: '1px solid var(--lt-brd)', resize: 'vertical', color: 'var(--lt-text)', boxSizing: 'border-box' }} />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+            <p style={{ fontSize: 12.5, color: 'var(--lt-text3)', lineHeight: 1.55, margin: '0 0 14px' }}>Responda o que souber — ensina a IA a interpretar os números do jeito certo para este cliente (ex.: que a concentração numa linha de produto é estratégia, não risco). Vale para todos os projetos deste cliente; campos em branco são ignorados.</p>
+            {CTX_CAMPOS.map(c => (
+              <div key={c.k} style={{ marginBottom: 11 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--lt-text)', display: 'block', marginBottom: 3 }}>{c.q}</label>
+                <textarea value={ctxDraft[c.k] || ''} onChange={e => setCtxDraft(d => ({ ...d, [c.k]: e.target.value }))} rows={c.curto ? 1 : 2} placeholder={c.ph} style={{ width: '100%', fontSize: 13, fontFamily: 'inherit', lineHeight: 1.5, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--lt-brd)', resize: 'vertical', color: 'var(--lt-text)', boxSizing: 'border-box' }} />
+              </div>
+            ))}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
               <BotaoSec onClick={() => setCtxModal(false)}>Cancelar</BotaoSec>
-              <BotaoVerde onClick={async () => { setCtxSaving(true); try { await supabase.from('clientes').update({ contexto_negocio: ctxDraft }).eq('id', projeto.cliente_id); setCtx(ctxDraft); setCtxModal(false) } catch (e) { setMsg('Erro ao salvar contexto: ' + e.message) } finally { setCtxSaving(false) } }} disabled={ctxSaving}>{ctxSaving ? 'Salvando…' : 'Salvar contexto'}</BotaoVerde>
+              <BotaoVerde onClick={async () => { setCtxSaving(true); try { await supabase.from('clientes').update({ contexto_negocio: JSON.stringify(ctxDraft) }).eq('id', projeto.cliente_id); setCtxForm(ctxDraft); setCtxModal(false) } catch (e) { setMsg('Erro ao salvar contexto: ' + e.message) } finally { setCtxSaving(false) } }} disabled={ctxSaving}>{ctxSaving ? 'Salvando…' : 'Salvar contexto'}</BotaoVerde>
             </div>
           </div>
         </div>
