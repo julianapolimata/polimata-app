@@ -134,8 +134,6 @@ export default function AnaliseMensal({ projeto }) {
       <PageHeader projeto={projeto} titulo="Análise Mensal" subtitulo={`${projeto?.nome || ''} · fechamento do mês · regime de competência`} />
       <ErroBox erro={d.erro} onClose={() => d.setErro('')} />
 
-      <MonthRail recReal={rail.mRecReal} saiReal={rail.mSaiReal} recOrc={rail.mRecOrc} saiOrc={rail.mSaiOrc} ano={ano} modo={railModo} setModo={setRailModo} selMonth={mes} anoSel={false} showAno={false} onMonth={(i) => setMes(i)} onAno={() => {}} />
-
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 14, fontSize: 12.5 }}>
         <span style={{ color: 'var(--lt-text3)' }}>Exercício</span>
         <select className="input-light" style={{ width: 'auto' }} value={ano} onChange={e => setAno(parseInt(e.target.value))}>
@@ -143,6 +141,8 @@ export default function AnaliseMensal({ projeto }) {
         </select>
         <span style={{ color: 'var(--lt-text3)', marginLeft: 6 }}>Mês: <strong style={{ color: 'var(--lt-text)' }}>{mes != null ? MESES[mes] : '—'}</strong></span>
       </div>
+
+      <MonthRail recReal={rail.mRecReal} saiReal={rail.mSaiReal} recOrc={rail.mRecOrc} saiOrc={rail.mSaiOrc} ano={ano} modo={railModo} setModo={setRailModo} selMonth={mes} anoSel={false} showAno={false} onMonth={(i) => setMes(i)} onAno={() => {}} />
 
       {!A ? <Card><div style={{ color: 'var(--lt-text3)', fontSize: 13 }}>Carregando…</div></Card> : (<>
         <KPIGrid>
