@@ -36,58 +36,51 @@ function Linha({ label, valor, w, cor, forte, sufixo }) {
   )
 }
 
-function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor, proj, ideal, curMonth }) {
+function BarrasMes({ titulo, real, orc, selMonth, base, light, proj, ideal, curMonth }) {
   const VW = 360, VH = 178, T = 18, B = 26, L = 44, R = 8
   const plotH = VH - T - B, plotW = VW - L - R
-  const vals = real.map((v, i) => (v && v > 0) ? v : (orc[i] || 0))
-  const max = Math.max(1, ...vals, ...((orc || []).filter(x => x > 0)), ...((proj || []).filter(x => x > 0)), ...((ideal || []).filter(x => x > 0))) * 1.12
+  const max = Math.max(1, ...((orc || []).filter(x => x > 0)), ...((real || []).filter(x => x > 0)), ...((proj || []).filter(x => x > 0)), ...((ideal || []).filter(x => x > 0))) * 1.12
   const slot = plotW / 12
   const bw = Math.min(17, slot - 6)
   const y = (v) => T + plotH * (1 - v / max)
+  const cx = (i) => L + slot * i + slot / 2
   const ticks = [0, max / 2, max]
   const aberto = (curMonth != null && curMonth >= 0) ? curMonth : 99
   const lastReal = real.reduce((mx, v, i) => (v && v > 0 && i < aberto) ? i : mx, -1)
-  const projPts = (proj && lastReal >= 0) ? real.map((v, i) => (i >= lastReal && proj[i] != null) ? `${L + slot * i + slot / 2},${y(proj[i])}` : null).filter(Boolean).join(' ') : ''
-  const idealPts = ideal ? ideal.map((v, i) => (v != null && i >= lastReal) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' ') : ''
+  const realPts = real.map((v, i) => (v > 0 && i < aberto) ? `${cx(i)},${y(v)}` : null).filter(Boolean).join(' ')
+  const projPts = (proj && lastReal >= 0) ? real.map((v, i) => (i >= lastReal && proj[i] != null) ? `${cx(i)},${y(proj[i])}` : null).filter(Boolean).join(' ') : ''
+  const idealPts = ideal ? ideal.map((v, i) => (v != null && i >= lastReal) ? `${cx(i)},${y(v)}` : null).filter(Boolean).join(' ') : ''
   return (
     <div>
       <div style={{ background: base, color: '#fff', fontSize: 12.5, fontWeight: 600, textAlign: 'center', padding: '6px 0', borderRadius: '10px 10px 0 0' }}>{titulo}</div>
       <div style={{ border: '1px solid var(--lt-brd)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '8px 8px 2px' }}>
-        <svg width="100%" viewBox={`0 0 ${VW} ${VH}`} style={{ display: 'block' }} role="img" aria-label={titulo + ' por mês'}>
+        <svg width="100%" viewBox={`0 0 ${VW} ${VH}`} style={{ display: 'block' }} role="img" aria-label={titulo + ' — orçado em barras, realizado em linha'}>
+          {selMonth >= 0 && selMonth < 12 && <rect x={L + slot * selMonth} y={T} width={slot} height={plotH} fill="rgba(0,32,62,0.05)" />}
           {ticks.map((t, k) => (
             <g key={k}>
               <line x1={L} y1={y(t)} x2={VW - R} y2={y(t)} stroke="var(--lt-brd, #eee)" strokeWidth="1" />
               <text x={L - 6} y={y(t) + 3} textAnchor="end" fontSize="9" fill="var(--lt-text3, #999)">{fmtC(t)}</text>
             </g>
           ))}
-          {vals.map((v, i) => {
+          {orc.map((_, i) => {
+            const oo = orc[i] || 0, hO = plotH * oo / max
             const x = L + slot * i + (slot - bw) / 2
-            const lbl = <text x={x + bw / 2} y={VH - 10} textAnchor="middle" fontSize="9" fill={i === selMonth ? NAVY : 'var(--lt-text3)'} fontWeight={i === selMonth ? 700 : 400}>{MESES_ABREV[i]}</text>
-            if (i === curMonth) {
-              const oo = orc[i] || 0, rr = (real[i] && real[i] > 0) ? real[i] : 0
-              const hO = plotH * oo / max, hR = plotH * rr / max
-              return (
-                <g key={i}>
-                  <rect x={x} y={T + plotH - hO} width={bw} height={hO} rx="2.5" fill={light} stroke={base} strokeWidth="1" strokeDasharray="2 2" />
-                  {hR > 0 && <rect x={x} y={T + plotH - hR} width={bw} height={hR} rx="2.5" fill={i === selMonth ? NAVY : base} />}
-                  {lbl}
-                </g>
-              )
-            }
-            const h = plotH * v / max
-            const hasReal = real[i] && real[i] > 0
-            const cor = i === selMonth ? NAVY : (hasReal ? base : light)
+            const isCur = i === curMonth
+            const rr = (real[i] && real[i] > 0) ? real[i] : 0
+            const hR = plotH * rr / max
+            const nbw = Math.max(5, bw * 0.5), xn = L + slot * i + (slot - nbw) / 2
             return (
               <g key={i}>
-                <rect x={x} y={T + plotH - h} width={bw} height={h} rx="2.5" fill={cor} />
-                {lbl}
+                <rect x={x} y={T + plotH - hO} width={bw} height={hO} rx="2.5" fill={light} stroke={isCur ? base : 'none'} strokeWidth={isCur ? 1 : 0} strokeDasharray={isCur ? '2 2' : undefined} />
+                {isCur && rr > 0 && <rect x={xn} y={T + plotH - hR} width={nbw} height={hR} rx="2" fill={i === selMonth ? NAVY : base} />}
+                <text x={x + bw / 2} y={VH - 10} textAnchor="middle" fontSize="9" fill={i === selMonth ? NAVY : 'var(--lt-text3)'} fontWeight={i === selMonth ? 700 : 400}>{MESES_ABREV[i]}</text>
               </g>
             )
           })}
-          {idealPts && <polyline points={idealPts} fill="none" stroke="#2a78d6" strokeWidth="1.6" strokeDasharray="5 4" strokeLinejoin="round" strokeLinecap="round" />}
-          {projPts && <polyline points={projPts} fill="none" stroke={lineColor} strokeWidth="2" strokeDasharray="2 3" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />}
-          {(() => { const pts = real.map((v, i) => (v && v > 0 && i < aberto) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' '); return pts ? <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /> : null })()}
-          {real.map((v, i) => (v && v > 0 && i < aberto) ? <circle key={'d' + i} cx={L + slot * i + slot / 2} cy={y(v)} r="2.6" fill={lineColor} stroke="#fff" strokeWidth="1" /> : null)}
+          {idealPts && <polyline points={idealPts} fill="none" stroke="#2a78d6" strokeWidth="1.7" strokeDasharray="7 4" strokeLinejoin="round" strokeLinecap="round" />}
+          {projPts && <polyline points={projPts} fill="none" stroke={base} strokeWidth="2" strokeDasharray="2 2" strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />}
+          {realPts && <polyline points={realPts} fill="none" stroke={base} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />}
+          {real.map((v, i) => (v > 0 && i < aberto) ? <circle key={'d' + i} cx={cx(i)} cy={y(v)} r="2.6" fill={base} stroke="#fff" strokeWidth="1" /> : null)}
         </svg>
       </div>
     </div>
@@ -358,17 +351,16 @@ export default function DashboardExec({ projeto }) {
       <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} selMonth={de === ate ? de : -1} anoSel={de === 0 && ate === 11} ano={ano} modo={railModo} setModo={setRailModo} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 10 }}>
-        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} lineColor="#7A3F1E" proj={proj ? proj.saidas : null} ideal={idealSai} curMonth={curMonth} />
-        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} lineColor="#0F6E56" proj={proj ? proj.receita : null} ideal={idealRec} curMonth={curMonth} />
+        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} proj={proj ? proj.saidas : null} ideal={idealSai} curMonth={curMonth} />
+        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} proj={proj ? proj.receita : null} ideal={idealRec} curMonth={curMonth} />
       </div>
       <div style={{ fontSize: 10.5, color: 'var(--lt-text3)', margin: '0 2px 14px', display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ color: 'var(--lt-text)', fontWeight: 600 }}>Legenda</span>
-        <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: '#6B7280', marginRight: 3 }} />realizado</span>
-        <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: '#CBD5E1', marginRight: 3 }} />projeção (orçado)</span>
-        <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: NAVY, marginRight: 3 }} />mês selecionado</span>
-        <span><span style={{ display: 'inline-block', width: 15, height: 0, borderTop: '2px dotted #6B7280', marginRight: 3, verticalAlign: 'middle' }} />projeção IA</span>
-        <span><span style={{ display: 'inline-block', width: 15, height: 0, borderTop: '2px dashed #2a78d6', marginRight: 3, verticalAlign: 'middle' }} />ideal (15%)</span>
-        <span style={{ color: '#9a917f' }}>· cobre = saídas · verde = receita · mês em aberto (não fechado): contorno = teto orçado, preenchido = já realizado</span>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#CBD5E1', marginRight: 3 }} />orçado (barras)</span>
+        <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2.5px solid #6B7280', marginRight: 3, verticalAlign: 'middle' }} />realizado</span>
+        <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2px dotted #6B7280', marginRight: 3, verticalAlign: 'middle' }} />projeção do realizado (IA)</span>
+        <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2px dashed #2a78d6', marginRight: 3, verticalAlign: 'middle' }} />projeção do ideal 15% (IA)</span>
+        <span style={{ color: '#9a917f' }}>· cobre = saídas · verde = receita · mês corrente = colunas sobrepostas</span>
       </div>
       {proj && proj.comentario && <div style={{ fontSize: 11.5, color: 'var(--lt-text)', background: 'rgba(42,120,214,0.06)', border: '1px solid rgba(42,120,214,0.25)', borderRadius: 8, padding: '8px 12px', margin: '0 2px 16px', lineHeight: 1.5 }}>✨ <strong>Projeção IA:</strong> {proj.comentario}{projLoad ? ' · atualizando…' : ''}</div>}
 
