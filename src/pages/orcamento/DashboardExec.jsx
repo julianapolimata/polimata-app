@@ -129,7 +129,7 @@ function Velocimetro({ valor }) {
   )
 }
 
-function BarrasMes({ titulo, real, orc, selMonth, base, light }) {
+function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor }) {
   const VW = 360, VH = 178, T = 18, B = 26, L = 44, R = 8
   const plotH = VH - T - B, plotW = VW - L - R
   const vals = real.map((v, i) => (v && v > 0) ? v : (orc[i] || 0))
@@ -161,6 +161,8 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light }) {
               </g>
             )
           })}
+          {(() => { const pts = real.map((v, i) => (v && v > 0) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' '); return pts ? <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /> : null })()}
+          {real.map((v, i) => (v && v > 0) ? <circle key={'d' + i} cx={L + slot * i + slot / 2} cy={y(v)} r="2.6" fill={lineColor} stroke="#fff" strokeWidth="1" /> : null)}
         </svg>
       </div>
     </div>
@@ -388,13 +390,14 @@ export default function DashboardExec({ projeto }) {
       <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} selMonth={de === ate ? de : -1} anoSel={de === 0 && ate === 11} ano={ano} modo={railModo} setModo={setRailModo} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 6 }}>
-        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} />
-        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} />
+        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} lineColor="#7A3F1E" />
+        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} lineColor="#0F6E56" />
       </div>
       <div style={{ fontSize: 11, color: 'var(--lt-text3)', margin: '0 2px 16px', display: 'flex', gap: 14, flexWrap: 'wrap' }}>
         <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: COBRE, marginRight: 4 }} />realizado</span>
         <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: COBRE_L, marginRight: 4 }} />projeção (orçado nos meses a realizar)</span>
         <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: NAVY, marginRight: 4 }} />mês selecionado</span>
+        <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2px solid #3D5068', marginRight: 4, verticalAlign: 'middle' }} />linha = realizado</span>
       </div>
 
       {(d.importacoes && d.importacoes[0]) || W.incompleto >= 0 ? (
