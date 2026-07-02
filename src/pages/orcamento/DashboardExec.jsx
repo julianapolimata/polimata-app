@@ -37,6 +37,7 @@ function Linha({ label, valor, w, cor, forte, sufixo }) {
 }
 
 function BarrasMes({ titulo, real, orc, selMonth, base, light, dark, proj, ideal, curMonth }) {
+  const [hv, setHv] = useState(-1)
   const VW = 360, VH = 178, T = 18, B = 26, L = 44, R = 8
   const plotH = VH - T - B, plotW = VW - L - R
   const max = Math.max(1, ...((orc || []).filter(x => x > 0)), ...((real || []).filter(x => x > 0)), ...((proj || []).filter(x => x > 0)), ...((ideal || []).filter(x => x > 0))) * 1.12
@@ -53,7 +54,7 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, dark, proj, ideal
   return (
     <div style={{ maxWidth: 540, margin: '0 auto', width: '100%' }}>
       <div style={{ background: base, color: '#fff', fontSize: 12.5, fontWeight: 600, textAlign: 'center', padding: '6px 0', borderRadius: '10px 10px 0 0' }}>{titulo}</div>
-      <div style={{ border: '1px solid var(--lt-brd)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '8px 8px 2px' }}>
+      <div style={{ border: '1px solid var(--lt-brd)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '8px 8px 2px', position: 'relative' }}>
         <svg width="100%" viewBox={`0 0 ${VW} ${VH}`} style={{ display: 'block' }} role="img" aria-label={titulo + ' — orçado em barras, realizado em linha'}>
           {selMonth >= 0 && selMonth < 12 && <rect x={L + slot * selMonth} y={T} width={slot} height={plotH} rx="3" fill={dark} opacity="0.22" />}
           {ticks.map((t, k) => (
@@ -81,7 +82,25 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, dark, proj, ideal
           {projPts && <polyline points={projPts} fill="none" stroke={base} strokeWidth="2" strokeDasharray="2 2" strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />}
           {realPts && <polyline points={realPts} fill="none" stroke={base} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />}
           {real.map((v, i) => (v > 0 && i < aberto) ? <circle key={'d' + i} cx={cx(i)} cy={y(v)} r="2.6" fill={base} stroke="#fff" strokeWidth="1" /> : null)}
+          {Array.from({ length: 12 }, (_, i) => <rect key={'hz' + i} x={L + slot * i} y={T} width={slot} height={plotH} fill="transparent" onMouseEnter={() => setHv(i)} onMouseLeave={() => setHv(-1)} />)}
         </svg>
+        {hv >= 0 && (() => {
+          const leftPct = cx(hv) / VW * 100
+          const oo = orc[hv] || 0, rr = real[hv]
+          const temR = rr != null && rr > 0
+          const pr = (proj && hv >= lastReal) ? proj[hv] : null
+          const id = (ideal && hv >= lastReal) ? ideal[hv] : null
+          const tx = hv <= 1 ? '0' : hv >= 10 ? '-100%' : '-50%'
+          return (
+            <div style={{ position: 'absolute', left: leftPct + '%', top: 4, transform: 'translateX(' + tx + ')', background: '#00203E', color: '#fff', borderRadius: 8, padding: '7px 10px', fontSize: 11, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 5, boxShadow: '0 4px 12px rgba(0,0,0,.22)' }}>
+              <div style={{ fontWeight: 600, marginBottom: 3 }}>{MESES_ABREV[hv]}</div>
+              <div>Orçado: <strong>{fmtBRL(oo)}</strong></div>
+              <div>Realizado: <strong>{temR ? fmtBRL(rr) : '—'}</strong></div>
+              {pr != null && <div style={{ color: '#D9A97A' }}>Projeção IA: <strong>{fmtBRL(pr)}</strong></div>}
+              {id != null && <div style={{ color: '#85B7EB' }}>Ideal 15%: <strong>{fmtBRL(id)}</strong></div>}
+            </div>
+          )
+        })()}
       </div>
     </div>
   )
