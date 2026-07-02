@@ -36,7 +36,7 @@ function Linha({ label, valor, w, cor, forte, sufixo }) {
   )
 }
 
-function BarrasMes({ titulo, real, orc, selMonth, base, light, proj, ideal, curMonth }) {
+function BarrasMes({ titulo, real, orc, selMonth, base, light, dark, proj, ideal, curMonth }) {
   const VW = 360, VH = 178, T = 18, B = 26, L = 44, R = 8
   const plotH = VH - T - B, plotW = VW - L - R
   const max = Math.max(1, ...((orc || []).filter(x => x > 0)), ...((real || []).filter(x => x > 0)), ...((proj || []).filter(x => x > 0)), ...((ideal || []).filter(x => x > 0))) * 1.12
@@ -55,7 +55,7 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, proj, ideal, curM
       <div style={{ background: base, color: '#fff', fontSize: 12.5, fontWeight: 600, textAlign: 'center', padding: '6px 0', borderRadius: '10px 10px 0 0' }}>{titulo}</div>
       <div style={{ border: '1px solid var(--lt-brd)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '8px 8px 2px' }}>
         <svg width="100%" viewBox={`0 0 ${VW} ${VH}`} style={{ display: 'block' }} role="img" aria-label={titulo + ' — orçado em barras, realizado em linha'}>
-          {selMonth >= 0 && selMonth < 12 && <rect x={L + slot * selMonth} y={T} width={slot} height={plotH} fill="rgba(0,32,62,0.05)" />}
+          {selMonth >= 0 && selMonth < 12 && <rect x={L + slot * selMonth} y={T} width={slot} height={plotH} rx="3" fill={dark} opacity="0.22" />}
           {ticks.map((t, k) => (
             <g key={k}>
               <line x1={L} y1={y(t)} x2={VW - R} y2={y(t)} stroke="var(--lt-brd, #eee)" strokeWidth="1" />
@@ -351,8 +351,8 @@ export default function DashboardExec({ projeto }) {
       <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} selMonth={de === ate ? de : -1} anoSel={de === 0 && ate === 11} ano={ano} modo={railModo} setModo={setRailModo} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 10 }}>
-        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} proj={proj ? proj.saidas : null} ideal={idealSai} curMonth={curMonth} />
-        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} proj={proj ? proj.receita : null} ideal={idealRec} curMonth={curMonth} />
+        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} dark="#A6512F" proj={proj ? proj.saidas : null} ideal={idealSai} curMonth={curMonth} />
+        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} dark="#0F6E56" proj={proj ? proj.receita : null} ideal={idealRec} curMonth={curMonth} />
       </div>
       <div style={{ fontSize: 10.5, color: 'var(--lt-text3)', margin: '0 2px 14px', display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ color: 'var(--lt-text)', fontWeight: 600 }}>Legenda</span>
