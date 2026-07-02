@@ -44,7 +44,7 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, dark, proj, ideal
   const bw = Math.min(17, slot - 6)
   const y = (v) => T + plotH * (1 - v / max)
   const cx = (i) => L + slot * i + slot / 2
-  const ticks = [0, max / 2, max]
+  const ticks = [0, max]
   const aberto = (curMonth != null && curMonth >= 0) ? curMonth : 99
   const lastReal = real.reduce((mx, v, i) => (v && v > 0 && i < aberto) ? i : mx, -1)
   const realPts = real.map((v, i) => (v > 0 && i < aberto) ? `${cx(i)},${y(v)}` : null).filter(Boolean).join(' ')
