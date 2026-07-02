@@ -3,7 +3,8 @@
 // DRE gerencial (realizado + projeção), receita por situação fiscal e maiores rubricas (explosíveis).
 import { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { useOrcDados, useItens, PageHeader, Card, BotaoSec, fmtBRL, MESES_ABREV, ErroBox, MonthRail } from './_shared'
+import { useOrcDados, useItens, PageHeader, Card, BotaoSec, BotaoVerde, fmtBRL, MESES_ABREV, ErroBox, MonthRail } from './_shared'
+import { useAuth } from '../../contexts/AuthContext'
 import { iaProjecao, iaAnaliseAno } from '../../lib/orcamento/ia'
 
 const ANO_ATUAL = new Date().getFullYear()
@@ -107,6 +108,18 @@ export default function DashboardExec({ projeto }) {
   const [anoIA, setAnoIA] = useState(null)
   const [anoIALoad, setAnoIALoad] = useState(false)
   const [grpOpen, setGrpOpen] = useState({})
+  const { perfil } = useAuth()
+  const isAdmin = !!perfil && !['usuario_cliente', 'gestor_cliente'].includes(perfil.papel)
+  const [ctx, setCtx] = useState('')
+  const [ctxDraft, setCtxDraft] = useState('')
+  const [ctxModal, setCtxModal] = useState(false)
+  const [ctxSaving, setCtxSaving] = useState(false)
+  useEffect(() => {
+    if (!projeto?.cliente_id) return
+    let cancel = false
+    supabase.from('clientes').select('contexto_negocio').eq('id', projeto.cliente_id).single().then(({ data }) => { if (!cancel) setCtx(data?.contexto_negocio || '') })
+    return () => { cancel = true }
+  }, [projeto?.cliente_id])
   const [modal, setModal] = useState(null)
   const [msg, setMsg] = useState('')
   const [tabOpen, setTabOpen] = useState(false)
@@ -277,7 +290,8 @@ export default function DashboardExec({ projeto }) {
   useEffect(() => {
     if (!A2) return
     const sigRec = A2.recorrentes.reduce((sx, r) => sx + Math.round(r.total) + (r.semOrc ? 1 : 0), 0)
-    const key = 'orc_ano_v5_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + Math.round(W.totOrcAno || 0) + '_' + sigRec + '_' + A2.recorrentes.length + '_' + A2.pontuais.length
+    const ctxSig = ctx ? ctx.length + ':' + Array.from(ctx).reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 0) : '0'
+    const key = 'orc_ano_v6_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + Math.round(W.totOrcAno || 0) + '_' + sigRec + '_' + A2.recorrentes.length + '_' + A2.pontuais.length + '_' + ctxSig
     try { const c = localStorage.getItem(key); if (c) { setAnoIA(JSON.parse(c)); return } } catch (e) { /* segue */ }
     let cancel = false
     setAnoIALoad(true)
@@ -287,11 +301,11 @@ export default function DashboardExec({ projeto }) {
       pontuais: A2.pontuais.map(p => ({ nome: p.nome, mes: MESES_ABREV[p.mes], valor: p.valor })),
       receita: { pct_meta: Math.round(A2.pctMeta), projecao_pct_meta: Math.round(A2.projPctMeta), meta: A2.recMeta, realizado: Math.round(A2.recRealYtd), concentracao_top_pct: A2.concPct, concentracao_top: A2.topRecNome, faturado_pct: A2.fatPct },
     }
-    iaAnaliseAno(payload).then(r => { if (!cancel) { setAnoIA(r); try { localStorage.setItem(key, JSON.stringify(r)) } catch (e) { /* segue */ } } })
+    iaAnaliseAno(payload, ctx).then(r => { if (!cancel) { setAnoIA(r); try { localStorage.setItem(key, JSON.stringify(r)) } catch (e) { /* segue */ } } })
       .catch(() => { if (!cancel) setAnoIA(null) })
       .finally(() => { if (!cancel) setAnoIALoad(false) })
     return () => { cancel = true }
-  }, [A2, anoSelecionado, projeto?.id, ano])
+  }, [A2, anoSelecionado, projeto?.id, ano, ctx])
 
   function appOk(dep) { if (dep === 'receita') return W.pReceita > 0; if (dep === 'orcado') return temOrcado; return true }
 
@@ -367,6 +381,7 @@ export default function DashboardExec({ projeto }) {
   return (
     <div style={{ padding: '20px 28px 40px' }}>
       <PageHeader projeto={projeto} titulo="Visão Geral do Orçamento" subtitulo={`${projeto?.nome || ''} · ${MESES_ABREV[de]}–${MESES_ABREV[ate]}/${ano} · regime de competência`}>
+        {isAdmin && <BotaoSec onClick={() => { setCtxDraft(ctx); setCtxModal(true) }}>⚙ Contexto (IA)</BotaoSec>}
         <BotaoSec onClick={exportar}>↓ Exportar</BotaoSec>
       </PageHeader>
       <ErroBox erro={d.erro || msg} onClose={() => { d.setErro(''); setMsg('') }} />
@@ -605,6 +620,20 @@ export default function DashboardExec({ projeto }) {
           </tbody>
         </table>}
       </Card>
+
+      {ctxModal && (
+        <div onClick={e => { if (e.target === e.currentTarget) setCtxModal(false) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+          <div style={{ width: 'min(680px, 96%)', maxHeight: '90vh', overflowY: 'auto', background: 'var(--lt-card, #fff)', border: '1px solid var(--lt-brd)', borderRadius: 14, padding: 22 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--lt-text)', marginBottom: 4 }}>Contexto do negócio — {projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome || 'cliente'}</div>
+            <p style={{ fontSize: 12.5, color: 'var(--lt-text3)', lineHeight: 1.55, margin: '0 0 12px' }}>Ensina a IA a interpretar os números do jeito certo para este cliente — por exemplo, que a concentração em uma linha de produto é estratégia, não risco. Vale para todos os projetos deste cliente.</p>
+            <textarea value={ctxDraft} onChange={e => setCtxDraft(e.target.value)} rows={11} placeholder={'Ex.: Marcenaria de móveis planejados de alto padrão, sob encomenda.\n\u2022 Mix esperado: Mobília Fixa é o carro-chefe (~80-85%); Mobília Solta é complementar (~15%) — concentração é normal, não risco.\n\u2022 Receita vem de grandes projetos esporádicos (não é recorrente); meses fortes: ...\n\u2022 RT-Arquitetos = comissão sobre venda (sobe junto com o faturamento).\n\u2022 Margem saudável de referência: ~15%.\n\u2022 Prioridade atual: proteger margem.'} style={{ width: '100%', fontSize: 13, fontFamily: 'inherit', lineHeight: 1.5, padding: 12, borderRadius: 10, border: '1px solid var(--lt-brd)', resize: 'vertical', color: 'var(--lt-text)', boxSizing: 'border-box' }} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+              <BotaoSec onClick={() => setCtxModal(false)}>Cancelar</BotaoSec>
+              <BotaoVerde onClick={async () => { setCtxSaving(true); try { await supabase.from('clientes').update({ contexto_negocio: ctxDraft }).eq('id', projeto.cliente_id); setCtx(ctxDraft); setCtxModal(false) } catch (e) { setMsg('Erro ao salvar contexto: ' + e.message) } finally { setCtxSaving(false) } }} disabled={ctxSaving}>{ctxSaving ? 'Salvando…' : 'Salvar contexto'}</BotaoVerde>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modal && (
         <div onClick={e => { if (e.target === e.currentTarget) setModal(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>

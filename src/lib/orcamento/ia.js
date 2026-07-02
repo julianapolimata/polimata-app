@@ -33,7 +33,7 @@ export async function iaProjecao(serieSaidas, serieReceita) {
 }
 
 /** Análise consolidada do ano: narrativas executivas + interpretação por rubrica recorrente. */
-export async function iaAnaliseAno(dados) {
-  const r = await chamar({ acao: 'analise_ano', dados })
+export async function iaAnaliseAno(dados, contexto) {
+  const r = await chamar({ acao: 'analise_ano', dados, contexto: contexto || '' })
   return { sinopse: r.sinopse || '', narrativaSaidas: r.narrativa_saidas || '', narrativaReceita: r.narrativa_receita || '', itens: r.itens || [], acoes: r.acoes || [] }
 }
