@@ -321,7 +321,8 @@ export default function DashboardExec({ projeto }) {
     } catch (e) { setMsg('Erro ao exportar: ' + e.message) }
   }
 
-  const curMonth = ano === ANO_ATUAL ? new Date().getMonth() : -1
+  const lastClosedSai = (W.mSaiReal || []).reduce((mx, v, i) => (v && v > 0) ? i : mx, -1)
+  const curMonth = (ano === ANO_ATUAL && lastClosedSai < 11) ? lastClosedSai + 1 : -1
   const comp = modo === 'comparativo'
   const cardsVisiveis = CATALOGO.filter(k => cardsOn.includes(k.id) && appOk(k.dep))
   const linhas = linhasTabela()
@@ -364,7 +365,7 @@ export default function DashboardExec({ projeto }) {
         <span><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: 2, background: NAVY, marginRight: 3 }} />mês selecionado</span>
         <span><span style={{ display: 'inline-block', width: 15, height: 0, borderTop: '2px dotted #6B7280', marginRight: 3, verticalAlign: 'middle' }} />projeção IA</span>
         <span><span style={{ display: 'inline-block', width: 15, height: 0, borderTop: '2px dashed #2a78d6', marginRight: 3, verticalAlign: 'middle' }} />ideal (15%)</span>
-        <span style={{ color: '#9a917f' }}>· cobre = saídas · verde = receita · mês corrente: contorno = teto orçado, preenchido = já realizado</span>
+        <span style={{ color: '#9a917f' }}>· cobre = saídas · verde = receita · mês em aberto (não fechado): contorno = teto orçado, preenchido = já realizado</span>
       </div>
       {proj && proj.comentario && <div style={{ fontSize: 11.5, color: 'var(--lt-text)', background: 'rgba(42,120,214,0.06)', border: '1px solid rgba(42,120,214,0.25)', borderRadius: 8, padding: '8px 12px', margin: '0 2px 16px', lineHeight: 1.5 }}>✨ <strong>Projeção IA:</strong> {proj.comentario}{projLoad ? ' · atualizando…' : ''}</div>}
 
