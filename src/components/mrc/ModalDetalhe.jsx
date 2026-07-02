@@ -44,6 +44,9 @@ export function ModalDetalhe({ row, projeto, onClose, onEditar, primaryAction, s
     )
   }
   const faseInfo = getFaseInfo(row, projeto?.num_fases, projeto?.f1_tem_teste === true)
+  const resVitrine = getResultadoVitrine(row, projeto)
+  const resValido = resVitrine && resVitrine !== '—' && !['teste não realizado', 'nao_iniciado', 'não iniciado'].includes(String(resVitrine).toLowerCase())
+  const resCor = (() => { const rl = String(resVitrine).toLowerCase(); return ['efetivo', 'existente'].includes(rl) ? { c: '#1B5E20', bg: '#E8F5E9' } : ['inefetivo', 'gap', 'inexistente'].includes(rl) ? { c: '#C62828', bg: '#FFEBEE' } : (rl === 'parcial' ? { c: '#E65100', bg: '#FFE0B2' } : { c: '#45566B', bg: '#ECEFF3' }) })()
   const ultTeste = ultimaDataTeste(row)
   const fmtData = (v) => { if (!v) return null; const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v).slice(0,10) }
   const impIdx = HM_IMPS.indexOf(row.imp); const probIdx = HM_PROBS.indexOf(row.prob)
@@ -77,20 +80,10 @@ export function ModalDetalhe({ row, projeto, onClose, onEditar, primaryAction, s
         <div className="modal-body">
 
           {tab === 'ident' && (<div className="tp active">
-            {(() => {
-              const res = getResultadoVitrine(row, projeto)
-              if (!res || res === '—' || ['teste não realizado', 'nao_iniciado', 'não iniciado'].includes(String(res).toLowerCase())) return null
-              const rl = String(res).toLowerCase()
-              const cor = ['efetivo', 'existente'].includes(rl) ? { c: '#1B5E20', bg: '#E8F5E9' } : ['inefetivo', 'gap', 'inexistente'].includes(rl) ? { c: '#C62828', bg: '#FFEBEE' } : (rl === 'parcial' ? { c: '#E65100', bg: '#FFE0B2' } : { c: '#45566B', bg: '#ECEFF3' })
-              return (<div className="ms" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <div className="ms-t" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Resultado</div>
-                <span style={{ fontSize: 13, fontWeight: 700, padding: '5px 14px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4, color: cor.c, background: cor.bg }}>{res}</span>
-              </div>)
-            })()}
             <div className="ms"><div className="ms-t">Identificação do Controle</div><div className="mr">{field('Ref. Risco', row.rr)}{field('Ref. Controle', row.rc)}</div><div className="mr">{field('Área', row.area)}{field('Subprocesso', row.sub)}</div><div className="mr">{field('Gerência', row.ger)}{field('Responsável Processo', row.resp_sub)}</div><div className="mr">{field('Data de implementação', fmtData(row.dt_implementacao))}{field('Última data de teste', ultTeste ? ultTeste.toLocaleDateString('pt-BR') : null)}</div></div>
             {isDiagModal && <div className="ms"><div className="ms-t" style={{ display: 'flex', alignItems: 'center' }}>Cenário Atual{blocoBadge('cenario')}</div>{row.cenario_atual && row.cenario_atual.trim() ? fieldText(null, row.cenario_atual) : <div style={{ fontSize: 12, color: '#C62828', fontStyle: 'italic', padding: '6px 10px', background: '#FFEBEE', borderLeft: '3px solid #C62828', borderRadius: 4 }}>— Não preenchido —</div>}</div>}
             <div className="ms"><div className="ms-t" style={{ display: 'flex', alignItems: 'center' }}>Descrição do Risco{blocoBadge('risco')}</div>{fieldText(null, row.dr)}</div>
-            <div className="ms"><div className="ms-t" style={{ display: 'flex', alignItems: 'center' }}>Descrição do Controle{blocoBadge('controle')}</div>{fieldText(null, row.dc)}</div>
+            <div className="ms"><div className="ms-t" style={{ display: 'flex', alignItems: 'center' }}>Descrição do Controle{blocoBadge('controle')}</div>{fieldText(null, row.dc)}{resValido && <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}><span style={{ fontSize: 10, fontWeight: 600, color: 'var(--lt-text3)', textTransform: 'uppercase', letterSpacing: 0.3 }}>Resultado</span><span style={{ fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.3, color: resCor.c, background: resCor.bg }}>{resVitrine}</span></div>}</div>
             <div className="ms"><div className="ms-t">Características do Controle</div><div className="mr3">{fieldTag('Categoria', row.cat)}{fieldTag('Frequência', row.freq)}{fieldTag('Natureza', row.nat)}</div><div className="mr3">{fieldTag('Característica', row.car)}{fieldTag('Sistema', row.sis)}{fieldTag('Controle Chave', row.chave)}</div>
               {!isDiagModal && (
                 <div className="mr" style={{ marginTop: 12 }}>
