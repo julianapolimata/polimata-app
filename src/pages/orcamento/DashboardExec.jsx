@@ -3,7 +3,7 @@
 // DRE gerencial (realizado + projeção), receita por situação fiscal e maiores rubricas (explosíveis).
 import { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { useOrcDados, useItens, PageHeader, Card, KPICard, KPIGrid, BotaoSec, fmtBRL, MESES_ABREV, ErroBox, MonthRail } from './_shared'
+import { useOrcDados, useItens, PageHeader, Card, BotaoSec, fmtBRL, MESES_ABREV, ErroBox, MonthRail } from './_shared'
 import { iaProjecao, iaAnaliseAno } from '../../lib/orcamento/ia'
 
 const ANO_ATUAL = new Date().getFullYear()
@@ -11,18 +11,6 @@ const NAVY = '#00203E', COBRE = '#CC915E', VERDE = '#22B98A', RED = '#A32D2D'
 const COBRE_L = 'rgba(204,145,94,0.4)', VERDE_L = 'rgba(34,185,138,0.4)'
 const fmtC = (v) => v == null ? '—' : (Math.abs(v) >= 1e6 ? 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M' : 'R$ ' + Math.round(v / 1e3) + 'k')
 
-const CATALOGO = [
-  { id: 'receita', nome: 'Receita realizada', dep: 'receita', info: 'Total de receitas reconhecidas no período (pelo fato gerador, com ou sem nota).' },
-  { id: 'margem', nome: 'Resultado operacional', dep: 'receita', info: 'Receita menos deduções, custos e despesas no período. É o que sobra (ou falta) da operação.' },
-  { id: 'aFaturar', nome: 'Receita a faturar', dep: 'receita', info: 'Receita já reconhecida que ainda não tem nota fiscal emitida (situação "A faturar").' },
-  { id: 'margemPct', nome: 'Margem líquida', dep: 'receita', info: 'Resultado dividido pela receita do período — quanto sobra de cada real de receita.' },
-  { id: 'bruta', nome: 'Margem bruta', dep: 'receita', info: 'Receita líquida menos o custo dos produtos vendidos (CPV) — quanto sobra da venda antes das despesas.' },
-  { id: 'saidas', nome: 'Saídas realizadas', dep: 'none', info: 'Total de saídas (deduções + custos + despesas) no período.' },
-  { id: 'burn', nome: 'Saída média mensal', dep: 'none', info: 'Ritmo médio de consumo de recursos: média de saídas por mês no período (burn rate).' },
-  { id: 'maiorRub', nome: 'Maior rubrica de saída', dep: 'none', info: 'A categoria que mais consome recursos no período.' },
-  { id: 'exec', nome: 'Execução orçamentária', dep: 'orcado', info: 'Percentual do orçado já consumido pelo realizado (realizado ÷ orçado).' },
-]
-const DEFAULT_ON = ['receita', 'aFaturar', 'margem', 'margemPct']
 const soma = (arr, de, ate) => (arr || []).slice(de, ate + 1).reduce((s, v) => s + (v || 0), 0)
 const pct = (n) => (n >= 0 ? '' : '−') + Math.abs(n).toFixed(1) + '%'
 
@@ -119,16 +107,9 @@ export default function DashboardExec({ projeto }) {
   const [anoIA, setAnoIA] = useState(null)
   const [anoIALoad, setAnoIALoad] = useState(false)
   const [grpOpen, setGrpOpen] = useState({})
-  const [libOpen, setLibOpen] = useState(false)
   const [modal, setModal] = useState(null)
-  const [cardsOn, setCardsOn] = useState(DEFAULT_ON)
   const [msg, setMsg] = useState('')
   const [tabOpen, setTabOpen] = useState(false)
-
-  useEffect(() => { try { const s = localStorage.getItem('orc_dash_v2_' + projeto.id); if (s) setCardsOn(JSON.parse(s)) } catch (e) { /* segue */ } }, [projeto?.id])
-  function toggleCard(id) {
-    setCardsOn(prev => { const n = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]; try { localStorage.setItem('orc_dash_v2_' + projeto.id, JSON.stringify(n)) } catch (e) { /* segue */ } return n })
-  }
 
   const temOrcado = useMemo(() => Object.values(porCat || {}).some(p => (p.valores || []).some(v => v != null && v !== 0)), [porCat])
   useEffect(() => { if (!temOrcado) setModo('analise') }, [temOrcado])
@@ -313,29 +294,6 @@ export default function DashboardExec({ projeto }) {
   }, [A2, anoSelecionado, projeto?.id, ano])
 
   function appOk(dep) { if (dep === 'receita') return W.pReceita > 0; if (dep === 'orcado') return temOrcado; return true }
-  function naoAplic(dep) { return dep === 'receita' ? 'Aplicável com as receitas importadas.' : 'Aplicável no cenário comparativo (com orçado cadastrado).' }
-
-  function indicador(id) {
-    switch (id) {
-      case 'receita': return { v: fmtBRL(W.pReceita), s: 'receita reconhecida' }
-      case 'margem': return { v: fmtBRL(W.pResultado), s: W.pReceita ? pct(W.pResultado / W.pReceita * 100) + ' da receita' : '' }
-      case 'aFaturar': return { v: fmtBRL(W.sit['A faturar'] || 0), s: 'entregue, sem nota emitida' }
-      case 'margemPct': return { v: W.pReceita ? pct(W.pResultado / W.pReceita * 100) : '—', s: 'resultado ÷ receita' }
-      case 'bruta': return { v: fmtBRL(W.pReceitaLiq - W.pCusto), s: 'receita líquida − CPV' }
-      case 'saidas': return { v: fmtBRL(W.pSaida), s: MESES_ABREV[de] + '–' + MESES_ABREV[ate] }
-      case 'burn': return { v: fmtBRL(Math.round(W.pSaida / W.nMes)), s: 'saída média por mês' }
-      case 'maiorRub': return { v: W.maior ? fmtBRL(W.maior.real) : '—', s: W.maior ? W.maior.nome : '' }
-      case 'exec': { const so = W.saidasCats.reduce((s, c) => s + c.orc, 0); return { v: so ? Math.round(W.pSaida / so * 100) + '%' : '—', s: 'realizado ÷ orçado' } }
-      default: return { v: '—', s: '' }
-    }
-  }
-
-  function abrirInfo(k) {
-    setModal({ titulo: k.nome, corpo: (<>
-      <p style={{ margin: '0 0 8px' }}>{k.info}</p>
-      {!appOk(k.dep) && <p style={{ margin: 0, color: 'var(--lt-text3)' }}>🔒 {naoAplic(k.dep)}</p>}
-    </>) })
-  }
 
   async function drill(c) {
     const compIni = `${ano}-${String(de + 1).padStart(2, '0')}-01`
@@ -401,7 +359,6 @@ export default function DashboardExec({ projeto }) {
   const lastClosedSai = (W.mSaiReal || []).reduce((mx, v, i) => (v && v > 0) ? i : mx, -1)
   const curMonth = (ano === ANO_ATUAL && lastClosedSai < 11) ? lastClosedSai + 1 : -1
   const comp = modo === 'comparativo'
-  const cardsVisiveis = CATALOGO.filter(k => cardsOn.includes(k.id) && appOk(k.dep))
   const linhas = linhasTabela()
   const dreCol = temOrcado
   const sitTot = (W.sit.Faturado || 0) + (W.sit['A faturar'] || 0) + (W.sit['Sem nota'] || 0)
@@ -410,7 +367,6 @@ export default function DashboardExec({ projeto }) {
   return (
     <div style={{ padding: '20px 28px 40px' }}>
       <PageHeader projeto={projeto} titulo="Visão Geral do Orçamento" subtitulo={`${projeto?.nome || ''} · ${MESES_ABREV[de]}–${MESES_ABREV[ate]}/${ano} · regime de competência`}>
-        <BotaoSec onClick={() => setLibOpen(o => !o)}>⊞ Personalizar</BotaoSec>
         <BotaoSec onClick={exportar}>↓ Exportar</BotaoSec>
       </PageHeader>
       <ErroBox erro={d.erro || msg} onClose={() => { d.setErro(''); setMsg('') }} />
@@ -477,27 +433,6 @@ export default function DashboardExec({ projeto }) {
           {W.incompleto >= 0 && <span style={{ background: 'rgba(204,145,94,0.15)', color: '#A6512F', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>{MESES_ABREV[W.incompleto]} parcial</span>}
         </div>
       ) : null}
-
-      {libOpen && (
-        <Card titulo="Indicadores do topo" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>ligue/desligue · ⓘ explica cada um</span>}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {CATALOGO.map(k => {
-              const ok = appOk(k.dep), on = cardsOn.includes(k.id)
-              return (
-                <div key={k.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button onClick={() => ok ? toggleCard(k.id) : abrirInfo(k)} style={{ flex: 1, textAlign: 'left', fontSize: 12.5, padding: '6px 10px', borderRadius: 8, cursor: ok ? 'pointer' : 'not-allowed', border: '1px solid var(--lt-brd)', background: (ok && on) ? 'rgba(204,145,94,0.12)' : 'transparent', color: ok ? (on ? 'var(--copper, #A6512F)' : 'var(--lt-text)') : 'var(--lt-text3)', opacity: ok ? 1 : 0.65 }}>
-                    {ok ? (on ? '✓ ' : '+ ') : '🔒 '}{k.nome}{!ok && <span style={{ fontSize: 10.5 }}> · {k.dep === 'receita' ? 'requer receita' : 'requer orçado'}</span>}
-                  </button>
-                  <button onClick={() => abrirInfo(k)} aria-label={'O que é ' + k.nome} style={{ width: 32, padding: '6px 0', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--lt-brd)', background: 'transparent', color: 'var(--lt-text3)' }}>ⓘ</button>
-                </div>)
-            })}
-          </div>
-        </Card>
-      )}
-
-      <KPIGrid>
-        {cardsVisiveis.map(k => { const r = indicador(k.id); return <KPICard key={k.id} label={k.nome} value={r.v} delta={r.s} /> })}
-      </KPIGrid>
 
 
 
