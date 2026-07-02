@@ -437,7 +437,8 @@ export default function Dashboard() {
       <main className={mainLightClass} style={{ flex: 1, overflowY: 'auto', background: isHomeDash ? 'var(--bg0)' : 'var(--lt-bg)', position: 'relative' }}>
         {/* Notificações — canto superior direito. Oculto na MRC e PorArea (header inclui o sino) */}
         {location.pathname !== '/mrc' && !location.pathname.startsWith('/area/') && (
-          <div className="top-bar" style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 16px 0', background: isHomeDash ? 'var(--bg0)' : 'var(--lt-bg)' }}>
+          <div className="top-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '9px 28px', background: isHomeDash ? 'var(--bg0)' : 'var(--lt-bg)' }}>
+            <div id="orc-topbar-slot" style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }} />
             <NotificacoesPanel />
           </div>
         )}

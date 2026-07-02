@@ -2,6 +2,7 @@
 // _shared.jsx — peças comuns do módulo Gestão Orçamentária
 // ═══════════════════════════════════════════════════════════════════════════
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import { formatNomeEmpresa } from '../../lib/formatNome'
 
@@ -24,17 +25,23 @@ export const TDL = { ...TD, textAlign: 'left' }
 
 // ── Header de página ────────────────────────────────────────────────────────
 export function PageHeader({ projeto, titulo, subtitulo, children }) {
+  const [slot, setSlot] = useState(null)
+  useEffect(() => { setSlot(document.getElementById('orc-topbar-slot')) }, [])
+  const eyebrow = formatNomeEmpresa(projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome) + (projeto?.nome ? ' · ' + projeto.nome : '')
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
-      <div>
-        <div style={{ fontSize: 11, color: 'var(--lt-text3)', textTransform: 'uppercase', letterSpacing: 1.4, fontWeight: 600 }}>
-          {formatNomeEmpresa(projeto?.clientes?.nome_fantasia || projeto?.clientes?.nome)} · {projeto?.nome}
+    <>
+      {slot && createPortal(
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 10, color: 'var(--lt-text3)', textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eyebrow}</div>
+          <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 16, fontWeight: 600, color: 'var(--lt-text)', lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titulo}</div>
+        </div>, slot)}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
+        <div style={{ minWidth: 0 }}>
+          {subtitulo && <div style={{ fontSize: 12, color: 'var(--lt-text3)' }}>{subtitulo}</div>}
         </div>
-        <h1 style={{ fontFamily: "'Raleway', sans-serif", fontSize: 23, fontWeight: 700, color: 'var(--lt-text)', margin: '2px 0 0' }}>{titulo}</h1>
-        {subtitulo && <div style={{ fontSize: 12, color: 'var(--lt-text3)', marginTop: 3 }}>{subtitulo}</div>}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>{children}</div>
       </div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>{children}</div>
-    </div>
+    </>
   )
 }
 
