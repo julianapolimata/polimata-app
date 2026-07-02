@@ -275,7 +275,7 @@ export default function DashboardExec({ projeto }) {
 
   const anoSelecionado = de === 0 && ate === 11
   useEffect(() => {
-    if (!A2 || !anoSelecionado) return
+    if (!A2) return
     const sigRec = A2.recorrentes.reduce((sx, r) => sx + Math.round(r.total) + (r.semOrc ? 1 : 0), 0)
     const key = 'orc_ano_v2_' + projeto.id + '_' + ano + '_' + Math.round(A2.recRealYtd) + '_' + Math.round(W.totOrcAno || 0) + '_' + sigRec + '_' + A2.recorrentes.length + '_' + A2.pontuais.length
     try { const c = localStorage.getItem(key); if (c) { setAnoIA(JSON.parse(c)); return } } catch (e) { /* segue */ }
@@ -400,6 +400,27 @@ export default function DashboardExec({ projeto }) {
         <span style={{ color: '#9a917f' }}>· cobre = saídas · verde = receita · mês corrente = colunas sobrepostas</span>
       </div>
       {proj && proj.comentario && <div style={{ fontSize: 11.5, color: 'var(--lt-text)', background: 'rgba(42,120,214,0.06)', border: '1px solid rgba(42,120,214,0.25)', borderRadius: 8, padding: '8px 12px', margin: '0 2px 16px', lineHeight: 1.5 }}>✨ <strong>Projeção IA:</strong> {proj.comentario}{projLoad ? ' · atualizando…' : ''}</div>}
+
+      {A2 && (() => {
+        const res = A2.recRealYtd - W.totRealYtd
+        const marg = A2.recRealYtd ? res / A2.recRealYtd * 100 : 0
+        const execS = W.totOrcAno ? W.totRealYtd / W.totOrcAno * 100 : 0
+        const fb = `Nos ${A2.n} meses fechados de ${ano}, a operação acumula ${fmtBRL(W.totRealYtd)} em saídas (${Math.round(execS)}% do orçado) e ${fmtBRL(A2.recRealYtd)} em receita (${Math.round(A2.pctMeta)}% da meta), com resultado de ${fmtBRL(res)}. Foram identificados ${A2.recorrentes.length} desvio(s) estrutural(is) recorrente(s) e ${A2.pontuais.length} evento(s) pontual(is) — abra a análise completa para ver onde atuar.`
+        const chip = (lbl, val, cor) => (<span style={{ fontSize: 11.5, color: 'var(--lt-text3)' }}>{lbl} <strong style={{ color: cor || 'var(--lt-text)' }}>{val}</strong></span>)
+        return (
+          <Card titulo="Sinopse do ano" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>✨ IA · {A2.n} meses fechados{anoIALoad ? ' · gerando…' : ''}</span>}>
+            <p style={{ margin: '0 0 12px', fontSize: 13.5, lineHeight: 1.65, color: 'var(--lt-text)' }}>{(anoIA && anoIA.sinopse) || fb}</p>
+            <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', paddingTop: 10, borderTop: '1px solid var(--lt-brd)' }}>
+              {chip('Resultado', fmtBRL(res), res >= 0 ? VERDE : RED)}
+              {chip('Margem', (marg >= 0 ? '' : '−') + Math.abs(marg).toFixed(1) + '%', marg >= 0 ? VERDE : RED)}
+              {chip('Saídas', Math.round(execS) + '% do orçado')}
+              {chip('Receita', Math.round(A2.pctMeta) + '% da meta')}
+              <span style={{ flex: 1 }} />
+              <button onClick={() => { setDe(0); setAte(11); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ fontSize: 12, fontWeight: 600, borderRadius: 8, padding: '7px 14px', cursor: 'pointer', border: 'none', background: 'var(--copper, #A6512F)', color: '#fff' }}>ver análise completa do ano →</button>
+            </div>
+          </Card>
+        )
+      })()}
 
       {analiseMargem && (
         <Card titulo="Análise de tendência da margem" extra={<span style={{ fontSize: 11, color: 'var(--lt-text3)' }}>meta: margem líquida de 15% · próximos {analiseMargem.fut} meses (projeção IA)</span>}>
