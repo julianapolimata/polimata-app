@@ -25,3 +25,9 @@ export async function iaInsight(tipo, dados) {
   const r = await chamar({ acao: 'insight', tipo, dados })
   return r.insight || ''
 }
+
+/** Projeção IA dos meses futuros. Séries mensais [12] (0 = mês não realizado). */
+export async function iaProjecao(serieSaidas, serieReceita) {
+  const r = await chamar({ acao: 'projecao', serie_saidas: serieSaidas, serie_receita: serieReceita })
+  return { saidas: r.saidas_proj || [], receita: r.receita_proj || [], comentario: r.comentario || '' }
+}

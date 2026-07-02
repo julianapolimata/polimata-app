@@ -4,6 +4,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useOrcDados, useItens, PageHeader, Card, KPICard, KPIGrid, BotaoSec, fmtBRL, MESES_ABREV, ErroBox, MonthRail } from './_shared'
+import { iaProjecao } from '../../lib/orcamento/ia'
 
 const ANO_ATUAL = new Date().getFullYear()
 const NAVY = '#00203E', COBRE = '#CC915E', VERDE = '#22B98A', RED = '#A32D2D'
@@ -129,15 +130,18 @@ function Velocimetro({ valor }) {
   )
 }
 
-function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor }) {
+function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor, proj, ideal }) {
   const VW = 360, VH = 178, T = 18, B = 26, L = 44, R = 8
   const plotH = VH - T - B, plotW = VW - L - R
   const vals = real.map((v, i) => (v && v > 0) ? v : (orc[i] || 0))
-  const max = Math.max(1, ...vals) * 1.12
+  const max = Math.max(1, ...vals, ...((proj || []).filter(x => x > 0)), ...((ideal || []).filter(x => x > 0))) * 1.12
   const slot = plotW / 12
   const bw = Math.min(17, slot - 6)
   const y = (v) => T + plotH * (1 - v / max)
   const ticks = [0, max / 2, max]
+  const lastReal = real.reduce((mx, v, i) => (v && v > 0) ? i : mx, -1)
+  const projPts = (proj && lastReal >= 0) ? real.map((v, i) => (i >= lastReal && proj[i] != null) ? `${L + slot * i + slot / 2},${y(proj[i])}` : null).filter(Boolean).join(' ') : ''
+  const idealPts = ideal ? ideal.map((v, i) => (v != null) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' ') : ''
   return (
     <div>
       <div style={{ background: base, color: '#fff', fontSize: 12.5, fontWeight: 600, textAlign: 'center', padding: '6px 0', borderRadius: '10px 10px 0 0' }}>{titulo}</div>
@@ -161,6 +165,8 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, lineColor }) {
               </g>
             )
           })}
+          {idealPts && <polyline points={idealPts} fill="none" stroke="#2a78d6" strokeWidth="1.6" strokeDasharray="5 4" strokeLinejoin="round" strokeLinecap="round" />}
+          {projPts && <polyline points={projPts} fill="none" stroke={lineColor} strokeWidth="2" strokeDasharray="2 3" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />}
           {(() => { const pts = real.map((v, i) => (v && v > 0) ? `${L + slot * i + slot / 2},${y(v)}` : null).filter(Boolean).join(' '); return pts ? <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /> : null })()}
           {real.map((v, i) => (v && v > 0) ? <circle key={'d' + i} cx={L + slot * i + slot / 2} cy={y(v)} r="2.6" fill={lineColor} stroke="#fff" strokeWidth="1" /> : null)}
         </svg>
@@ -178,6 +184,8 @@ export default function DashboardExec({ projeto }) {
   const [ate, setAte] = useState(11)
   const [modo, setModo] = useState('analise')
   const [railModo, setRailModo] = useState('sai')
+  const [proj, setProj] = useState(null)
+  const [projLoad, setProjLoad] = useState(false)
   const [libOpen, setLibOpen] = useState(false)
   const [modal, setModal] = useState(null)
   const [cardsOn, setCardsOn] = useState(DEFAULT_ON)
@@ -271,6 +279,34 @@ export default function DashboardExec({ projeto }) {
       nMes: ate - de + 1, baseAV: pReceitaLiq > 0 ? pReceitaLiq : pSaida,
     }
   }, [d.catsAtivas, d.categorias, d.realPorCat, d.realizado, porCat, ano, de, ate])
+
+  const projSig = useMemo(() => {
+    const sai = W.mSaiReal || [], rec = W.mRecReal || []
+    return ano + ':' + Math.round(sai.reduce((a, b) => a + (b || 0), 0)) + ':' + Math.round(rec.reduce((a, b) => a + (b || 0), 0))
+  }, [W.mSaiReal, W.mRecReal, ano])
+
+  useEffect(() => {
+    const sai = W.mSaiReal || [], rec = W.mRecReal || []
+    if (!sai.some(v => v > 0) && !rec.some(v => v > 0)) { setProj(null); return }
+    const key = 'orc_proj_' + projeto.id + '_' + projSig
+    try { const c = localStorage.getItem(key); if (c) { setProj(JSON.parse(c)); return } } catch (e) { /* segue */ }
+    let cancel = false
+    setProjLoad(true)
+    iaProjecao(sai, rec).then(r => {
+      if (cancel) return
+      const val = { saidas: r.saidas, receita: r.receita, comentario: r.comentario }
+      setProj(val); try { localStorage.setItem(key, JSON.stringify(val)) } catch (e) { /* segue */ }
+    }).catch(() => {
+      if (cancel) return
+      const mm = (arr) => { const dd = arr.filter(v => v > 0).slice(-3); const md = dd.length ? dd.reduce((a, b) => a + b, 0) / dd.length : 0; return arr.map(v => v > 0 ? v : Math.round(md)) }
+      setProj({ saidas: mm(sai), receita: mm(rec), comentario: 'Projeção por média móvel (IA indisponível no momento).' })
+    }).finally(() => { if (!cancel) setProjLoad(false) })
+    return () => { cancel = true }
+  }, [projeto?.id, projSig])
+
+  const MARGEM_ALVO = 0.15
+  const idealSai = proj ? proj.receita.map((v) => Math.round((v || 0) * (1 - MARGEM_ALVO))) : null
+  const idealRec = proj ? proj.saidas.map((v) => Math.round((v || 0) / (1 - MARGEM_ALVO))) : null
 
   function appOk(dep) { if (dep === 'receita') return W.pReceita > 0; if (dep === 'orcado') return temOrcado; return true }
   function naoAplic(dep) { return dep === 'receita' ? 'Aplicável com as receitas importadas.' : 'Aplicável no cenário comparativo (com orçado cadastrado).' }
@@ -390,15 +426,18 @@ export default function DashboardExec({ projeto }) {
       <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} selMonth={de === ate ? de : -1} anoSel={de === 0 && ate === 11} ano={ano} modo={railModo} setModo={setRailModo} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 6 }}>
-        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} lineColor="#7A3F1E" />
-        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} lineColor="#0F6E56" />
+        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} lineColor="#7A3F1E" proj={proj ? proj.saidas : null} ideal={idealSai} />
+        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} lineColor="#0F6E56" proj={proj ? proj.receita : null} ideal={idealRec} />
       </div>
       <div style={{ fontSize: 11, color: 'var(--lt-text3)', margin: '0 2px 16px', display: 'flex', gap: 14, flexWrap: 'wrap' }}>
         <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: COBRE, marginRight: 4 }} />realizado</span>
         <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: COBRE_L, marginRight: 4 }} />projeção (orçado nos meses a realizar)</span>
         <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: NAVY, marginRight: 4 }} />mês selecionado</span>
         <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2px solid #3D5068', marginRight: 4, verticalAlign: 'middle' }} />linha = realizado</span>
+        <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2px dotted #3D5068', marginRight: 4, verticalAlign: 'middle' }} />projeção IA</span>
+        <span><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: '2px dashed #2a78d6', marginRight: 4, verticalAlign: 'middle' }} />ideal (margem 15%)</span>
       </div>
+      {proj && proj.comentario && <div style={{ fontSize: 11.5, color: 'var(--lt-text)', background: 'rgba(42,120,214,0.06)', border: '1px solid rgba(42,120,214,0.25)', borderRadius: 8, padding: '8px 12px', margin: '0 2px 16px', lineHeight: 1.5 }}>✨ <strong>Projeção IA:</strong> {proj.comentario}{projLoad ? ' · atualizando…' : ''}</div>}
 
       {(d.importacoes && d.importacoes[0]) || W.incompleto >= 0 ? (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10, fontSize: 11, color: 'var(--lt-text3)' }}>

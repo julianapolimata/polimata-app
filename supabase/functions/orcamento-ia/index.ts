@@ -101,6 +101,27 @@ async function insight(body: Record<string, unknown>) {
   return { insight: out.trim() };
 }
 
+// series realizadas mensais (Jan..Dez; 0 = mês ainda não realizado). Projeta os meses futuros.
+async function projecao(body: Record<string, unknown>) {
+  const saidas = body.serie_saidas as number[];
+  const receita = body.serie_receita as number[];
+  if (!Array.isArray(saidas) || !Array.isArray(receita)) throw new Error("Informe serie_saidas e serie_receita (12 números).");
+  const system =
+    "Você é um analista financeiro (FP&A) brasileiro especialista em PMEs de manufatura sob medida. " +
+    "A partir do realizado mensal, projete os meses futuros de duas séries (saídas e receita), " +
+    "considerando RECORRÊNCIA (custos que se repetem todo mês), TENDÊNCIA e sazonalidade plausível. " +
+    "Seja realista e conservador com receita. " +
+    "Meses com valor 0 = ainda não realizados (projete-os); meses com valor > 0 = realizados (mantenha EXATAMENTE). " +
+    "Responda APENAS com JSON válido em pt-BR, valores em reais (números), sem texto fora do JSON.";
+  const user =
+    `Série SAÍDAS (Jan..Dez): ${JSON.stringify(saidas)}\n` +
+    `Série RECEITA (Jan..Dez): ${JSON.stringify(receita)}\n\n` +
+    `Devolva: {"saidas_proj":[12 números],"receita_proj":[12 números],` +
+    `"comentario":"1-2 frases pt-BR explicando a lógica (recorrência/tendência) da projeção"}.`;
+  const out = await claude(system, user, 1500);
+  return extrairJson(out);
+}
+
 // ── HTTP ───────────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -117,6 +138,7 @@ Deno.serve(async (req: Request) => {
     if (acao === "categorizar") return json(await categorizar(body));
     if (acao === "sugerir") return json(await sugerir(body));
     if (acao === "insight") return json(await insight(body));
+    if (acao === "projecao") return json(await projecao(body));
     return json({ erro: "Ação inválida: " + acao }, 400);
   } catch (e) {
     return json({ erro: (e as Error).message }, 500);
