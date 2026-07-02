@@ -129,6 +129,44 @@ function Velocimetro({ valor }) {
   )
 }
 
+function BarrasMes({ titulo, real, orc, selMonth, base, light }) {
+  const VW = 360, VH = 178, T = 18, B = 26, L = 44, R = 8
+  const plotH = VH - T - B, plotW = VW - L - R
+  const vals = real.map((v, i) => (v && v > 0) ? v : (orc[i] || 0))
+  const max = Math.max(1, ...vals) * 1.12
+  const slot = plotW / 12
+  const bw = Math.min(17, slot - 6)
+  const y = (v) => T + plotH * (1 - v / max)
+  const ticks = [0, max / 2, max]
+  return (
+    <div>
+      <div style={{ background: base, color: '#fff', fontSize: 12.5, fontWeight: 600, textAlign: 'center', padding: '6px 0', borderRadius: '10px 10px 0 0' }}>{titulo}</div>
+      <div style={{ border: '1px solid var(--lt-brd)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '8px 8px 2px' }}>
+        <svg width="100%" viewBox={`0 0 ${VW} ${VH}`} style={{ display: 'block' }} role="img" aria-label={titulo + ' por mês'}>
+          {ticks.map((t, k) => (
+            <g key={k}>
+              <line x1={L} y1={y(t)} x2={VW - R} y2={y(t)} stroke="var(--lt-brd, #eee)" strokeWidth="1" />
+              <text x={L - 6} y={y(t) + 3} textAnchor="end" fontSize="9" fill="var(--lt-text3, #999)">{fmtC(t)}</text>
+            </g>
+          ))}
+          {vals.map((v, i) => {
+            const h = plotH * v / max
+            const x = L + slot * i + (slot - bw) / 2
+            const hasReal = real[i] && real[i] > 0
+            const cor = i === selMonth ? NAVY : (hasReal ? base : light)
+            return (
+              <g key={i}>
+                <rect x={x} y={T + plotH - h} width={bw} height={h} rx="2.5" fill={cor} />
+                <text x={x + bw / 2} y={VH - 10} textAnchor="middle" fontSize="9" fill={i === selMonth ? NAVY : 'var(--lt-text3)'} fontWeight={i === selMonth ? 700 : 400}>{MESES_ABREV[i]}</text>
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardExec({ projeto }) {
   const [ano, setAno] = useState(ANO_ATUAL)
   const d = useOrcDados(projeto, ano)
@@ -348,6 +386,16 @@ export default function DashboardExec({ projeto }) {
       </div>
 
       <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} selMonth={de === ate ? de : -1} anoSel={de === 0 && ate === 11} ano={ano} modo={railModo} setModo={setRailModo} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 6 }}>
+        <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} />
+        <BarrasMes titulo="Receita por mês" real={W.mRecReal} orc={W.mRecOrc} selMonth={de === ate ? de : -1} base={VERDE} light={VERDE_L} />
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--lt-text3)', margin: '0 2px 16px', display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: COBRE, marginRight: 4 }} />realizado</span>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: COBRE_L, marginRight: 4 }} />projeção (orçado nos meses a realizar)</span>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: NAVY, marginRight: 4 }} />mês selecionado</span>
+      </div>
 
       {(d.importacoes && d.importacoes[0]) || W.incompleto >= 0 ? (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10, fontSize: 11, color: 'var(--lt-text3)' }}>
