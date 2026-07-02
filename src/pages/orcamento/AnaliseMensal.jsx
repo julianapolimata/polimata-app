@@ -18,7 +18,6 @@ export default function AnaliseMensal({ projeto }) {
   const { porCat } = useItens(cenario?.id)
   const [mes, setMes] = useState(null)
   const [modo, setModo] = useState('redistribuir')
-  const [railModo, setRailModo] = useState('sai')
   const [iaTexto, setIaTexto] = useState('')
   const [iaLoad, setIaLoad] = useState(false)
 
@@ -142,7 +141,7 @@ export default function AnaliseMensal({ projeto }) {
         <span style={{ color: 'var(--lt-text3)', marginLeft: 6 }}>Mês: <strong style={{ color: 'var(--lt-text)' }}>{mes != null ? MESES[mes] : '—'}</strong></span>
       </div>
 
-      <MonthRail recReal={rail.mRecReal} saiReal={rail.mSaiReal} recOrc={rail.mRecOrc} saiOrc={rail.mSaiOrc} ano={ano} modo={railModo} setModo={setRailModo} selMonth={mes} anoSel={false} showAno={false} onMonth={(i) => setMes(i)} onAno={() => {}} />
+      <MonthRail recReal={rail.mRecReal} saiReal={rail.mSaiReal} recOrc={rail.mRecOrc} saiOrc={rail.mSaiOrc} ano={ano} selMonth={mes} anoSel={false} showAno={false} onMonth={(i) => setMes(i)} onAno={() => {}} />
 
       {!A ? <Card><div style={{ color: 'var(--lt-text3)', fontSize: 13 }}>Carregando…</div></Card> : (<>
         <KPIGrid>

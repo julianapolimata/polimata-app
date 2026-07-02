@@ -51,7 +51,7 @@ function BarrasMes({ titulo, real, orc, selMonth, base, light, dark, proj, ideal
   const projPts = (proj && lastReal >= 0) ? real.map((v, i) => (i >= lastReal && proj[i] != null) ? `${cx(i)},${y(proj[i])}` : null).filter(Boolean).join(' ') : ''
   const idealPts = ideal ? ideal.map((v, i) => (v != null && i >= lastReal) ? `${cx(i)},${y(v)}` : null).filter(Boolean).join(' ') : ''
   return (
-    <div>
+    <div style={{ maxWidth: 540, margin: '0 auto', width: '100%' }}>
       <div style={{ background: base, color: '#fff', fontSize: 12.5, fontWeight: 600, textAlign: 'center', padding: '6px 0', borderRadius: '10px 10px 0 0' }}>{titulo}</div>
       <div style={{ border: '1px solid var(--lt-brd)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '8px 8px 2px' }}>
         <svg width="100%" viewBox={`0 0 ${VW} ${VH}`} style={{ display: 'block' }} role="img" aria-label={titulo + ' — orçado em barras, realizado em linha'}>
@@ -95,7 +95,6 @@ export default function DashboardExec({ projeto }) {
   const [de, setDe] = useState(0)
   const [ate, setAte] = useState(11)
   const [modo, setModo] = useState('analise')
-  const [railModo, setRailModo] = useState('sai')
   const [proj, setProj] = useState(null)
   const [projLoad, setProjLoad] = useState(false)
   const [anoIA, setAnoIA] = useState(null)
@@ -118,8 +117,11 @@ export default function DashboardExec({ projeto }) {
   useEffect(() => {
     let max = -1
     d.realizado.forEach(r => { const dt = new Date(r.competencia + 'T00:00:00'); if (dt.getFullYear() === ano) max = Math.max(max, dt.getMonth()) })
+    try { const sv = JSON.parse(localStorage.getItem('orc_sel_' + projeto.id) || 'null'); if (sv && sv.ano === ano && typeof sv.de === 'number' && typeof sv.ate === 'number') { setDe(sv.de); setAte(sv.ate); return } } catch (e) { /* segue */ }
     setDe(0); setAte(max >= 0 ? max : 11)
   }, [ano, d.realizado])
+
+  useEffect(() => { try { localStorage.setItem('orc_sel_' + projeto.id, JSON.stringify({ ano, de, ate })) } catch (e) { /* segue */ } }, [projeto?.id, ano, de, ate])
 
   const W = useMemo(() => {
     const catTipo = {}; d.categorias.forEach(c => { catTipo[c.id] = c.tipo })
@@ -407,7 +409,7 @@ export default function DashboardExec({ projeto }) {
         ))}
       </div>
 
-      <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} selMonth={de === ate ? de : -1} anoSel={de === 0 && ate === 11} ano={ano} modo={railModo} setModo={setRailModo} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
+      <MonthRail recReal={W.mRecReal} saiReal={W.mSaiReal} recOrc={W.mRecOrc} saiOrc={W.mSaiOrc} selMonth={de === ate ? de : -1} anoSel={de === 0 && ate === 11} ano={ano} onMonth={(i) => { setDe(i); setAte(i) }} onAno={() => { setDe(0); setAte(11) }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 10 }}>
         <BarrasMes titulo="Saídas por mês" real={W.mSaiReal} orc={W.mSaiOrc} selMonth={de === ate ? de : -1} base={COBRE} light={COBRE_L} dark="#A6512F" proj={proj ? proj.saidas : null} ideal={idealSai} curMonth={curMonth} />
